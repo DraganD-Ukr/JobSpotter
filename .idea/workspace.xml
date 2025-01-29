@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7510509f-5816-40e0-88c4-c22eeab422ba" name="Changes" comment="Added: added gateway and configured security(keycloak). To be fixed: gateway can not register to discovery(eureka)">
+    <list default="true" id="7510509f-5816-40e0-88c4-c22eeab422ba" name="Changes" comment="Fix: fixed gateway not being able to register in discovery. Updated application properties and pom.xml for Eureka client configuration">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jobspotter_backend/services/config-server/src/main/resources/configurations/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/jobspotter_backend/services/config-server/src/main/resources/configurations/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,7 +22,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="main" />
+        <entry key="$PROJECT_DIR$" value="JOBSPOTTER-13-Creating-and-Setting-Up-Gateway-Setting-up-Security" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -53,40 +52,40 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "Docker.jobspotter_backend: Compose Deployment.executor": "Run",
-    "Maven.config_server [clean].executor": "Run",
-    "Maven.discovery [clean].executor": "Run",
-    "Maven.discovery [install].executor": "Run",
-    "Maven.gateway [clean].executor": "Run",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "Spring Boot.ConfigServerApplication.executor": "Run",
-    "Spring Boot.DiscoveryApplication.executor": "Debug",
-    "Spring Boot.GatewayApplication.executor": "Debug",
-    "git-widget-placeholder": "JOBSPOTTER-12-Creating-and-Setting-up-Discovery-Eureka-Service",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/DraganD/Web Patterns/Spring/JobSpotter/jobspotter_backend/services/gateway",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "run.configurations.included.in.services": "true",
-    "settings.editor.selected.configurable": "MavenSettings",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Docker.jobspotter_backend: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.config_server [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.discovery [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.discovery [install].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.gateway [clean].executor&quot;: &quot;Run&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;Spring Boot.ConfigServerApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.DiscoveryApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.GatewayApplication.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;JOBSPOTTER-12-Creating-and-Setting-up-Discovery-Eureka-Service&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/DraganD/Web Patterns/Spring/JobSpotter/jobspotter_backend/services/gateway&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
@@ -171,7 +170,8 @@
       <workItem from="1738088919743" duration="3980000" />
       <workItem from="1738094103841" duration="324000" />
       <workItem from="1738097047886" duration="7605000" />
-      <workItem from="1738159092607" duration="11966000" />
+      <workItem from="1738159092607" duration="12247000" />
+      <workItem from="1738180818376" duration="319000" />
     </task>
     <task id="LOCAL-00001" summary="Addition: initial config server setup">
       <option name="closed" value="true" />
@@ -221,7 +221,15 @@
       <option name="project" value="LOCAL" />
       <updated>1738169884576</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Fix: fixed gateway not being able to register in discovery. Updated application properties and pom.xml for Eureka client configuration">
+      <option name="closed" value="true" />
+      <created>1738171345410</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1738171345410</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -233,6 +241,7 @@
     <MESSAGE value="Add: create discovery service configuration" />
     <MESSAGE value="removed: ide related properties" />
     <MESSAGE value="Added: added gateway and configured security(keycloak). To be fixed: gateway can not register to discovery(eureka)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added: added gateway and configured security(keycloak). To be fixed: gateway can not register to discovery(eureka)" />
+    <MESSAGE value="Fix: fixed gateway not being able to register in discovery. Updated application properties and pom.xml for Eureka client configuration" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix: fixed gateway not being able to register in discovery. Updated application properties and pom.xml for Eureka client configuration" />
   </component>
 </project>
