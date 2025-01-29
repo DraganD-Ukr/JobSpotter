@@ -5,17 +5,42 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7510509f-5816-40e0-88c4-c22eeab422ba" name="Changes" comment="removed: ide related properties">
+      <change afterPath="$PROJECT_DIR$/jobspotter_backend/services/config-server/src/main/resources/configurations/gateway-service.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jobspotter_backend/services/gateway/src/main/java/org/jobspotter/gateway/config/JwtConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jobspotter_backend/services/gateway/src/main/java/org/jobspotter/gateway/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jobspotter_backend/services/config_server/.gitattributes" beforeDir="false" afterPath="$PROJECT_DIR$/jobspotter_backend/services/config-server/.gitattributes" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jobspotter_backend/services/config_server/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/jobspotter_backend/services/config-server/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jobspotter_backend/services/config_server/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/jobspotter_backend/services/config-server/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jobspotter_backend/services/config_server/mvnw" beforeDir="false" afterPath="$PROJECT_DIR$/jobspotter_backend/services/config-server/mvnw" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jobspotter_backend/services/config_server/mvnw.cmd" beforeDir="false" afterPath="$PROJECT_DIR$/jobspotter_backend/services/config-server/mvnw.cmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jobspotter_backend/services/config_server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/jobspotter_backend/services/config-server/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jobspotter_backend/services/config_server/src/main/java/org/job_spotter/config_server/ConfigServerApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/jobspotter_backend/services/config-server/src/main/java/org/job_spotter/config_server/ConfigServerApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jobspotter_backend/services/config_server/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/jobspotter_backend/services/config-server/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jobspotter_backend/services/config_server/src/main/resources/configurations/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/jobspotter_backend/services/config-server/src/main/resources/configurations/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jobspotter_backend/services/config_server/src/main/resources/configurations/discovery_service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/jobspotter_backend/services/config-server/src/main/resources/configurations/discovery-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jobspotter_backend/services/config_server/src/test/java/org/job_spotter/config_server/ConfigServerApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/jobspotter_backend/services/config-server/src/test/java/org/job_spotter/config_server/ConfigServerApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jobspotter_backend/services/discovery/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/jobspotter_backend/services/discovery/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="JOBSPOTTER-12-Creating-and-Setting-up-Discovery-Eureka-Service" />
+        <entry key="$PROJECT_DIR$" value="main" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -49,36 +74,46 @@
   "keyToString": {
     "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "Docker.jobspotter_backend: Compose Deployment.executor": "Run",
+    "Maven.discovery [install].executor": "Run",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "Spring Boot.ConfigServerApplication.executor": "Run",
     "Spring Boot.DiscoveryApplication.executor": "Run",
+    "Spring Boot.GatewayApplication.executor": "Run",
     "git-widget-placeholder": "JOBSPOTTER-12-Creating-and-Setting-up-Discovery-Eureka-Service",
+    "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/A dkit study/Year 3/Sem2/Software Project/jobspotter_backend/services/discovery",
+    "last_opened_file_path": "C:/DraganD/Web Patterns/Spring/JobSpotter/jobspotter_backend/services/gateway",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "run.configurations.included.in.services": "true",
     "settings.editor.selected.configurable": "MavenSettings",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="ReactorSettings">
+    <option name="notificationShown" value="true" />
+  </component>
   <component name="RunDashboard">
     <option name="configurationTypes">
       <set>
+        <option value="MicronautRunConfigurationType" />
+        <option value="QuarkusRunConfigurationType" />
         <option value="SpringBootApplicationConfigurationType" />
       </set>
     </option>
   </component>
   <component name="RunManager" selected="Docker.jobspotter_backend: Compose Deployment">
-    <configuration default="true" type="JetRunConfigurationType">
-      <module name="JobSpotter" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
       <module name="JobSpotter" />
       <option name="filePath" />
@@ -94,6 +129,13 @@
     <configuration name="DiscoveryApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="discovery" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="org.job_spotter.discovery.DiscoveryApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="GatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="gateway" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="org.jobspotter.gateway.GatewayApplication" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -116,6 +158,7 @@
       <item itemvalue="Docker.jobspotter_backend: Compose Deployment" />
       <item itemvalue="Spring Boot.ConfigServerApplication" />
       <item itemvalue="Spring Boot.DiscoveryApplication" />
+      <item itemvalue="Spring Boot.GatewayApplication" />
     </list>
     <recent_temporary>
       <list>
@@ -126,8 +169,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-fdfe4dae3a2d-intellij.indexing.shared.core-IU-243.21565.193" />
-        <option value="bundled-js-predefined-d6986cc7102b-e768b9ed790e-JavaScript-IU-243.21565.193" />
+        <option value="bundled-jdk-9f38398b9061-39b83d9b5494-intellij.indexing.shared.core-IU-241.19416.15" />
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-IU-241.19416.15" />
       </set>
     </attachedChunks>
   </component>
@@ -142,6 +185,7 @@
       <workItem from="1738088919743" duration="3980000" />
       <workItem from="1738094103841" duration="324000" />
       <workItem from="1738097047886" duration="7605000" />
+      <workItem from="1738159092607" duration="9515000" />
     </task>
     <task id="LOCAL-00001" summary="Addition: initial config server setup">
       <option name="closed" value="true" />

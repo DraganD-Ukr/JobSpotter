@@ -1,0 +1,37 @@
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+#      routes:
+#        - id: user-service
+#          uri: lb:http://user-service
+#          predicates:
+#            - Path=/api/v1/users/**
+  #
+  #        - id: job-post-service
+  #          uri: lb:http://JOB-POST-SERVICE
+  #          predicates:
+  #            - Path=/api/v1/posts/**
+  #
+  #        - id: review-service
+  #          uri: lb:http://REVIEW-SERVICE
+  #          predicates:
+  #            - Path=/api/v1/reviews/**
+  #
+  #        - id: applicant-service
+  #          uri: lb:http://APPLICANT-SERVICE
+  #          predicates:
+  #            - Path=/api/v1/applicants/**
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090/realms/JobSpotter
+          jwk-set-uri: http://localhost:9090/realms/JobSpotter/protocol/openid-connect/certs
+
+
+server:
+  port: 8100
