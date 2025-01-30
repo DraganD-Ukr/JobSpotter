@@ -12,6 +12,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserLoginRequest {
     // Simplified username validation - just check for general format
+    //Takes in both username and email
+
     // Note: could have better regex
     @NotEmpty(message = "username cannot be empty")
     @Pattern(regexp = "^[A-Za-z0-9]{4,}$", message = "username must be at least 4 characters long and contain only letters and digits")
