@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.user.dto.UserLoginRequest;
 import org.jobspotter.user.dto.UserRegisterRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,9 +19,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
-@Slf4j
 public class UserController {
 
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
     // Create a new user
     @PostMapping("/register")
     public ResponseEntity<HttpStatus> createuser(
