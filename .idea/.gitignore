@@ -1,0 +1,17 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+/compiler.xml
+/dataSources.xml
+/encodings.xml
+/intellij-javadocs-4.0.1.xml
+/jarRepositories.xml
+/misc.xml
+/modules.xml
+/sqldialects.xml
+/vcs.xml
