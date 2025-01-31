@@ -4,11 +4,11 @@ spring:
       discovery:
         locator:
           enabled: true
-#      routes:
-#        - id: user-service
-#          uri: lb:http://user-service
-#          predicates:
-#            - Path=/api/v1/users/**
+      routes:
+        - id: user-service
+          uri: lb:http://USER-SERVICE
+          predicates:
+            - Path=/api/v1/user/**
   #
   #        - id: job-post-service
   #          uri: lb:http://JOB-POST-SERVICE

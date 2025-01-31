@@ -1,7 +1,6 @@
 package org.jobspotter.user.service.implementation;
 
 
-import com.fasterxml.jackson.databind.ser.std.StdKeySerializers;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.user.dto.*;
 import org.jobspotter.user.model.User;
+import org.jobspotter.user.model.UserType;
 import org.jobspotter.user.repository.UserRepository;
 import org.jobspotter.user.service.KeyCloakService;
 import org.jobspotter.user.service.UserService;
@@ -43,7 +43,7 @@ public class UserServiceImpl implements UserService {
 
         keyCloakService.createUser(adminToken, keyCloakRegisterRequest);
 
-        String userId = keyCloakService.getUserIDbyEmail(adminToken, userRegisterRequest.getEmail());
+        String userId = keyCloakService.getUserIDbyEmail(userRegisterRequest.getEmail(), adminToken);
 
         User user = User.builder()
                 .userId(UUID.fromString(userId))
@@ -51,7 +51,10 @@ public class UserServiceImpl implements UserService {
                 .email(userRegisterRequest.getEmail())
                 .firstName(userRegisterRequest.getFirstName())
                 .lastName(userRegisterRequest.getLastName())
+                .userType(UserType.USER)
                 .build();
+
+        log.debug("Saving user: {}", user);
 
         userRepository.save(user);
         log.info("User with Id: {} created successfully",userId);
@@ -61,7 +64,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<Object> loginUser(UserLoginRequest userLoginRequest) {
-        return null;
+        return new ResponseEntity<Object>(keyCloakService.loginUser(keyCloakService.getAdminToken(), userLoginRequest), HttpStatus.OK);
     }
 
 }

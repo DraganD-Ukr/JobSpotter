@@ -34,7 +34,7 @@ public class KeyCloakServiceImpl implements KeyCloakService {
     private String clientId;
 
     public String getAdminToken() {
-        String url = "http://localhost:9090/realms/neighborhood-services-realm/protocol/openid-connect/token";
+        String url = "http://localhost:9090/realms/JobSpotter/protocol/openid-connect/token";
 
         // Prepare the form data (application/x-www-form-urlencoded)
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
@@ -50,7 +50,6 @@ public class KeyCloakServiceImpl implements KeyCloakService {
         // Create the HTTP request
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
 
-        log.debug("Keycloak Info: clientId:{}, adminUsername:{}, adminPassword:{}", clientId, adminUsername, adminPassword);
 
         try {
             // Make the POST request
@@ -67,6 +66,8 @@ public class KeyCloakServiceImpl implements KeyCloakService {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(responseBody);
 
+            log.info("Successfully got admin JWT token");
+
             return jsonNode.get("access_token").asText();
         } catch (Exception e) {
             e.printStackTrace();
@@ -75,7 +76,7 @@ public class KeyCloakServiceImpl implements KeyCloakService {
     }
 
     public void createUser(String token, KeyCloakRegisterRequest registerRequest) {
-        String url = "http://localhost:9090/admin/realms/neighborhood-services-realm/users";
+        String url = "http://localhost:9090/admin/realms/JobSpotter/users";
 
         // Set headers
         HttpHeaders headers = new HttpHeaders();
@@ -111,7 +112,7 @@ public class KeyCloakServiceImpl implements KeyCloakService {
 
     public String getUserIDbyEmail(String email, String token) {
         // The base URL for the Keycloak Admin API
-        String url = "http://localhost:9090/admin/realms/neighborhood-services-realm/users";
+        String url = "http://localhost:9090/admin/realms/JobSpotter/users";
 
         // Set the authorization header with the admin JWT token
         HttpHeaders headers = new HttpHeaders();
@@ -151,7 +152,7 @@ public class KeyCloakServiceImpl implements KeyCloakService {
     }
 
     public Object loginUser(String token, UserLoginRequest loginRequest) {
-        String url = "http://localhost:9090/realms/neighborhood-services-realm/protocol/openid-connect/token";
+        String url = "http://localhost:9090/realms/JobSpotter/protocol/openid-connect/token";
         // Prepare the form data (application/x-www-form-urlencoded)
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("client_id", clientId);
