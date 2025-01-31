@@ -3,11 +3,9 @@ package org.jobspotter.user.service.implementation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.user.dto.KeyCloakRegisterRequest;
 import org.jobspotter.user.dto.TokenResponse;
 import org.jobspotter.user.dto.UserLoginRequest;
-import org.jobspotter.user.dto.UserRegisterRequest;
 import org.jobspotter.user.service.KeyCloakService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +15,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
-import reactor.core.publisher.Mono;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -214,5 +213,27 @@ public class KeyCloakServiceImpl implements KeyCloakService {
 
         return responseEntity.getBody();
 
+    }
+
+    @Override
+    public HttpStatus logoutUser(UUID userId) {
+
+        // Set headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(getAdminToken());
+
+        // Make HTTP request
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(headers);
+        ResponseEntity<Void> responseEntity =
+                restTemplate.exchange(
+                        "http://localhost:9090/admin/realms/JobSpotter/users/"+userId.toString()+"/logout",
+                        HttpMethod.POST,
+                        requestEntity,
+                        Void.class);
+
+        log.info("Successfully logged out user");
+
+        return (HttpStatus) responseEntity.getStatusCode();
     }
 }

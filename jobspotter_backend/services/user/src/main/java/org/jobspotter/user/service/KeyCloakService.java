@@ -2,9 +2,9 @@ package org.jobspotter.user.service;
 
 import org.jobspotter.user.dto.KeyCloakRegisterRequest;
 import org.jobspotter.user.dto.UserLoginRequest;
-import reactor.core.publisher.Mono;
+import org.springframework.http.HttpStatus;
 
-import java.nio.channels.FileChannel;
+import java.util.UUID;
 
 
 public interface KeyCloakService {
@@ -18,4 +18,6 @@ public interface KeyCloakService {
     Object loginUser(String token, UserLoginRequest loginRequest);
 
     Object refreshToken(String refreshToken);
+
+    HttpStatus logoutUser(UUID userId);
 }
