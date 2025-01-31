@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Getter
 @AllArgsConstructor
 @Builder
-public class jobPostViewRequest {
+public class JobPostViewRequest {
     String Title;
     String Description;
     LocalDate DatePosted;
