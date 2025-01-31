@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.user.dto.KeyCloakRegisterRequest;
+import org.jobspotter.user.dto.TokenResponse;
 import org.jobspotter.user.dto.UserLoginRequest;
 import org.jobspotter.user.dto.UserRegisterRequest;
 import org.jobspotter.user.service.KeyCloakService;
@@ -16,6 +17,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -188,6 +190,29 @@ public class KeyCloakServiceImpl implements KeyCloakService {
             e.printStackTrace();
             throw new RuntimeException("Failed to login user " + e.getMessage());
         }
+
+    }
+
+    @Override
+    public TokenResponse refreshToken(String refreshToken) {
+        // Prepare request body
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("client_id", clientId);  // No client_secret needed for public client
+        formData.add("grant_type", "refresh_token");
+        formData.add("refresh_token", refreshToken);
+
+        // Set headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        // Make HTTP request
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
+        ResponseEntity<TokenResponse> responseEntity =
+                restTemplate.exchange("http://localhost:9090/realms/JobSpotter/protocol/openid-connect/token", HttpMethod.POST, requestEntity, TokenResponse.class);
+
+        log.info("Successfully refreshed token");
+
+        return responseEntity.getBody();
 
     }
 }
