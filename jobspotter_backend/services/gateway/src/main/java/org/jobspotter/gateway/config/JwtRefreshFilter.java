@@ -49,7 +49,7 @@ public class JwtRefreshFilter implements WebFilter {
     }
 
     private Mono<Void> refreshToken(ServerWebExchange exchange, WebFilterChain chain, String expiredToken) {
-        log.info("Attempting to refresh token: {}", expiredToken);
+        log.debug("Attempting to refresh token: {}", expiredToken);
         log.debug("Cookies: {}", exchange.getRequest().getCookies());
         // Extract the RefreshToken cookie from the incoming request
         String refreshToken = exchange.getRequest().getCookies().getFirst("RefreshToken").getValue();
