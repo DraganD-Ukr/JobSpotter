@@ -7,5 +7,9 @@ import java.util.List;
 public interface JobPostService {
     List<JobPost> getAllJobPosts();
 
-    void createJobPost();
+    List<JobPost> getJobPostByTag(String tag);
+
+    void createJobPostDomainDummyData();
+
+
 }
