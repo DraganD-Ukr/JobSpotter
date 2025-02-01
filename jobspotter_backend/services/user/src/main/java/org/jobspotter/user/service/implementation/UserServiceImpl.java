@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jobspotter.user.authUtils.JWTUtils;
 import org.jobspotter.user.dto.*;
 import org.jobspotter.user.model.User;
 import org.jobspotter.user.model.UserType;
@@ -65,6 +66,50 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<Object> loginUser(UserLoginRequest userLoginRequest) {
         return new ResponseEntity<Object>(keyCloakService.loginUser(keyCloakService.getAdminToken(), userLoginRequest), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<HttpStatus> logoutUser(String accessToken) throws Exception {
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+        HttpStatus status = keyCloakService.logoutUser(userId);
+
+        if (status == HttpStatus.NO_CONTENT) {
+            log.info("User with Id: {} logged out successfully", userId);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } else {
+            log.warn("Failed to log out user with Id: {}", userId);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+
+    }
+
+    @Override
+    public ResponseEntity<UserResponse> getUserById(String accessToken) {
+        User user;
+        try {
+            user = userRepository.findByUserId(JWTUtils.getUserIdFromToken(accessToken));
+        } catch (Exception e) {
+            log.error("Failed to get user details", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>(UserResponse.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .about(user.getAbout())
+                .createdAt(user.getCreatedAt())
+                .lastUpdatedAt(user.getLastUpdatedAt())
+                .userType(user.getUserType())
+                .build(), HttpStatus.OK
+        );
+
     }
 
 }
