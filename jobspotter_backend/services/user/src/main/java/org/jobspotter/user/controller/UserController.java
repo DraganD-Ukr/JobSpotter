@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.jobspotter.user.dto.TokenResponse;
 import org.jobspotter.user.dto.UserLoginRequest;
 import org.jobspotter.user.dto.UserRegisterRequest;
+import org.jobspotter.user.dto.UserResponse;
 import org.jobspotter.user.service.UserService;
 import org.jobspotter.user.service.implementation.KeyCloakServiceImpl;
 import org.slf4j.Logger;
@@ -77,6 +78,15 @@ public class UserController {
 
 
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> myProfile(
+            @RequestHeader("Authorization") String accessToken
+    ) {
+        log.info("Getting user details");
+        return userService.getUserById(accessToken);
+    }
+
 
     private void clearCookie(String name, HttpServletResponse response) {
         Cookie cookie = new Cookie(name, "");
