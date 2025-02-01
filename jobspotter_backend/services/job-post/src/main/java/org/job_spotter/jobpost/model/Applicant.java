@@ -8,6 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -31,7 +32,7 @@ public class Applicant {
 
     // The unique identifier for the user. generated automatically
     @Column(nullable = false)
-    private Long userId;
+    private UUID userId;
 
     //message from the applicant
     @Column(length = 255)

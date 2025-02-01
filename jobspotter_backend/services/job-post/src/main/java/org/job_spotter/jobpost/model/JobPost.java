@@ -9,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -28,7 +29,7 @@ public class JobPost {
     //User who posted the job we get from user service through endpoint
     //request
     @Column(nullable = false, updatable = false)
-    private long jobPosterId;
+    private UUID jobPosterId;
 
     //The tags associated with the job
     @ManyToMany
