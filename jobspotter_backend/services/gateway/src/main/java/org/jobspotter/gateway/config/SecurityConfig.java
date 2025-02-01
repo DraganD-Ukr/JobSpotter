@@ -3,6 +3,7 @@ package org.jobspotter.gateway.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
@@ -31,6 +32,7 @@ public class SecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/api/v1/user/auth/**").permitAll()
                         .pathMatchers("/eureka/**").permitAll()
+                        .pathMatchers( HttpMethod.GET, "api/v1/job-post").permitAll()
                         .anyExchange().authenticated()
                 )
                 .addFilterBefore(JwtRefreshFilter, SecurityWebFiltersOrder.AUTHENTICATION)
