@@ -23,7 +23,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="sticky top-0 z-50 bg-gradient-to-r from-green-500 to-lime-500 p-4 shadow-md">
+    <nav className="sticky top-0 z-50 lava-lamp-background p-4 shadow-md">
       <div className="container mx-auto flex items-center justify-between">
         <a href="/" className="text-white font-bold text-xl">
           JobSpotter
@@ -63,14 +63,19 @@ export default function Navbar() {
         </div>
 
         <ul className="flex gap-4 items-center">
+         <li>
+            <a href="/jobpost" className="bg-yellow-500 px-4 py-1.5 text-white rounded-md hover:bg-yellow-600 duration-200">
+              Job Posts
+            </a>
+          </li>
           <li>
-            <a href="/login" className="bg-green-700 px-4 py-2 text-white rounded-md hover:bg-green-800">
+            <a href="/login" className="bg-green-700 px-4 py-1.5 text-white rounded-md hover:bg-green-800">
               Login
             </a>
           </li>
 
           <li>
-            <a href="/register" className="bg-lime-700 px-4 py-2 text-white rounded-md hover:bg-lime-800">
+            <a href="/register" className="bg-lime-700 px-4 py-1.5 text-white rounded-md hover:bg-lime-800">
               Register
             </a>
           </li>

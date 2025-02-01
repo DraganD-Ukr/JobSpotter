@@ -37,7 +37,7 @@ h1 {
 }
 
 .lava-lamp-background {
-  background: linear-gradient(120deg, #04ebf3, #05e690, #32cd32);
+  background: linear-gradient(120deg, #369d55, #05e690, #32cd32);
   background-size: 400% 400%;
   animation: lavaLampAnimation 10s ease infinite;
 }

@@ -8,6 +8,7 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import {TermsOfService} from "./pages/TermsOfService";
+import { JobPost } from "./pages/JobPost";
 import Profile from "./pages/Profile";
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/privacypolicy" element={<PrivacyPolicy />} />
           <Route path="/termsofservice" element={<TermsOfService />} />
+          <Route path="/jobpost" element={<JobPost />} />
         </Routes>
       </div>
       <Footer />
