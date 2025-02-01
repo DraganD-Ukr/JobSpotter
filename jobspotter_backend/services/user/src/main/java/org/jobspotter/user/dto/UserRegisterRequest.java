@@ -13,7 +13,7 @@ import lombok.Getter;
 public class UserRegisterRequest {
 
     // Note: could have better regex
-    @NotEmpty(message = "username cannot be empty")
+    @NotEmpty(message = "Username cannot be empty")
     @Pattern(regexp = "^[A-Za-z0-9]{4,}$", message = "username must be at least 4 characters long and contain only letters and digits")
     String username;
 
