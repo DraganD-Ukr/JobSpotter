@@ -110,7 +110,7 @@ export function Register() {
         <div className="grid grid-cols-1 md:grid-cols-2">
           
           {/* Left Section */}
-          <div className="hidden md:flex flex-col justify-center items-center p-10 bg-gradient-to-r from-green-500 to-lime-500 text-white rounded-l-2xl">
+          <div className="lava-lamp-background flex flex-col justify-center items-center p-10 text-white rounded-l-2xl">
             <h2 className="text-3xl font-bold">Welcome Back!</h2>
             <p className="mt-2 text-sm">Already have an account?</p>
             <a
