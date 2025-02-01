@@ -5,10 +5,17 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 
+@Getter
 @AllArgsConstructor
 @Builder
 public class UserRegisterRequest {
+
+    // Note: could have better regex
+    @NotEmpty(message = "Username cannot be empty")
+    @Pattern(regexp = "^[A-Za-z0-9]{4,}$", message = "username must be at least 4 characters long and contain only letters and digits")
+    String username;
 
     // Generic validation for names (first and last) - allowing alphabetic characters and spaces
     @NotEmpty(message = "First name cannot be empty")
