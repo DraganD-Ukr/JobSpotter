@@ -86,4 +86,30 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
+    public ResponseEntity<UserResponse> getUserById(String accessToken) {
+        User user;
+        try {
+            user = userRepository.findByUserId(JWTUtils.getUserIdFromToken(accessToken));
+        } catch (Exception e) {
+            log.error("Failed to get user details", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>(UserResponse.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .about(user.getAbout())
+                .createdAt(user.getCreatedAt())
+                .lastUpdatedAt(user.getLastUpdatedAt())
+                .userType(user.getUserType())
+                .build(), HttpStatus.OK
+        );
+
+    }
+
 }
