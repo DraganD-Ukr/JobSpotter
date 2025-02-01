@@ -98,14 +98,14 @@ export function Register() {
       [name]: fieldValue,
     }));
 
-    // Validate the changed field and update errors
+    // Validates the changed field and update errors
     const errorMessage = validateField(name, fieldValue);
     setErrors((prevErrors) => ({
       ...prevErrors,
       [name]: errorMessage,
     }));
 
-    // Check overall form validity
+    // Checks overall form validity
     checkFormValidity({ ...formValues, [name]: fieldValue });
   };
 
@@ -142,7 +142,7 @@ export function Register() {
             setRegistrationSuccessful(true);
           } else {
             // In case the API returns a different success status,
-            // you can add extra handling here if needed.
+      
             const data = await response.json();
             console.log("User registered successfully:", data);
           }
@@ -176,14 +176,16 @@ export function Register() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white shadow-lg rounded-2xl overflow-hidden w-4/5 max-w-3xl">
         <div className="grid grid-cols-1 md:grid-cols-2">
+
           {/* Left Section */}
-          <div className="hidden md:flex flex-col justify-center items-center p-10 bg-gradient-to-r from-green-500 to-lime-500 text-white rounded-l-2xl">
+          <div className="hidden md:flex flex-col justify-center items-center p-10 lava-lamp-background rounded-l-2xl">
           </div>
 
           {/* Right Section */}
           <div className="p-10">
             {registrationSuccessful ? (
-              // Registration Successful: Show success message and proceed button
+              
+              // Registration Successful will show success message and proceed button
               <div className="text-center">
                 <h2 className="text-3xl font-bold text-gray-800 mb-6">
                   Registration Successful!
