@@ -15,7 +15,7 @@ public class UserLoginRequest {
 
     // Note: could have better regex
     @NotBlank(message = "Username cannot be empty")
-    @Pattern(regexp = "^[A-Za-z0-9]{4,}$", message = "Username must be at least 4 characters long and contain only letters and digits")
+    @Pattern(regexp = "^[a-zA-ZáéíóúÁÉÍÓÚ0-9_'-]{4,20}$", message = "Username must be at least 4 characters long and contain only letters and digits")
     String username;
 
     // Simplified password validation - just check for general format
