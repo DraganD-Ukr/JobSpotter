@@ -19,17 +19,19 @@ public class AddressRequest {
 
     @NotBlank(message = "Street address cannot be blank")
     @Size(min = 5, max = 100, message = "Street address must be between 5 and 100 characters")
+    @Pattern(regexp = "^[a-zA-ZÁÉÍÓÚáéíóú0-9' -]+$", message = "Only letters, numbers, spaces, hyphens, and apostrophes are allowed")
     private String streetAddress;
 
     @NotBlank(message = "City cannot be blank")
     @Size(min = 2, max = 50, message = "City name must be between 2 and 50 characters")
+    @Pattern(regexp = "^[a-zA-ZÁÉÍÓÚáéíóú' -]+$", message = "Only letters, spaces, hyphens, and apostrophes are allowed")
     private String city;
 
     @Enumerated(EnumType.STRING)
     @NotNull(message = "County is required")
     private County county;
 
-    @Pattern(regexp = "^[A-Za-z0-9]{3} ?[A-Za-z0-9]{4}$", message = "Invalid eir code format")
+    @Pattern(regexp = "^[A-Z0-9]{3} [A-Z0-9]{4}$", message = "Invalid eir code format")
     private String eirCode;
 
     @Enumerated(EnumType.STRING)
