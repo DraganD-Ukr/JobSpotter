@@ -177,8 +177,8 @@ public class GlobalExceptionHandler {
      * @param e UnauthorizedException
      * @return ResponseEntity with the error message.
      */
-    @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException e) {
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenException(ForbiddenException e) {
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
                 "FORBIDDEN",
@@ -186,6 +186,22 @@ public class GlobalExceptionHandler {
                 e.getMessage()
         );
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
+    /**
+     * Handles UnauthorizedException. Thrown when valid authentication credentials were not provided to access the resource.
+     * @param e UnauthorizedException
+     * @return ResponseEntity with the error message.
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException e) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                "FORBIDDEN",
+                HttpStatus.UNAUTHORIZED.value(),
+                e.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 
     /**

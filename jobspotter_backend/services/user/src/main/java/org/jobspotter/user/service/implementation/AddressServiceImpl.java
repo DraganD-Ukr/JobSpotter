@@ -2,9 +2,9 @@ package org.jobspotter.user.service.implementation;
 
 import lombok.RequiredArgsConstructor;
 import org.jobspotter.user.dto.AddressRequest;
+import org.jobspotter.user.exception.ForbiddenException;
 import org.jobspotter.user.exception.ResourceAlreadyExistsException;
 import org.jobspotter.user.exception.ResourceNotFoundException;
-import org.jobspotter.user.exception.UnauthorizedException;
 import org.jobspotter.user.model.Address;
 import org.jobspotter.user.model.AddressType;
 import org.jobspotter.user.model.County;
@@ -101,11 +101,11 @@ public class AddressServiceImpl implements AddressService {
 
         if (user==null) {
             log.warn("User not found with ID {}", userId);
-            throw new ResourceNotFoundException("User not found with id: " + userId);
+            throw new ResourceNotFoundException("User does not exist");
 
-        } else if(user.getUserId()!=userId) {
+        } else if(!user.getUserId().equals(userId)) {
             log.warn("User with ID {} not authorized to delete address with id {}", userId, addressId);
-            throw new UnauthorizedException("User with id "+ userId +" not authorized to delete address with id " + addressId);
+            throw new ForbiddenException("User not authorized to delete the address");
 
         } else {
             addressRepository.delete(address);
