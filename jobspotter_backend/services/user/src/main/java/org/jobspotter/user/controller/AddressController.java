@@ -30,5 +30,16 @@ public class AddressController {
         return addressService.createAddress(userId, addressRequest);
     }
 
+    @DeleteMapping("/{addressId}")
+    public ResponseEntity<HttpStatus> deleteAddress(
+            @RequestHeader("Authorization") String accessToken,
+            @PathVariable Long addressId
+    ) throws Exception {
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+        return addressService.deleteAddress(userId, addressId);
+    }
+
 
 }

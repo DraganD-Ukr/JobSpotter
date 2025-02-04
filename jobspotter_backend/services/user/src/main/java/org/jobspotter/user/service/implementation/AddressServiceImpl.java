@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.jobspotter.user.dto.AddressRequest;
 import org.jobspotter.user.exception.ResourceAlreadyExistsException;
 import org.jobspotter.user.exception.ResourceNotFoundException;
+import org.jobspotter.user.exception.UnauthorizedException;
 import org.jobspotter.user.model.Address;
 import org.jobspotter.user.model.AddressType;
 import org.jobspotter.user.model.County;
@@ -12,6 +13,8 @@ import org.jobspotter.user.repository.AddressRepository;
 import org.jobspotter.user.repository.UserRepository;
 import org.jobspotter.user.service.AddressService;
 import org.jobspotter.user.service.GeoCodingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AddressServiceImpl implements AddressService {
 
+    private static final Logger log = LoggerFactory.getLogger(AddressServiceImpl.class);
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
     private final GeoCodingService geoCodingService;
@@ -82,6 +86,32 @@ public class AddressServiceImpl implements AddressService {
         addressRepository.save(address);
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
+
+    }
+
+    @Override
+    public ResponseEntity<HttpStatus> deleteAddress(UUID userId, Long addressId) {
+
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Address not found with id: " + addressId)
+                );
+
+        User user = address.getUser();
+
+        if (user==null) {
+            log.warn("User not found with ID {}", userId);
+            throw new ResourceNotFoundException("User not found with id: " + userId);
+
+        } else if(user.getUserId()!=userId) {
+            log.warn("User with ID {} not authorized to delete address with id {}", userId, addressId);
+            throw new UnauthorizedException("User with id "+ userId +" not authorized to delete address with id " + addressId);
+
+        } else {
+            addressRepository.delete(address);
+            log.info("Address with ID {} deleted successfully", addressId);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
 
     }
 

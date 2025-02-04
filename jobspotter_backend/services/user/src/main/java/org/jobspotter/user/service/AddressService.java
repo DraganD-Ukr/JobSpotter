@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public interface AddressService {
 
-    public ResponseEntity<HttpStatus> createAddress(UUID userId, AddressRequest addressRequest);
+    ResponseEntity<HttpStatus> createAddress(UUID userId, AddressRequest addressRequest);
 
+    ResponseEntity<HttpStatus> deleteAddress(UUID userId, Long addressId);
 }
