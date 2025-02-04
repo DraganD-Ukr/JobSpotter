@@ -50,6 +50,7 @@ public class Address {
      * The county of the address.
      */
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private County county;
 
     /**
@@ -81,6 +82,6 @@ public class Address {
      * The default address boolean of the user.
      */
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private boolean isDefault = false;
+    private boolean isDefault;
 
 }

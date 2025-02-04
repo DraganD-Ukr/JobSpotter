@@ -8,7 +8,7 @@ spring:
         - id: user-service
           uri: lb:http://USER-SERVICE
           predicates:
-            - Path=/api/v1/user/**
+            - Path=/api/v1/users/**
 
         - id: job-post-service
           uri: lb:http://JOB-POST-SERVICE

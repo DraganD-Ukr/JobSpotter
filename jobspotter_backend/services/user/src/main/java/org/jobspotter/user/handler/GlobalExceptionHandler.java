@@ -1,10 +1,6 @@
 package org.jobspotter.user.handler;
 
-import org.jobspotter.user.exception.InvalidCredentialsException;
-import org.jobspotter.user.exception.InvalidRequestException;
-import org.jobspotter.user.exception.ResourceNotFoundException;
-import org.jobspotter.user.exception.ServerException;
-import org.jobspotter.user.exception.UnauthorizedException;
+import org.jobspotter.user.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -66,6 +62,14 @@ public class GlobalExceptionHandler {
         Map<String, String> response = new HashMap<>();
         response.put("message", e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<Object> handleResourceAlreadyExistsException(ResourceAlreadyExistsException e) {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(response);
     }
 
