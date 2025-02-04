@@ -12,7 +12,8 @@ import java.util.UUID;
 @Repository
 public interface JobPostRepository extends JpaRepository<JobPost ,UUID> {
 
-    @Query("SELECT jp FROM JobPost jp JOIN jp.tags t WHERE t.name = :tagName")
-    List<JobPost> findByTagName(@Param("tagName") String tagName);
+    @Query("SELECT jp FROM JobPost jp JOIN jp.tags t WHERE t.name = :name")
+    List<JobPost> findAllByTags_Name(@Param("name") String name);
+
 
 }

@@ -1,5 +1,6 @@
 package org.job_spotter.jobpost.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +21,7 @@ public class Tag {
     private Long tagId;
 
     //Many to many relationship with job post
+    @JsonIgnore
     @ManyToMany(mappedBy = "tags")
     private Set<JobPost> jobPosts = new HashSet<>();
 

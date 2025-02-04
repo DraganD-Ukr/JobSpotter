@@ -32,7 +32,7 @@ public class SecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/api/v1/user/auth/**").permitAll()
                         .pathMatchers("/eureka/**").permitAll()
-                        .pathMatchers( HttpMethod.GET, "api/v1/job-post").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/v1/job-post").permitAll()
                         .anyExchange().authenticated()
                 )
                 .addFilterBefore(JwtRefreshFilter, SecurityWebFiltersOrder.AUTHENTICATION)

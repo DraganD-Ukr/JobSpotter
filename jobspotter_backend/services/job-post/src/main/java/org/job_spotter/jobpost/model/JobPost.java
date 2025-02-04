@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Data
+
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -32,7 +32,8 @@ public class JobPost {
     private UUID jobPosterId;
 
     //The tags associated with the job
-    @ManyToMany
+
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "jobpost_tag", // Name of the join table
             joinColumns = @JoinColumn(name = "jobPostId"), // Foreign key column for JobPost

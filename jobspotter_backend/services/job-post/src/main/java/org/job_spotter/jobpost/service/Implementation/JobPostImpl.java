@@ -25,7 +25,7 @@ public class JobPostImpl implements JobPostService {
 
     @Override
     public List<JobPost> getJobPostByTag(String tag) {
-        return jobPostRepository.findByTagName(tag);
+        return jobPostRepository.findAllByTags_Name(tag);
     }
 
 
