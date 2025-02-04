@@ -1,5 +1,6 @@
 package org.jobspotter.user.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
@@ -9,6 +10,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.jobspotter.user.dto.deserializer.CountyDeserializer;
 import org.jobspotter.user.model.AddressType;
 import org.jobspotter.user.model.County;
 
@@ -29,6 +31,7 @@ public class AddressRequest {
 
     @Enumerated(EnumType.STRING)
     @NotNull(message = "County is required")
+    @JsonDeserialize(using = CountyDeserializer.class)
     private County county;
 
     @Pattern(regexp = "^[A-Z0-9]{3} [A-Z0-9]{4}$", message = "Invalid eir code format")
