@@ -49,15 +49,6 @@ public class AddressServiceImpl implements AddressService {
             throw new ResourceAlreadyExistsException("Address limit exceeded: user with id " + userId + " already has 5 addresses. Remove an address to add a new one.");
         }
 
-//        Or if user already has an address with type HOME
-        if (addressRequest.getAddressType().equals(AddressType.HOME)) {
-            addresses.stream().forEach(address -> {
-                if (address.getAddressType().equals(AddressType.HOME)) {
-                    throw new ResourceAlreadyExistsException("Address with type HOME already exists");
-                }
-            });
-        }
-
 //        Format address to a single string
         String fullAddress =  formatAddress(
                 addressRequest.getStreetAddress(),
@@ -66,24 +57,29 @@ public class AddressServiceImpl implements AddressService {
                 addressRequest.getEirCode()
         );
 
-//        Get coordinates from address
-        Map<String, Double> coordinates = geoCodingService.getCoordinates(fullAddress);
-
-        Double lat = coordinates.get("lat");
-        Double lng = coordinates.get("lng");
-
 //        Set the address object
         Address address = Address.builder()
-                .user(user)
                 .address(fullAddress)
                 .streetAddress(addressRequest.getStreetAddress())
                 .city(addressRequest.getCity())
                 .county(addressRequest.getCounty())
                 .eirCode(addressRequest.getEirCode())
                 .addressType(addressRequest.getAddressType())
-                .latitude(lat)
-                .longitude(lng)
+                .isDefault(addressRequest.isDefault())
+                .user(user)
                 .build();
+
+//        Or if user already has an address with type HOME or duplicate address
+        hasDuplicateOrHomeConflict(addresses, address);
+
+
+
+//        Get coordinates from address
+        Map<String, Double> coordinates = geoCodingService.getCoordinates(fullAddress);
+
+        Double lat = coordinates.get("lat");
+        Double lng = coordinates.get("lng");
+
 
 
 //          Save the address
