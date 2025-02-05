@@ -24,6 +24,8 @@ public class JWTUtils {
     public void init() {
         keycloakPublicKey = System.getenv("KEYCLOAK_PUBLIC_KEY");
     }
+
+
     private static PublicKey getPublicKey() throws Exception {
 
         // Decode the base64 encoded public key

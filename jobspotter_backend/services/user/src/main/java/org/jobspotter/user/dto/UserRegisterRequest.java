@@ -14,16 +14,16 @@ public class UserRegisterRequest {
 
     // Note: could have better regex
     @NotEmpty(message = "Username cannot be empty")
-    @Pattern(regexp = "^[A-Za-z0-9]{4,}$", message = "username must be at least 4 characters long and contain only letters and digits")
+    @Pattern(regexp = "^[a-zA-ZáéíóúÁÉÍÓÚ0-9_'-]{4,20}$", message = "Username must be at least 4 characters long and contain only letters and digits")
     String username;
 
-    // Generic validation for names (first and last) - allowing alphabetic characters and spaces
+
     @NotEmpty(message = "First name cannot be empty")
-    @Pattern(regexp = "^[A-Za-z ]+$", message = "First name can only contain letters and spaces")
+    @Pattern(regexp = "^\\p{L}[\\p{L}'-]+$", message = "First name can only contain letters, spaces, apostrophes, and hyphens")
     String firstName;
 
     @NotEmpty(message = "Last name cannot be empty")
-    @Pattern(regexp = "^[A-Za-z ]+$", message = "Last name can only contain letters and spaces")
+    @Pattern(regexp = "^\\p{L}[\\p{L}'-]+$", message = "Last name can only contain letters, spaces, apostrophes, and hyphens")
     String lastName;
 
     // Simplified password validation - just check for general format
@@ -33,6 +33,6 @@ public class UserRegisterRequest {
 
     // Email validation
     @NotEmpty(message = "Email cannot be empty")
-    @Email(message = "Invalid email format")
+    @Pattern(regexp = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$", message = "Invalid email format. Correct format: test@domain.example")
     String email;
 }

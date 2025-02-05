@@ -1,5 +1,9 @@
 package org.jobspotter.user.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.jobspotter.user.dto.deserializer.CountyDeserializer;
+
+@JsonDeserialize(using = CountyDeserializer.class)
 public enum County {
     Carlow,
     Cavan,

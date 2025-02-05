@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.user.authUtils.JWTUtils;
 import org.jobspotter.user.dto.*;
+import org.jobspotter.user.exception.ResourceAlreadyExistsException;
 import org.jobspotter.user.model.User;
 import org.jobspotter.user.model.UserType;
 import org.jobspotter.user.repository.UserRepository;
@@ -28,7 +29,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<HttpStatus> registerUser(UserRegisterRequest userRegisterRequest) throws Exception {
         if (userRepository.existsByUsernameAndEmail(userRegisterRequest.getUsername(), userRegisterRequest.getEmail())) {
-            throw new Exception("User already exists");
+            throw new ResourceAlreadyExistsException("User already exists");
         }
 
         String adminToken = keyCloakService.getAdminToken();
