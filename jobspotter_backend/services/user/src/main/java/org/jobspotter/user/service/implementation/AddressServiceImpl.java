@@ -1,6 +1,7 @@
 package org.jobspotter.user.service.implementation;
 
 import lombok.RequiredArgsConstructor;
+import org.jobspotter.user.dto.AddressPatchRequest;
 import org.jobspotter.user.dto.AddressRequest;
 import org.jobspotter.user.exception.ForbiddenException;
 import org.jobspotter.user.exception.ResourceAlreadyExistsException;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -36,8 +38,10 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public ResponseEntity<HttpStatus> createAddress(UUID userId, AddressRequest addressRequest) {
 
+//        TODO: Check for duplicate addresses
 //        Check if user exists
-        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
 //        Check if user already has 5 addresses
         List<Address> addresses = addressRepository.findAllByUser(user);
@@ -115,9 +119,179 @@ public class AddressServiceImpl implements AddressService {
 
     }
 
+    @Override
+    public ResponseEntity<?> updateAddress(UUID userId, Long addressId, AddressPatchRequest addressRequest) {
+
+
+        log.info("Updating address with ID {}", addressId);
+
+//        Try to find the user, else throw an exception
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    log.warn("User not found with ID: {}", userId);
+                    return new ResourceNotFoundException("User not found with id: " + userId);
+                });
+
+
+//        Get all addresses of the user
+        List<Address> userAddresses = addressRepository.findAllByUser(user);
+
+//        Find the address to be updated
+        Optional<Address> address = userAddresses.stream()
+                .filter(curAdr -> curAdr.getAddressId().equals(addressId))
+                .findFirst();
+
+//        Check if address is not empty(wrapped in Optional)
+        if (address.isEmpty()) {
+            log.warn("Address not found with ID {}", addressId);
+            throw new ResourceNotFoundException("Address not found with id: " + addressId);
+        }
+
+        log.info("Address found with ID {}", addressId);
+
+        Address unwrappedAddress = address.get();
+//        Unwrap the optional
+        Address addressToBeUpdated = new Address(
+                unwrappedAddress.getAddressId(),
+                unwrappedAddress.getUser(),
+                unwrappedAddress.getAddress(),
+                unwrappedAddress.getStreetAddress(),
+                unwrappedAddress.getCity(),
+                unwrappedAddress.getCounty(),
+                unwrappedAddress.getEirCode(),
+                unwrappedAddress.getLongitude(),
+                unwrappedAddress.getLatitude(),
+                unwrappedAddress.getAddressType(),
+                unwrappedAddress.isDefault()
+        ) ;
+
+
+//        Check if user exists and is authorized to update the address
+         if(!user.getUserId().equals(userId)){
+            log.warn("User with ID {} not authorized to update address with id {}", userId, addressId);
+            throw new ForbiddenException("User not authorized to update the address");
+         }
+
+
+        if (updateAddressFields(addressRequest, addressToBeUpdated)){
+
+//            Check for duplicate or HOME conflict
+            hasDuplicateOrHomeConflict(userAddresses, addressToBeUpdated);
+
+//            Update coordinates
+            Map<String, Double> coordinates = geoCodingService.getCoordinates(addressToBeUpdated.getAddress());
+            addressToBeUpdated.setLatitude(coordinates.get("lat"));
+            addressToBeUpdated.setLongitude(coordinates.get("lng"));
+
+//            Save the updated address
+            addressRepository.save(addressToBeUpdated);
+            log.info("Address with ID {} updated successfully", addressId);
+
+        } else {
+            log.info("No changes detected in address with ID {}", addressId);
+            return ResponseEntity.ok("No changes detected in the address");
+        }
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+
+    }
+
+
+
+
+//    ------------------------------------------ Helper methods ----------------------------------------
+
+    /**
+     * Check if the user already has an address with type HOME or if the full address is a duplicate
+     * @param addresses
+     * @param addressToUpdate
+     * @return
+     */
+    private boolean hasDuplicateOrHomeConflict(List<Address> addresses, Address addressToUpdate) {
+
+        for(Address currAdr : addresses) {
+            if (addressToUpdate.getAddressType().equals(AddressType.HOME)
+                    && currAdr.getAddressType().equals(AddressType.HOME)) {
+                throw new ResourceAlreadyExistsException("User already has an address with type HOME");
+            }
+            if (currAdr.getAddress().equals(addressToUpdate.getAddress())) {
+                throw new ResourceAlreadyExistsException("Duplicate address found, please provide a different address");
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Update the address fields if they are different
+     * @param addressPatchRequest Patch request of address
+     * @param address Address to be updated
+     * @return true if any of the fields are updated, false otherwise
+     */
+    private boolean updateAddressFields(AddressPatchRequest addressPatchRequest, Address address) {
+
+        boolean isUpdated = false;
+        boolean toUpdateCoordinates = false;
+
+
+        // Compare and update fields if they are different
+        if (addressPatchRequest.getStreetAddress() != null
+                && !addressPatchRequest.getStreetAddress().equals(address.getStreetAddress())) {
+            address.setStreetAddress(addressPatchRequest.getStreetAddress());
+            isUpdated = true;
+            toUpdateCoordinates = true;
+        }
+        if (addressPatchRequest.getCity() != null
+                && !addressPatchRequest.getCity().equals(address.getCity())) {
+            address.setCity(addressPatchRequest.getCity());
+            isUpdated = true;
+            toUpdateCoordinates = true;
+        }
+        if (addressPatchRequest.getCounty() != null
+                && !addressPatchRequest.getCounty().equals(address.getCounty())) {
+            address.setCounty(addressPatchRequest.getCounty());
+            isUpdated = true;
+            toUpdateCoordinates = true;
+        }
+        if (addressPatchRequest.getEirCode() != null
+                && !addressPatchRequest.getEirCode().equals(address.getEirCode())) {
+            address.setEirCode(addressPatchRequest.getEirCode());
+            isUpdated = true;
+            toUpdateCoordinates = true;
+        }
+        if (addressPatchRequest.getAddressType() != null
+                && !addressPatchRequest.getAddressType().equals(address.getAddressType())) {
+            address.setAddressType(addressPatchRequest.getAddressType());
+            isUpdated = true;
+        }
+        if (addressPatchRequest.isDefault() != address.isDefault()) {
+            address.setDefault(addressPatchRequest.isDefault());
+            isUpdated = true;
+        }
+
+//        Update coordinates if any of the address related fields are updated
+        if (toUpdateCoordinates) {
+            address.setAddress(
+                    formatAddress(
+                            address.getStreetAddress(),
+                            address.getCity(),
+                            address.getCounty(),
+                            address.getEirCode()
+                    ));
+        }
+
+        return isUpdated;
+    }
+
+    /**
+     * Format the address to a single string with a ',' separator
+     * @param strAdr Street address
+     * @param city City
+     * @param county County
+     * @param eirCode Eircode
+     * @return Formatted address. E.g. "123 Main St, Dublin, Dublin, D01 F2E3"
+     */
     private String formatAddress(String strAdr, String city, County county, String eirCode) {
         return strAdr + ", " + city + ", " + county.toString() + ", " + eirCode;
     }
-
 
 }

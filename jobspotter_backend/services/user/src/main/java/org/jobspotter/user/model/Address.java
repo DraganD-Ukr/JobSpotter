@@ -12,6 +12,7 @@ import lombok.*;
 @Setter
 @Entity
 @Table(name = "addresses")
+@EqualsAndHashCode
 public class Address {
 
     /**
@@ -19,6 +20,7 @@ public class Address {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Exclude
     private Long addressId;
 
     /**
@@ -62,12 +64,14 @@ public class Address {
     /**
      * The latitude of the address.
      */
+    @EqualsAndHashCode.Exclude
     @Column
     private Double latitude;
 
     /**
      * The longitude of the address.
      */
+    @EqualsAndHashCode.Exclude
     @Column
     private Double longitude;
 

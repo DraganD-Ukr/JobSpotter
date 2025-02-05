@@ -3,6 +3,7 @@ package org.jobspotter.user.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.jobspotter.user.authUtils.JWTUtils;
+import org.jobspotter.user.dto.AddressPatchRequest;
 import org.jobspotter.user.dto.AddressRequest;
 import org.jobspotter.user.service.AddressService;
 import org.springframework.http.HttpStatus;
@@ -41,5 +42,17 @@ public class AddressController {
         return addressService.deleteAddress(userId, addressId);
     }
 
+
+    @PatchMapping("/{addressId}")
+    public ResponseEntity<?> updateAddress(
+            @RequestHeader("Authorization") String accessToken,
+            @PathVariable Long addressId,
+            @RequestBody @Valid AddressPatchRequest addressRequest
+    ) throws Exception {
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+        return addressService.updateAddress(userId, addressId, addressRequest);
+    }
 
 }
