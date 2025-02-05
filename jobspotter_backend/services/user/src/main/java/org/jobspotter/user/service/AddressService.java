@@ -14,4 +14,6 @@ public interface AddressService {
     ResponseEntity<HttpStatus> deleteAddress(UUID userId, Long addressId);
 
     ResponseEntity<?> updateAddress(UUID userId, Long addressId, AddressPatchRequest addressRequest);
+
+    ResponseEntity<?> getAddressById(UUID userId, Long addressId);
 }

@@ -192,6 +192,28 @@ public class AddressServiceImpl implements AddressService {
 
     }
 
+    @Override
+    public ResponseEntity<?> getAddressById(UUID userId, Long addressId) {
+
+        log.info("Fetching address with ID {}", addressId);
+
+
+        Address address = addressRepository.findById(addressId).orElseThrow(() -> {
+            log.warn("Address not found with ID {}", addressId);
+            return new ResourceNotFoundException("Address not found with id: " + addressId);
+        });
+
+        if (address.getUser() == null) {
+            log.warn("User not found with ID {}", userId);
+            throw new ResourceNotFoundException("User does not exist");
+        }
+        if(!address.getUser().getUserId().equals(userId)){
+            log.warn("User with ID {} not authorized to get address with id {}", userId, addressId);
+            throw new ForbiddenException("User not authorized to get the address");
+        }
+
+        return ResponseEntity.ok(address);
+    }
 
 
 

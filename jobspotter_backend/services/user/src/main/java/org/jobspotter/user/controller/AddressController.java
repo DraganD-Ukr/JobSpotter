@@ -55,4 +55,14 @@ public class AddressController {
         return addressService.updateAddress(userId, addressId, addressRequest);
     }
 
+    @GetMapping("/{addressId}")
+    public ResponseEntity<?> getAddress(
+            @RequestHeader("Authorization") String accessToken,
+            @PathVariable Long addressId
+    ) throws Exception {
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+        return addressService.getAddressById(userId, addressId);
+    }
 }
