@@ -3,6 +3,7 @@ package org.jobspotter.user.service.implementation;
 import lombok.RequiredArgsConstructor;
 import org.jobspotter.user.dto.AddressPatchRequest;
 import org.jobspotter.user.dto.AddressRequest;
+import org.jobspotter.user.dto.AddressResponse;
 import org.jobspotter.user.exception.ForbiddenException;
 import org.jobspotter.user.exception.ResourceAlreadyExistsException;
 import org.jobspotter.user.exception.ResourceNotFoundException;
@@ -193,7 +194,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public ResponseEntity<?> getAddressById(UUID userId, Long addressId) {
+    public ResponseEntity<AddressResponse> getAddressById(UUID userId, Long addressId) {
 
         log.info("Fetching address with ID {}", addressId);
 
@@ -212,9 +213,51 @@ public class AddressServiceImpl implements AddressService {
             throw new ForbiddenException("User not authorized to get the address");
         }
 
-        return ResponseEntity.ok(address);
+        return ResponseEntity.ok(AddressResponse.builder()
+                .addressId(address.getAddressId())
+                .userId(address.getUser().getUserId())
+                .address(address.getAddress())
+                .streetAddress(address.getStreetAddress())
+                .city(address.getCity())
+                .county(address.getCounty())
+                .eirCode(address.getEirCode())
+                .latitude(address.getLatitude())
+                .longitude(address.getLongitude())
+                .addressType(address.getAddressType())
+                .isDefault(address.isDefault())
+                .build());
     }
 
+    @Override
+    public ResponseEntity<List<AddressResponse>> getAllAddresses(UUID userId) {
+
+
+        User user = userRepository.findById(userId)
+                .orElseThrow( () -> new ResourceNotFoundException("User with id " + userId + " not found"));
+
+
+        List<Address> addresses = addressRepository.findAllByUser(user);
+
+        return ResponseEntity.ok(
+                addresses.stream()
+                        .map(address -> AddressResponse.builder()
+                                .addressId(address.getAddressId())
+                                .userId(address.getUser().getUserId())
+                                .address(address.getAddress())
+                                .streetAddress(address.getStreetAddress())
+                                .city(address.getCity())
+                                .county(address.getCounty())
+                                .eirCode(address.getEirCode())
+                                .latitude(address.getLatitude())
+                                .longitude(address.getLongitude())
+                                .addressType(address.getAddressType())
+                                .isDefault(address.isDefault())
+                                .build()
+                        )
+                        .toList()
+        );
+
+    }
 
 
 //    ------------------------------------------ Helper methods ----------------------------------------
