@@ -1,6 +1,7 @@
 package org.jobspotter.user.service.implementation;
 
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,7 +29,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public ResponseEntity<HttpStatus> registerUser(UserRegisterRequest userRegisterRequest) throws Exception {
+    public ResponseEntity<HttpStatus> registerUser(UserRegisterRequest userRegisterRequest) {
         if (userRepository.existsByUsernameAndEmail(userRegisterRequest.getUsername(), userRegisterRequest.getEmail())) {
             throw new ResourceAlreadyExistsException("User already exists");
         }
@@ -121,6 +122,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow( () -> new ResourceNotFoundException("User with id " + userId + " not found"));
 
         if (!updateUserFromPatch(user, userPatchRequest)) {
+            log.info("Request to update user with id: {} was successful, however no changes detected", userId);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
 
@@ -135,7 +137,7 @@ public class UserServiceImpl implements UserService {
                 .phoneNumber(user.getPhoneNumber())
                 .about(user.getAbout())
                 .createdAt(user.getCreatedAt())
-                .lastUpdatedAt(user.getLastUpdatedAt())
+                .lastUpdatedAt(LocalDateTime.now())
                 .userType(user.getUserType())
                 .build()
         );
@@ -144,31 +146,43 @@ public class UserServiceImpl implements UserService {
 
     private boolean updateUserFromPatch(User user, UserPatchRequest userPatchRequest){
         boolean updated = false;
+        boolean toUpdateKeycloak = false;
 
-        if (userPatchRequest.getFirstName() != null && !user.getFirstName().equals(userPatchRequest.getFirstName())) {
+        KeycloakUserPutRequest keycloakUserPutRequest = new KeycloakUserPutRequest();
+
+        if (userPatchRequest.getFirstName() != null && !userPatchRequest.getFirstName().equals(user.getFirstName())) {
             user.setFirstName(userPatchRequest.getFirstName());
+            toUpdateKeycloak = true;
             updated = true;
         }
 
-        if (userPatchRequest.getLastName() != null && !user.getLastName().equals(userPatchRequest.getLastName())) {
+        if (userPatchRequest.getLastName() != null && !userPatchRequest.getLastName().equals(user.getLastName())) {
             user.setLastName(userPatchRequest.getLastName());
+            toUpdateKeycloak = true;
             updated = true;
         }
 
-        if (userPatchRequest.getEmail() != null && !user.getEmail().equals(userPatchRequest.getEmail())) {
-//            TODO: Update email in Keycloak
+        if (userPatchRequest.getEmail() != null && !userPatchRequest.getEmail().equals(user.getEmail())) {
             user.setEmail(userPatchRequest.getEmail());
+            toUpdateKeycloak = true;
             updated = true;
         }
 
-        if (userPatchRequest.getPhoneNumber() != null && !user.getPhoneNumber().equals(userPatchRequest.getPhoneNumber())) {
+        if (userPatchRequest.getPhoneNumber() != null && !userPatchRequest.getPhoneNumber().equals(user.getPhoneNumber())) {
             user.setPhoneNumber(userPatchRequest.getPhoneNumber());
             updated = true;
         }
 
-        if (userPatchRequest.getAbout() != null && !user.getAbout().equals(userPatchRequest.getAbout())) {
+        if (userPatchRequest.getAbout() != null && !userPatchRequest.getAbout().equals(user.getAbout())) {
             user.setAbout(userPatchRequest.getAbout());
             updated = true;
+        }
+
+        if (toUpdateKeycloak) {
+            keycloakUserPutRequest.setFirstName(user.getFirstName());
+            keycloakUserPutRequest.setLastName(user.getLastName());
+            keycloakUserPutRequest.setEmail(user.getEmail());
+            keyCloakService.updateUser(keycloakUserPutRequest, user.getUserId());
         }
 
         return updated;

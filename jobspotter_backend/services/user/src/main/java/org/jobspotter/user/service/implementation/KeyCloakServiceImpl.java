@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.jobspotter.user.dto.KeyCloakRegisterRequest;
+import org.jobspotter.user.dto.KeycloakUserPutRequest;
 import org.jobspotter.user.dto.TokenResponse;
 import org.jobspotter.user.dto.UserLoginRequest;
 import org.jobspotter.user.exception.InvalidCredentialsException;
@@ -21,6 +22,8 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -333,7 +336,7 @@ public class KeyCloakServiceImpl implements KeyCloakService {
                 throw new ServerException("Authentication service is unavailable. Please try again later.");
 
             } else {
-                log.error("Unexpected error while logging out user with ID {}: {}", userId, e.getStatusCode(), e.getResponseBodyAsString());
+                log.error("Unexpected error while logging out user with ID {}: {}, {}", userId, e.getStatusCode(), e.getResponseBodyAsString());
                 throw new ServerException("Failed to log out user. Please try again.");
             }
 
@@ -342,5 +345,78 @@ public class KeyCloakServiceImpl implements KeyCloakService {
             throw new ServerException("Something went wrong during logout. Please try again.");
         }
     }
+
+    @Override
+    public HttpStatus updateUser(KeycloakUserPutRequest userPutRequest, UUID userId) {
+
+        log.info("Attempting update user in Keycloak with ID: {}", userId);
+
+        String url = localHostPrefixUrl+"/admin/realms/JobSpotter/users/" + userId.toString();
+
+        Map<String, String> reqBody = reqBodyFromUserPutRequest(userPutRequest);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(getAdminToken());
+
+        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(reqBody, headers);
+
+        try {
+            ResponseEntity<HttpStatus> responseEntity =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.PUT,
+                            requestEntity,
+                            HttpStatus.class
+                    );
+
+            log.info("Successfully updated user with id {} in Keycloak", userId);
+
+            return responseEntity.getBody();
+
+        } catch (RestClientResponseException e) {
+
+            if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
+                log.error("(Keycloak)Bad request while updating user with id {} - {}",userId, e.getResponseBodyAsString());
+                throw new InvalidRequestException("Invalid request body for one or more fields.");
+
+            } else if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                log.error("(Keycloak):Unauthorized request while updating user user with id {} - {}", userId, e.getResponseBodyAsString());
+                throw new ServerException("Something went wrong on our end. Please try again later.");
+
+            } else if (e.getStatusCode().is5xxServerError()) {
+                log.error("(Keycloak): Error while updating user user with id {} - {}", userId, e.getResponseBodyAsString());
+                throw new ServerException("Something went wrong on our end. Please try again later.");
+
+            } else {
+                log.error("(Keycloak)Unexpected error while updating user: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+                throw new ServerException("Something went wrong on our end. Please try again later.");
+            }
+
+        } catch (Exception e) {
+            log.error("(Keycloak)Unexpected error during updating user user user with id {} - {}", userId, e.getMessage(), e);
+            throw new ServerException("Something went wrong while refreshing the token. Please try again.");
+        }
+
+
+    }
+
+    private static Map<String, String> reqBodyFromUserPutRequest(KeycloakUserPutRequest userPutRequest) {
+        Map<String, String> formData = new HashMap<>();
+
+//        Checking what fields are being updated and adding them to JSON body
+        if (userPutRequest.getFirstName() != null) {
+            formData.put("firstName", userPutRequest.getFirstName());
+        }
+        if (userPutRequest.getLastName() != null) {
+            formData.put("lastName", userPutRequest.getLastName());
+        }
+        if (userPutRequest.getEmail() != null) {
+            formData.put("email", userPutRequest.getEmail());
+        }
+
+        return formData;
+    }
+
 
 }
