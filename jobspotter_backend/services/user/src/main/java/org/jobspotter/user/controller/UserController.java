@@ -4,10 +4,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.jobspotter.user.dto.TokenResponse;
-import org.jobspotter.user.dto.UserLoginRequest;
-import org.jobspotter.user.dto.UserRegisterRequest;
-import org.jobspotter.user.dto.UserResponse;
+import org.jobspotter.user.authUtils.JWTUtils;
+import org.jobspotter.user.dto.*;
 import org.jobspotter.user.service.UserService;
 import org.jobspotter.user.service.implementation.KeyCloakServiceImpl;
 import org.slf4j.Logger;
@@ -15,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -82,6 +82,19 @@ public class UserController {
     ) {
         log.info("Getting user details");
         return userService.getUserById(accessToken);
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<UserResponse> updateProfile(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestBody @Valid UserPatchRequest userPatchRequest
+    ) throws Exception {
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+
+        return userService.updateUser(userId, userPatchRequest);
+
     }
 
 

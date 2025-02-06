@@ -56,8 +56,8 @@ public class User {
     /**
      * The phone number of the user.
      */
-    @Column(length = 13)
-    @Pattern(regexp = "^(?:\\+353|0)8[3-9]\\d{7}$\n", message = "Invalid phone number format")
+    @Column(length = 10)
+    @Pattern(regexp = "^(?<prefix>08[3-9])(?<subscriber>[0-9]{7})$", message = "Invalid phone number format")
     private String phoneNumber;
 
     /**
