@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.user.authUtils.JWTUtils;
 import org.jobspotter.user.dto.*;
 import org.jobspotter.user.exception.ResourceAlreadyExistsException;
+import org.jobspotter.user.exception.ResourceNotFoundException;
 import org.jobspotter.user.model.User;
 import org.jobspotter.user.model.UserType;
 import org.jobspotter.user.repository.UserRepository;
@@ -110,6 +111,67 @@ public class UserServiceImpl implements UserService {
                 .userType(user.getUserType())
                 .build(), HttpStatus.OK
         );
+
+    }
+
+    @Override
+    public ResponseEntity<UserResponse> updateUser(UUID userId, UserPatchRequest userPatchRequest) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow( () -> new ResourceNotFoundException("User with id " + userId + " not found"));
+
+        if (!updateUserFromPatch(user, userPatchRequest)) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(UserResponse.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .about(user.getAbout())
+                .createdAt(user.getCreatedAt())
+                .lastUpdatedAt(user.getLastUpdatedAt())
+                .userType(user.getUserType())
+                .build()
+        );
+    }
+
+
+    private boolean updateUserFromPatch(User user, UserPatchRequest userPatchRequest){
+        boolean updated = false;
+
+        if (userPatchRequest.getFirstName() != null && !user.getFirstName().equals(userPatchRequest.getFirstName())) {
+            user.setFirstName(userPatchRequest.getFirstName());
+            updated = true;
+        }
+
+        if (userPatchRequest.getLastName() != null && !user.getLastName().equals(userPatchRequest.getLastName())) {
+            user.setLastName(userPatchRequest.getLastName());
+            updated = true;
+        }
+
+        if (userPatchRequest.getEmail() != null && !user.getEmail().equals(userPatchRequest.getEmail())) {
+//            TODO: Update email in Keycloak
+            user.setEmail(userPatchRequest.getEmail());
+            updated = true;
+        }
+
+        if (userPatchRequest.getPhoneNumber() != null && !user.getPhoneNumber().equals(userPatchRequest.getPhoneNumber())) {
+            user.setPhoneNumber(userPatchRequest.getPhoneNumber());
+            updated = true;
+        }
+
+        if (userPatchRequest.getAbout() != null && !user.getAbout().equals(userPatchRequest.getAbout())) {
+            user.setAbout(userPatchRequest.getAbout());
+            updated = true;
+        }
+
+        return updated;
 
     }
 
