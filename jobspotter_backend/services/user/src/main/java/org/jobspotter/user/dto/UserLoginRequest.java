@@ -1,5 +1,6 @@
 package org.jobspotter.user.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
@@ -10,14 +11,16 @@ import org.springframework.validation.annotation.Validated;
 @Data
 @AllArgsConstructor
 public class UserLoginRequest {
-    // Simplified username validation - just check for general format
-    //Takes in both username and email
 
-    // Note: could have better regex
+
+//TODO: Allow for either username or email to be used for login
+
+    @Schema(description = "Username", example = "john_doe")
     @NotBlank(message = "Username cannot be empty")
     @Pattern(regexp = "^[a-zA-ZáéíóúÁÉÍÓÚ0-9_'-]{4,20}$", message = "Username must be at least 4 characters long and contain only letters and digits")
     String username;
 
+    @Schema(description = "Password", example = "Password123!")
     // Simplified password validation - just check for general format
     @NotBlank(message = "Password cannot be empty")
     @Pattern(regexp = "^[A-Za-z0-9!@#$%^&*()_+]{8,}$", message = "Password must be at least 8 characters long and contain only letters, digits, and special characters")

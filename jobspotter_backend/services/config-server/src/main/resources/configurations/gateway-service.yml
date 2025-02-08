@@ -35,3 +35,17 @@ spring:
 
 server:
   port: 8100
+
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      -   name: gateway-service
+          url: /v3/api-docs
+      -   name: user-service
+          url: /api/v1/users/v3/api-docs

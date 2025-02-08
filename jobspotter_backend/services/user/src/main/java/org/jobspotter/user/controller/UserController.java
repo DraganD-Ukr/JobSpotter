@@ -1,5 +1,11 @@
 package org.jobspotter.user.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -25,7 +31,19 @@ public class UserController {
     private final UserService userService;
     private final KeyCloakServiceImpl keyCloakServiceImpl;
 
-    // Create a new user
+    @Operation(summary = "Register a new user")
+     @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "User created"),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "409", description = "User already exists",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @PostMapping("/auth/register")
     public ResponseEntity<HttpStatus> createUser(
             @RequestBody @Valid UserRegisterRequest userRegisterRequest
@@ -34,6 +52,21 @@ public class UserController {
         return userService.registerUser(userRegisterRequest);
     }
 
+    @Operation(summary = "Login a user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User logged in",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TokenResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized: Invalid credentials",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @PostMapping("/auth/login")
     public ResponseEntity<Object> login(
             @RequestBody @Valid UserLoginRequest userLoginRequest
@@ -42,6 +75,7 @@ public class UserController {
         return userService.loginUser(userLoginRequest);
     }
 
+    @Hidden
     @PostMapping("/auth/refresh")
     public ResponseEntity<TokenResponse> refreshToken(@CookieValue("RefreshToken") String refreshToken) {
         log.info("Refreshing token");
@@ -51,7 +85,13 @@ public class UserController {
     }
 
 
-
+    @Operation(summary = "Logout a user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "User logged out"),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @PostMapping("/auth/logout")
     public ResponseEntity<HttpStatus> logout(
             @RequestHeader("Authorization") String accessToken,
@@ -76,6 +116,18 @@ public class UserController {
 
     }
 
+    @Operation(summary = "Get user details")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User details retrieved",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized: Invalid token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @GetMapping("/me")
     public ResponseEntity<UserResponse> myProfile(
             @RequestHeader("Authorization") String accessToken
@@ -84,6 +136,23 @@ public class UserController {
         return userService.getUserById(accessToken);
     }
 
+
+
+    @Operation(summary = "Update user details")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User details updated",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized: Invalid token",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @PatchMapping("/me")
     public ResponseEntity<UserResponse> updateProfile(
             @RequestHeader("Authorization") String accessToken,

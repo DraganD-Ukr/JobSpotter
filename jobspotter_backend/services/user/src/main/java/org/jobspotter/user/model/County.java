@@ -1,8 +1,10 @@
 package org.jobspotter.user.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.jobspotter.user.dto.deserializer.CountyDeserializer;
 
+@Schema(enumAsRef = true)
 @JsonDeserialize(using = CountyDeserializer.class)
 public enum County {
     Carlow,
