@@ -46,9 +46,8 @@ public class JobPostController {
             @RequestBody JobPostPostRequest jobPostPostRequest
     ) throws URISyntaxException {
         log.info("Creating job post");
-//        Long id = jobPostService.createJobPost(jobPostPostRequest, accessToken);
-//        return ResponseEntity.created(new URI("/api/v1/job-posts/"+id)).build();
-        return ResponseEntity.ok(HttpStatus.CREATED);
+        Long id = jobPostService.createJobPost(jobPostPostRequest, accessToken);
+        return ResponseEntity.created(new URI("/api/v1/job-posts/"+id)).build();
     }
 
     //Create job post with dummy data

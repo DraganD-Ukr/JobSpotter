@@ -1,8 +1,12 @@
 package org.job_spotter.jobpost.service.Implementation;
 
 import lombok.RequiredArgsConstructor;
+import org.job_spotter.jobpost.client.AddressServiceClient;
+import org.job_spotter.jobpost.dto.AddressResponse;
+import org.job_spotter.jobpost.dto.JobPostPostRequest;
 import org.job_spotter.jobpost.model.JobPost;
 import org.job_spotter.jobpost.model.JobStatus;
+import org.job_spotter.jobpost.model.JobTagEnum;
 import org.job_spotter.jobpost.model.Tag;
 import org.job_spotter.jobpost.repository.JobPostRepository;
 import org.job_spotter.jobpost.repository.TagRepository;
@@ -17,6 +21,7 @@ public class JobPostImpl implements JobPostService {
 
     private final JobPostRepository jobPostRepository;
     private final TagRepository tagRepository;
+    private final AddressServiceClient addressServiceClient;
 
     @Override
     public List<JobPost> getAllJobPosts() {
@@ -118,5 +123,46 @@ public class JobPostImpl implements JobPostService {
         // Save job posts
         jobPostRepository.saveAll(jobPosts);
     }
+
+    @Override
+    public Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken) {
+
+        AddressResponse userAddress = addressServiceClient.getAddressById(accessToken, jobPostPostRequest.getAddressId());
+        if (userAddress == null) {
+            throw new RuntimeException("Address not found");
+        }
+
+        Set<Tag> tags = convertTagsFromDto(jobPostPostRequest.getTags());
+
+        JobPost jobPost = JobPost.builder()
+                .jobPosterId(UUID.fromString(accessToken))
+                .tags(tags)
+                .title(jobPostPostRequest.getTitle())
+                .description(jobPostPostRequest.getDescription())
+                .address(userAddress.getAddress())
+                .longitude(userAddress.getLongitude())
+                .latitude(userAddress.getLatitude())
+                .maxApplicants(jobPostPostRequest.getMaxApplicants())
+                .status(JobStatus.OPEN)
+                .build();
+
+        jobPostRepository.save(jobPost);
+
+        return jobPost.getJobPostId();
+    }
+
+    private Set<Tag> convertTagsFromDto(Set<JobTagEnum> tags){
+        Set<Tag> tagSet = new HashSet<>();
+        for (JobTagEnum tagEnum : tags) {
+            Tag tag = Tag.builder()
+                    .tagId(tagEnum.getId())
+                    .name(tagEnum.getDisplayName())
+                    .build();
+            tagSet.add(tag);
+        }
+        return tagSet;
+    }
+
+
 }
 
