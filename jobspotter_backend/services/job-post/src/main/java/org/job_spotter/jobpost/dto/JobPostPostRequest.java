@@ -23,20 +23,20 @@ public class JobPostPostRequest {
     @JsonDeserialize(using = TagDeserializer.class)
     private Set<JobTagEnum> tags;
 
-    @Size(min = 1, max = 255)
+    @Size(min = 1, max = 255, message = "Title must be between 1 and 255 characters")
     private String title;
 
-    @Size(min = 1, max = 255)
+    @Size(min = 1, max = 255, message = "Description must be between 1 and 255 characters")
     private String description;
 
 //    Id of address used to retrieve address from address service
-    @Min(1)
-    @Max(Long.MAX_VALUE)
+    @Min(value = 1, message = "Minimum address id must be 1")
+    @Max(value = Long.MAX_VALUE, message = "Maximum address id must not exceed 9,223,372,036,854,775,807")
     private Long addressId;
 
     //Maximum number of applicants that can apply for the job
-    @Min(1)
-    @Max(15)
+    @Min(value = 1, message = "Minimum number of applicants must be 1")
+    @Max(value = 15, message = "Maximum number of applicants must be 15")
     private int maxApplicants;
 
 

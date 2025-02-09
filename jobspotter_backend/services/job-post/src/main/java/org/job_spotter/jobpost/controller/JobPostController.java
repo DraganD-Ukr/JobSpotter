@@ -1,5 +1,6 @@
 package org.job_spotter.jobpost.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.job_spotter.jobpost.dto.JobPostPostRequest;
@@ -43,7 +44,7 @@ public class JobPostController {
     @PostMapping()
     public ResponseEntity<HttpStatus> createJobPost(
             @RequestHeader("Authorization") String accessToken,
-            @RequestBody JobPostPostRequest jobPostPostRequest
+            @RequestBody @Valid JobPostPostRequest jobPostPostRequest
     ) throws URISyntaxException {
         log.info("Creating job post");
         Long id = jobPostService.createJobPost(jobPostPostRequest, accessToken);

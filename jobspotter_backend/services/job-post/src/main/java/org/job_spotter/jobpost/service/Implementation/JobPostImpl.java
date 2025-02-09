@@ -1,10 +1,17 @@
 package org.job_spotter.jobpost.service.Implementation;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.FeignException;
+import feign.FeignException.FeignClientException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.job_spotter.jobpost.authUtils.JWTUtils;
 import org.job_spotter.jobpost.client.AddressServiceClient;
 import org.job_spotter.jobpost.dto.AddressResponse;
 import org.job_spotter.jobpost.dto.JobPostPostRequest;
+import org.job_spotter.jobpost.exception.ForbiddenException;
+import org.job_spotter.jobpost.exception.ServerException;
+import org.job_spotter.jobpost.exception.UnauthorizedException;
 import org.job_spotter.jobpost.model.JobPost;
 import org.job_spotter.jobpost.model.JobStatus;
 import org.job_spotter.jobpost.model.JobTagEnum;
@@ -12,12 +19,15 @@ import org.job_spotter.jobpost.model.Tag;
 import org.job_spotter.jobpost.repository.JobPostRepository;
 import org.job_spotter.jobpost.repository.TagRepository;
 import org.job_spotter.jobpost.service.JobPostService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class JobPostImpl implements JobPostService {
 
     private final JobPostRepository jobPostRepository;
@@ -129,36 +139,72 @@ public class JobPostImpl implements JobPostService {
     @Override
     public Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken) {
 
-        AddressResponse userAddress = addressServiceClient.getAddressById(accessToken, jobPostPostRequest.getAddressId());
-        if (userAddress == null) {
-            throw new RuntimeException("Address not found");
-        }
-
-        Set<Tag> tags = convertTagsFromDto(jobPostPostRequest.getTags());
-
-        UUID userId;
         try {
-            userId = JWTUtils.getUserIdFromToken(accessToken);
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid access token");
+            ResponseEntity<AddressResponse> response = addressServiceClient.getAddressById(accessToken, jobPostPostRequest.getAddressId());
+
+            AddressResponse userAddress = response.getBody();
+
+            if (userAddress == null) {
+                log.error("Error retrieving user address from user-service");
+                throw new ServerException("Server error: Could not retrieve user address. Please try again later.");
+            }
+
+            Set<Tag> tags = convertTagsFromDto(jobPostPostRequest.getTags());
+
+            UUID userId;
+            try {
+                userId = JWTUtils.getUserIdFromToken(accessToken);
+            } catch (Exception e) {
+                log.error("Error getting user ID from token: {}", e.getMessage(), e);
+                throw new ServerException("Something went wrong. Please try again later.");
+            }
+
+
+            JobPost jobPost = JobPost.builder()
+                    .jobPosterId(userId)
+                    .tags(tags)
+                    .title(jobPostPostRequest.getTitle())
+                    .description(jobPostPostRequest.getDescription())
+                    .address(userAddress.getAddress())
+                    .longitude(userAddress.getLongitude())
+                    .latitude(userAddress.getLatitude())
+                    .maxApplicants(jobPostPostRequest.getMaxApplicants())
+                    .status(JobStatus.OPEN)
+                    .build();
+
+            jobPostRepository.save(jobPost);
+
+            log.info("Job post created successfully");
+
+            return jobPost.getJobPostId();
+            
+        } catch (FeignClientException e){
+
+            if (e.status() == HttpStatus.NOT_FOUND.value()) {
+                logAddressClientException(e);
+                throw new ServerException(getErrorMessageFromFeignException(e));
+
+            } else if (e.status() == HttpStatus.INTERNAL_SERVER_ERROR.value()) {
+                logAddressClientException(e);
+                throw new ServerException(getErrorMessageFromFeignException(e));
+
+            } else if (e.status() == HttpStatus.UNAUTHORIZED.value()) {
+                logAddressClientException(e);
+                throw new UnauthorizedException(getErrorMessageFromFeignException(e));
+
+            } else if (e.status() == HttpStatus.FORBIDDEN.value()) {
+                logAddressClientException(e);
+                throw new ForbiddenException(getErrorMessageFromFeignException(e));
+
+            }
         }
 
+        return null;
 
-        JobPost jobPost = JobPost.builder()
-                .jobPosterId(userId)
-                .tags(tags)
-                .title(jobPostPostRequest.getTitle())
-                .description(jobPostPostRequest.getDescription())
-                .address(userAddress.getAddress())
-                .longitude(userAddress.getLongitude())
-                .latitude(userAddress.getLatitude())
-                .maxApplicants(jobPostPostRequest.getMaxApplicants())
-                .status(JobStatus.OPEN)
-                .build();
+    }
 
-        jobPostRepository.save(jobPost);
-
-        return jobPost.getJobPostId();
+    private static void logAddressClientException(FeignClientException e) {
+        log.error("(job-posts): Error getting address from user-service: {}, {}", e.getMessage(), e.status());
     }
 
     private Set<Tag> convertTagsFromDto(Set<JobTagEnum> tags){
@@ -171,6 +217,23 @@ public class JobPostImpl implements JobPostService {
             tagSet.add(tag);
         }
         return tagSet;
+    }
+
+    private String getErrorMessageFromFeignException(FeignException ex) {
+        try {
+            // Deserialize the content of the exception body into a Map
+            String content = new String(ex.content());
+
+            // Assuming the error response is a JSON object like {"message": "some error message"}
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> errorResponse = objectMapper.readValue(content, Map.class);
+
+            // Return the message from the error response (assuming it's in the 'message' field)
+            return (String) errorResponse.get("message");
+        } catch (Exception e) {
+            // If there's an error deserializing the response, return a generic message
+            return "An unknown error occurred while parsing the error response.";
+        }
     }
 
 
