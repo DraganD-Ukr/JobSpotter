@@ -1,7 +1,8 @@
 package org.job_spotter.jobpost.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -82,6 +83,8 @@ public class JobPost {
 
     //maximum number of applicants that can apply for the job
     @Column(nullable = false)
+    @Min(1)
+    @Max(15)
     private int maxApplicants;
 
     //status of the job
