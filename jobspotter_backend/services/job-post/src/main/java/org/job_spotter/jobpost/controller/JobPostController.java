@@ -51,11 +51,11 @@ public class JobPostController {
     }
 
     //Create job post with dummy data
-    @PostMapping()
-    public ResponseEntity<HttpStatus> createJobPostWithDummyData() {
-        log.info("Populating job post with dummy data");
-        jobPostService.createJobPostDomainDummyData();
-        return ResponseEntity.ok(HttpStatus.CREATED);
-    }
+//    @PostMapping()
+//    public ResponseEntity<HttpStatus> createJobPostWithDummyData() {
+//        log.info("Populating job post with dummy data");
+//        jobPostService.createJobPostDomainDummyData();
+//        return ResponseEntity.ok(HttpStatus.CREATED);
+//    }
 
 }

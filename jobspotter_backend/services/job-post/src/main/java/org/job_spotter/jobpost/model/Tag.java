@@ -25,7 +25,7 @@ public class Tag {
     @ManyToMany(mappedBy = "tags")
     private Set<JobPost> jobPosts = new HashSet<>();
 
-    @Column(nullable = false, length = 20, updatable = false, unique = true)
+    @Column(nullable = false, length = 30, updatable = false, unique = true)
     private String name;
 
 

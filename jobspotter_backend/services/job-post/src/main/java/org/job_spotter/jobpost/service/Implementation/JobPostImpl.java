@@ -1,6 +1,7 @@
 package org.job_spotter.jobpost.service.Implementation;
 
 import lombok.RequiredArgsConstructor;
+import org.job_spotter.jobpost.authUtils.JWTUtils;
 import org.job_spotter.jobpost.client.AddressServiceClient;
 import org.job_spotter.jobpost.dto.AddressResponse;
 import org.job_spotter.jobpost.dto.JobPostPostRequest;
@@ -22,6 +23,7 @@ public class JobPostImpl implements JobPostService {
     private final JobPostRepository jobPostRepository;
     private final TagRepository tagRepository;
     private final AddressServiceClient addressServiceClient;
+
 
     @Override
     public List<JobPost> getAllJobPosts() {
@@ -134,8 +136,16 @@ public class JobPostImpl implements JobPostService {
 
         Set<Tag> tags = convertTagsFromDto(jobPostPostRequest.getTags());
 
+        UUID userId;
+        try {
+            userId = JWTUtils.getUserIdFromToken(accessToken);
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid access token");
+        }
+
+
         JobPost jobPost = JobPost.builder()
-                .jobPosterId(UUID.fromString(accessToken))
+                .jobPosterId(userId)
                 .tags(tags)
                 .title(jobPostPostRequest.getTitle())
                 .description(jobPostPostRequest.getDescription())
