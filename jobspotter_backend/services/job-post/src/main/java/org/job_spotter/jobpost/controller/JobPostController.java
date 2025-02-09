@@ -2,12 +2,15 @@ package org.job_spotter.jobpost.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.job_spotter.jobpost.dto.JobPostPostRequest;
 import org.job_spotter.jobpost.model.JobPost;
 import org.job_spotter.jobpost.service.JobPostService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 @RestController
@@ -38,10 +41,21 @@ public class JobPostController {
 
     //Create job post with dummy data
     @PostMapping()
-    public ResponseEntity<HttpStatus> createJobPost() {
-        log.info("Populating job post with dummy data");
-        jobPostService.createJobPostDomainDummyData();
-        return ResponseEntity.ok(HttpStatus.CREATED);
+    public ResponseEntity<HttpStatus> createJobPost(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestBody JobPostPostRequest jobPostPostRequest
+    ) throws URISyntaxException {
+        log.info("Creating job post");
+        Long id = jobPostService.createJobPost(jobPostPostRequest, accessToken);
+        return ResponseEntity.created(new URI("/api/v1/job-posts/"+id)).build();
     }
+
+    //Create job post with dummy data
+//    @PostMapping()
+//    public ResponseEntity<HttpStatus> createJobPostWithDummyData() {
+//        log.info("Populating job post with dummy data");
+//        jobPostService.createJobPostDomainDummyData();
+//        return ResponseEntity.ok(HttpStatus.CREATED);
+//    }
 
 }
