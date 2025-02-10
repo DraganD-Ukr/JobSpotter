@@ -10,7 +10,7 @@ export default function Profile() {
     const accessToken = Cookies.get("AccessToken");
     
     if (accessToken) {
-      fetch("/api/v1/user/me", {
+      fetch("/api/v1/users/me", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${accessToken}`,

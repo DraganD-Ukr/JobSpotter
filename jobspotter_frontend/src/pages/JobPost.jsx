@@ -9,7 +9,7 @@ export function JobPost() {
   useEffect(() => {
     // Fetches job posts from the API endpoint
     const accessToken = Cookies.get("AccessToken");
-    fetch("/api/v1/job-post", {
+    fetch("/api/v1/job-posts", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

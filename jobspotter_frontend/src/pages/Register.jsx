@@ -128,7 +128,7 @@ export function Register() {
       };
 
       try {
-        const response = await fetch("/api/v1/user/auth/register", {
+        const response = await fetch("/api/v1/users/auth/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

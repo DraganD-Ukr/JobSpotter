@@ -53,7 +53,7 @@ export function Login() {
     // Proceed only if there are no validation errors
     if (Object.keys(errors).length === 0) {
       try {
-        const response = await fetch("/api/v1/user/auth/login", {
+        const response = await fetch("/api/v1/users/auth/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
