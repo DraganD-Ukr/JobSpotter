@@ -7,11 +7,13 @@ import gigachadImage from "../assets/gigachad.png";
 export default function Navbar() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [username, setUsername] = useState("Guest");
+  const [username, setUsername] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const searchRef = useRef(null);
   const profileMenuRef = useRef(null);
 
-  // Close search or profile menu when clicking outside
+  // Detect clicks outside search/profile menus
   useEffect(() => {
     function handleClickOutside(event) {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -25,33 +27,39 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fetches user info if an AccessToken exists in cookies
   useEffect(() => {
-    const token = Cookies.get("AccessToken");
-    if (token) {
-      fetch("/api/v1/user/me", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
+    // No need to check for token existence client-side if using HttpOnly cookies.
+    fetch("/api/v1/users/me", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // Include credentials so cookies are sent automatically with the request.
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch user info");
+        return res.json();
       })
-        .then((res) => {
-          if (res.ok) return res.json();
-          else throw new Error("Failed to fetch user info");
-        })
-        .then((data) => {
-          // Assume your API response has a 'username' property.
-          setUsername(data.username || "Guest");
-        })
-        .catch((err) => {
-          console.error("Error fetching user info:", err);
-          setUsername("Guest");
-        });
-    }
+      .then((data) => {
+        setUsername(data.username || "");
+        setIsLoggedIn(true);
+        console.log("User is logged in, username:", data.username);
+      })
+      .catch((err) => {
+        console.error("Error fetching user info:", err);
+        setIsLoggedIn(false);
+        console.log("Error occurred, setting isLoggedIn to false");
+      })
+      .finally(() => setIsCheckingAuth(false));
   }, []);
+  
 
-  // Logout handler: removes cookies and redirect to home page
+  // Log isLoggedIn during renders
+  useEffect(() => {
+    console.log("isLoggedIn state updated:", isLoggedIn);
+  }, [isLoggedIn]);
+
   const handleLogout = () => {
     Cookies.remove("AccessToken");
     Cookies.remove("RefreshToken");
@@ -65,7 +73,15 @@ export default function Navbar() {
           JobSpotter
         </a>
 
-        {/* Search Section */}
+        <div className="flex-grow flex justify-center gap-8">
+          <a href="/jobpost" className="text-white font-medium hover:underline">
+            Job Posts
+          </a>
+          <a href="/data" className="text-white font-medium hover:underline">
+            Data
+          </a>
+        </div>
+
         <div className="relative flex items-center ml-auto mr-4" ref={searchRef}>
           {!isExpanded ? (
             <button
@@ -101,17 +117,10 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Navbar Links & Profile */}
         <ul className="flex gap-4 items-center">
-          <li>
-            <a
-              href="/jobpost"
-              className="bg-yellow-500 px-4 py-2 text-white rounded-md hover:bg-yellow-600"
-            >
-              Job Posts
-            </a>
-          </li>
-          {username === "Guest" ? (
+          {isCheckingAuth ? ( // While checking authentication, don't render anything
+            <li className="text-white">Loading...</li>
+          ) : !isLoggedIn ? (
             <>
               <li>
                 <a
@@ -168,7 +177,6 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
-              {/* Displays the username next to the profile picture */}
               <span className="text-white font-bold">{username}</span>
             </li>
           )}

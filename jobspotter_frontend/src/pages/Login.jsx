@@ -62,12 +62,9 @@ export function Login() {
         });
 
         if (response.ok) {
-          const data = await response.json();
 
-          // Store tokens in cookies using js-cookie.
-          // Adjust the cookie settings as needed (remove 'secure' for local development if necessary)
-          Cookies.set("AccessToken", data.access_token);
-          Cookies.set("RefreshToken", data.refresh_token);
+          // access token and refresh tokens cookies will be set automatically in browser.
+        
 
           // Instead of an alert, set loggedIn to true so the component displays the success message.
           setLoggedIn(true);
