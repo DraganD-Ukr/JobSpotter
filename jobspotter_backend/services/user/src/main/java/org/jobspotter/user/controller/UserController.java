@@ -16,10 +16,13 @@ import org.jobspotter.user.service.UserService;
 import org.jobspotter.user.service.implementation.KeyCloakServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.util.UUID;
 
 @RestController
@@ -67,12 +70,47 @@ public class UserController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
+
+
     @PostMapping("/auth/login")
     public ResponseEntity<Object> login(
             @RequestBody @Valid UserLoginRequest userLoginRequest
             ) {
         log.info("Logging in user");
-        return userService.loginUser(userLoginRequest);
+
+        TokenResponse tokenResponse = keyCloakServiceImpl.loginUser(userLoginRequest);
+
+        if (tokenResponse == null || tokenResponse.getAccess_token() == null || tokenResponse.getRefresh_token() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
+
+//        Extract the expiration times from the token response and convert them to minutes
+        int accessTokenExpiresIn = tokenResponse.getExpires_in()/60;
+        int refreshTokenExpiresIn = tokenResponse.getRefresh_expires_in()/60;
+
+        // Create HttpOnly Cookies
+        ResponseCookie accessTokenCookie = ResponseCookie.from("AccessToken", tokenResponse.getAccess_token())
+                .httpOnly(true)
+                .secure(true) // Ensure it's secure, especially in production (requires HTTPS)
+                .path("/") // Available to all endpoints
+                .maxAge(Duration.ofMinutes(accessTokenExpiresIn)) // Set expiration (adjust accordingly)
+                .sameSite("Strict") // Prevent CSRF attacks
+                .build();
+
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("RefreshToken", tokenResponse.getRefresh_token())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(Duration.ofDays(refreshTokenExpiresIn))
+                .sameSite("Strict")
+                .build();
+
+        // Return the response with cookies
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                .body("Login successful");
+
     }
 
     @Hidden

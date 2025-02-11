@@ -67,8 +67,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<Object> loginUser(UserLoginRequest userLoginRequest) {
-        return new ResponseEntity<Object>(keyCloakService.loginUser(keyCloakService.getAdminToken(), userLoginRequest), HttpStatus.OK);
+    public TokenResponse loginUser(UserLoginRequest userLoginRequest) {
+        return keyCloakService.loginUser(userLoginRequest);
     }
 
     @Override

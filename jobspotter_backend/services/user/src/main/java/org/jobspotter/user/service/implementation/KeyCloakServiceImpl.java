@@ -194,7 +194,7 @@ public class KeyCloakServiceImpl implements KeyCloakService {
     }
 
 
-    public String loginUser(String token, UserLoginRequest loginRequest) {
+    public TokenResponse loginUser(UserLoginRequest loginRequest) {
         String url = localHostPrefixUrl+"/realms/JobSpotter/protocol/openid-connect/token";
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
@@ -211,11 +211,11 @@ public class KeyCloakServiceImpl implements KeyCloakService {
         log.debug("Attempting login for user: {}", loginRequest.getUsername());
 
         try {
-            ResponseEntity<String> response = restTemplate.exchange(
+            ResponseEntity<TokenResponse> response = restTemplate.exchange(
                     url,
                     HttpMethod.POST,
                     requestEntity,
-                    String.class
+                    TokenResponse.class
             );
 
             HttpStatus status = (HttpStatus) response.getStatusCode();
