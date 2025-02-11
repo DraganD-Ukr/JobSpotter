@@ -194,7 +194,7 @@ public class KeyCloakServiceImpl implements KeyCloakService {
     }
 
 
-    public String loginUser(String token, UserLoginRequest loginRequest) {
+    public TokenResponse loginUser(UserLoginRequest loginRequest) {
         String url = localHostPrefixUrl+"/realms/JobSpotter/protocol/openid-connect/token";
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
@@ -211,11 +211,11 @@ public class KeyCloakServiceImpl implements KeyCloakService {
         log.debug("Attempting login for user: {}", loginRequest.getUsername());
 
         try {
-            ResponseEntity<String> response = restTemplate.exchange(
+            ResponseEntity<TokenResponse> response = restTemplate.exchange(
                     url,
                     HttpMethod.POST,
                     requestEntity,
-                    String.class
+                    TokenResponse.class
             );
 
             HttpStatus status = (HttpStatus) response.getStatusCode();
@@ -244,60 +244,6 @@ public class KeyCloakServiceImpl implements KeyCloakService {
         }
     }
 
-
-
-    @Override
-    public TokenResponse refreshToken(String refreshToken) {
-        // Prepare request body
-        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-        formData.add("client_id", clientId);  // No client_secret needed for public client
-        formData.add("grant_type", "refresh_token");
-        formData.add("refresh_token", refreshToken);
-
-        // Set headers
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        // Make HTTP request
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
-
-        try {
-            ResponseEntity<TokenResponse> responseEntity =
-                    restTemplate.exchange(
-                            localHostPrefixUrl+"/realms/JobSpotter/protocol/openid-connect/token",
-                            HttpMethod.POST,
-                            requestEntity,
-                            TokenResponse.class
-                    );
-
-            log.info("Successfully refreshed token");
-
-            return responseEntity.getBody();
-
-        } catch (RestClientResponseException e) {
-
-            if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
-                log.error("Bad request while refreshing token: {}", e.getResponseBodyAsString());
-                throw new InvalidCredentialsException("Invalid refresh token.");
-
-            } else if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                log.error("Unauthorized request while refreshing token: {}", e.getResponseBodyAsString());
-                throw new UnauthorizedException("Invalid or expired refresh token.");
-
-            } else if (e.getStatusCode().is5xxServerError()) {
-                log.error("Server error while refreshing token: {}", e.getStatusCode());
-                throw new ServerException("Authentication service is unavailable. Please try again later.");
-
-            } else {
-                log.error("Unexpected error while refreshing token: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
-                throw new ServerException("Failed to refresh token. Please try again.");
-            }
-
-        } catch (Exception e) {
-            log.error("Unexpected error during token refresh: {}", e.getMessage(), e);
-            throw new ServerException("Something went wrong while refreshing the token. Please try again.");
-        }
-    }
 
 
     @Override

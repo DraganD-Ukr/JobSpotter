@@ -8,7 +8,8 @@ import java.util.UUID;
 
 public interface UserService {
     ResponseEntity<HttpStatus> registerUser(UserRegisterRequest userRegisterRequest) throws Exception;
-    ResponseEntity<Object> loginUser(UserLoginRequest userLoginRequest);
+
+    TokenResponse loginUser(UserLoginRequest userLoginRequest);
 
     ResponseEntity<HttpStatus> logoutUser(String accessToken) throws Exception;
 
