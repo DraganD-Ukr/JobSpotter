@@ -1,13 +1,17 @@
 package org.jobspotter.gateway.config;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.gateway.dto.TokenResponse;
+import org.jobspotter.gateway.exception.ErrorResponse;
+import org.jobspotter.gateway.exception.InvalidRequestException;
+import org.jobspotter.gateway.exception.ServerException;
+import org.jobspotter.gateway.exception.UnauthorizedException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpCookie;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseCookie;
+import org.springframework.http.*;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -23,6 +27,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Component
@@ -37,12 +42,15 @@ public class JwtRefreshFilter implements WebFilter {
     private final JwtDecoder jwtDecoder;
     private final WebClient.Builder webClientBuilder;
 
+    @Autowired
+    ObjectMapper objectMapper;
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getPath().value();
 
-        if (path.contains("/login") || path.contains("/register")) {
+        if (path.contains("/login") || path.contains("/register") || path.contains("/logout") || path.contains("/webjars")) {
             return chain.filter(exchange);// Skip JWT validation here
         }
         // Extract the AccessToken from cookies
@@ -64,7 +72,8 @@ public class JwtRefreshFilter implements WebFilter {
                 }
                 log.debug("Access token is expired. Refreshing token...");
             } catch (JwtException e) {
-                log.error("Error decoding access token: {}", e.getMessage());
+                log.error("Error decoding access token: {}:, {}", e.getMessage(), e.getStackTrace());
+                return Mono.error(new UnauthorizedException("Invalid access token"));
             }
         }
 
@@ -79,7 +88,7 @@ public class JwtRefreshFilter implements WebFilter {
         HttpCookie refreshTokenCookie = exchange.getRequest().getCookies().getFirst("RefreshToken");
         if (refreshTokenCookie == null) {
             log.error("No RefreshToken found in request cookies");
-            return Mono.error(new RuntimeException("Refresh token missing"));
+            return returnErrorResponse(exchange, HttpStatus.BAD_REQUEST, "Refresh token missing");
         }
         String refreshToken = refreshTokenCookie.getValue();
 
@@ -99,23 +108,23 @@ public class JwtRefreshFilter implements WebFilter {
                 .bodyToMono(TokenResponse.class)
                 .flatMap(newTokenResponse -> {
                     if (newTokenResponse.getAccess_token() == null || newTokenResponse.getRefresh_token() == null) {
-                        log.error("Invalid response from Keycloak");
-                        return Mono.error(new RuntimeException("Failed to refresh token"));
+                        log.error("Invalid response from Keycloak: {}", newTokenResponse);
+                        return returnErrorResponse(exchange, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to refresh token. Please login again");
                     }
 
                     String newAccessToken = newTokenResponse.getAccess_token();
                     String newRefreshToken = newTokenResponse.getRefresh_token();
 
-//                    Invalidate old cookies
+                    // Invalidate old cookies
                     removeCookies(exchange);
 
                     // Set new tokens in HttpOnly cookies
                     exchange.getResponse().addCookie(ResponseCookie.from("AccessToken", newAccessToken)
-                            .httpOnly(true).secure(true).path("/").maxAge(Duration.ofMinutes(newTokenResponse.getExpires_in() / 60))
+                            .httpOnly(true).secure(false).path("/").maxAge(Duration.ofMinutes(newTokenResponse.getExpires_in() / 60))
                             .sameSite("Strict").build());
 
                     exchange.getResponse().addCookie(ResponseCookie.from("RefreshToken", newRefreshToken)
-                            .httpOnly(true).secure(true).path("/").maxAge(Duration.ofDays(newTokenResponse.getRefresh_expires_in() / 60))
+                            .httpOnly(true).secure(false).path("/").maxAge(Duration.ofDays(newTokenResponse.getRefresh_expires_in() / 60))
                             .sameSite("Strict").build());
 
                     log.info("Successfully refreshed access and refresh tokens");
@@ -128,16 +137,41 @@ public class JwtRefreshFilter implements WebFilter {
                     return chain.filter(exchange.mutate().request(newRequest).build());
                 })
                 .onErrorResume(e -> {
-                    log.error("Token refresh failed: {}", e.getMessage());
-                    return Mono.error(new RuntimeException("Could not refresh token"));
+                    log.error("Token refresh failed: {}: {}", e.getMessage(), e.getStackTrace());
+                    return returnErrorResponse(exchange, HttpStatus.INTERNAL_SERVER_ERROR, "Could not refresh token");
                 });
+    }
+
+    /**
+     * Utility method to return a custom error response with a message, status, and timestamp.
+     */
+    private Mono<Void> returnErrorResponse(ServerWebExchange exchange, HttpStatus status, String message) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                status.getReasonPhrase(),
+                status.value(),
+                message
+        );
+
+        try {
+            byte[] errorBytes = objectMapper.writeValueAsBytes(errorResponse);
+            exchange.getResponse().setStatusCode(status);
+            exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+            exchange.getResponse().getHeaders().setContentLength(errorBytes.length);
+            return exchange.getResponse().writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(errorBytes)));
+        } catch (JsonProcessingException e) {
+            // Fallback for JSON serialization errors
+            byte[] fallbackErrorBytes = ("{\"message\": \"Internal Server Error\"}").getBytes();
+            exchange.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+            return exchange.getResponse().writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(fallbackErrorBytes)));
+        }
     }
 
     private void removeCookies(ServerWebExchange exchange) {
         // Remove old cookies (invalidate them)
         exchange.getResponse().addCookie(ResponseCookie.from("AccessToken", "")
-                .httpOnly(true).secure(true).path("/").maxAge(Duration.ZERO).build());
+                .httpOnly(true).secure(false).path("/").maxAge(Duration.ZERO).build());
         exchange.getResponse().addCookie(ResponseCookie.from("RefreshToken", "")
-                .httpOnly(true).secure(true).path("/").maxAge(Duration.ZERO).build());
+                .httpOnly(true).secure(false).path("/").maxAge(Duration.ZERO).build());
     }
 }

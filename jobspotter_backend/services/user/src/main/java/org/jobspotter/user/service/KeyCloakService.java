@@ -19,8 +19,6 @@ public interface KeyCloakService {
 
     TokenResponse loginUser(UserLoginRequest loginRequest);
 
-    Object refreshToken(String refreshToken);
-
     HttpStatus logoutUser(UUID userId);
 
     HttpStatus updateUser(KeycloakUserPutRequest userPutRequest, UUID userId);

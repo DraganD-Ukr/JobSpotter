@@ -1,6 +1,5 @@
 package org.jobspotter.user.controller;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -91,7 +90,7 @@ public class UserController {
         // Create HttpOnly Cookies
         ResponseCookie accessTokenCookie = ResponseCookie.from("AccessToken", tokenResponse.getAccess_token())
                 .httpOnly(true)
-                .secure(true) // Ensure it's secure, especially in production (requires HTTPS)
+                .secure(false) // Ensure it's secure, especially in production (requires HTTPS)
                 .path("/") // Available to all endpoints
                 .maxAge(Duration.ofMinutes(accessTokenExpiresIn)) // Set expiration (adjust accordingly)
                 .sameSite("Strict") // Prevent CSRF attacks
@@ -99,7 +98,7 @@ public class UserController {
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from("RefreshToken", tokenResponse.getRefresh_token())
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .path("/")
                 .maxAge(Duration.ofDays(refreshTokenExpiresIn))
                 .sameSite("Strict")
@@ -110,15 +109,6 @@ public class UserController {
                 .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
                 .body("Login successful");
-
-    }
-
-    @Hidden
-    @PostMapping("/auth/refresh")
-    public ResponseEntity<TokenResponse> refreshToken(@CookieValue("RefreshToken") String refreshToken) {
-        log.info("Refreshing token");
-        TokenResponse tokenResponse = keyCloakServiceImpl.refreshToken(refreshToken);
-        return ResponseEntity.ok(tokenResponse);
 
     }
 
