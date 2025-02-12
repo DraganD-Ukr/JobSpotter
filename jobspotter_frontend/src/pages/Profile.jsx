@@ -2,6 +2,43 @@ import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import thanosImage from "../assets/thanos.jpg";
 
+// Loading Skeleton Component
+const LoadingSkeleton = () => (
+  <div className="flex min-h-screen bg-gray-100">
+    <aside className="w-1/4 bg-white shadow-md p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-14 h-14 bg-gray-300 rounded-full"></div>
+        <div>
+          <div className="w-24 h-4 bg-gray-300 rounded mb-2"></div>
+          <div className="w-16 h-4 bg-gray-300 rounded"></div>
+        </div>
+      </div>
+      <nav className="space-y-3">
+        <div className="w-3/4 h-4 bg-gray-300 rounded mb-2"></div>
+        <div className="w-3/4 h-4 bg-gray-300 rounded mb-2"></div>
+        <div className="w-3/4 h-4 bg-gray-300 rounded mb-2"></div>
+        <div className="w-3/4 h-4 bg-gray-300 rounded"></div>
+      </nav>
+    </aside>
+    <main className="w-3/4 p-8">
+      <div className="bg-white shadow rounded-lg p-6">
+        <div className="w-1/2 h-6 bg-gray-300 rounded mb-4"></div>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="w-full h-6 bg-gray-300 rounded mb-4"></div>
+          <div className="w-full h-6 bg-gray-300 rounded mb-4"></div>
+          <div className="w-full h-6 bg-gray-300 rounded mb-4"></div>
+          <div className="w-full h-6 bg-gray-300 rounded mb-4"></div>
+          <div className="col-span-2 w-full h-24 bg-gray-300 rounded mb-4"></div>
+        </div>
+        <div className="mt-6 flex gap-4">
+          <div className="w-24 h-10 bg-gray-300 rounded"></div>
+          <div className="w-24 h-10 bg-gray-300 rounded"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+);
+
 // Returns an object with default values based on the user data.
 const getDefaultFormData = (data) => ({
   firstName: data.firstName || "",
@@ -23,6 +60,7 @@ export default function Profile() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Fetch user data. Cookies will be sent automatically.
   useEffect(() => {
@@ -122,6 +160,7 @@ export default function Profile() {
     console.log("Request Options:", requestOptions); // Log the request options
 
     setSaving(true);
+    setErrorMessage(""); // Clear any previous error messages
 
     fetch("/api/v1/users/me", requestOptions)
       .then((res) => {
@@ -134,7 +173,7 @@ export default function Profile() {
         }
         return res.json().then((data) => {
           console.log("Response Body:", data); // Log the response body
-          if (!res.ok) throw new Error("Failed to save changes");
+          if (!res.ok) throw new Error(data.message || "Failed to save changes");
           return data;
         });
       })
@@ -149,6 +188,7 @@ export default function Profile() {
       })
       .catch((err) => {
         console.error("Error saving user profile:", err);
+        setErrorMessage(err.message || "An error occurred while saving the profile.");
       })
       .finally(() => {
         setSaving(false);
@@ -157,11 +197,7 @@ export default function Profile() {
   };
 
   if (loading || saving) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <p>{loading ? "Loading..." : "Saving..."}</p>
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
 
   if (!user) {
@@ -254,6 +290,11 @@ export default function Profile() {
         <h1 className="text-2xl font-bold text-gray-800 mb-4">Profile</h1>
         <div className="bg-white shadow rounded-lg p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">My Information</h2>
+          {errorMessage && (
+            <div className="mb-4 text-red-500">
+              {errorMessage}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-6">
             {renderField("First Name", "firstName")}
             {renderField("Last Name", "lastName")}
