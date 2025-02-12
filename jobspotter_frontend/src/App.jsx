@@ -8,6 +8,7 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import { TermsOfService } from "./pages/TermsOfService";
+import { Address } from "./pages/Address";
 import Data from "./pages/Data";
 import { JobPost } from "./pages/JobPost";
 
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/termsofservice" element={<TermsOfService />} />
           <Route path="/jobpost" element={<JobPost />} />
           <Route path="/data" element={<Data />} />
+          <Route path="/address" element={<Address />} />
         </Routes>
       </div>
       <Footer />

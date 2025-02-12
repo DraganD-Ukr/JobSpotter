@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, LogOut } from "lucide-react";
-import Cookies from "js-cookie";
 import trollImage from "../assets/troll.jpg";
 import gigachadImage from "../assets/gigachad.png";
 
@@ -13,7 +12,6 @@ export default function Navbar() {
   const searchRef = useRef(null);
   const profileMenuRef = useRef(null);
 
-  // Detect clicks outside search/profile menus
   useEffect(() => {
     function handleClickOutside(event) {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -28,13 +26,11 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    // No need to check for token existence client-side if using HttpOnly cookies.
     fetch("/api/v1/users/me", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      // Include credentials so cookies are sent automatically with the request.
       credentials: "include",
     })
       .then((res) => {
@@ -44,27 +40,38 @@ export default function Navbar() {
       .then((data) => {
         setUsername(data.username || "");
         setIsLoggedIn(true);
-        console.log("User is logged in, username:", data.username);
       })
-      .catch((err) => {
-        console.error("Error fetching user info:", err);
+      .catch(() => {
         setIsLoggedIn(false);
-        console.log("Error occurred, setting isLoggedIn to false");
       })
       .finally(() => setIsCheckingAuth(false));
   }, []);
-  
 
-  // Log isLoggedIn during renders
   useEffect(() => {
     console.log("isLoggedIn state updated:", isLoggedIn);
   }, [isLoggedIn]);
 
-  const handleLogout = () => {
-    Cookies.remove("AccessToken");
-    Cookies.remove("RefreshToken");
-    window.location.href = "/";
+  const handleLogout = async () => {
+    try {
+      
+  
+      const response = await fetch("/api/v1/users/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+  
+      if (!response.ok) throw new Error("Logout failed");
+
+  
+      window.location.href = "/Login";
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
   };
+  
 
   return (
     <nav className="sticky top-0 z-50 lava-lamp-background p-4 shadow-md">
@@ -72,7 +79,6 @@ export default function Navbar() {
         <a href="/" className="text-white font-bold text-xl">
           JobSpotter
         </a>
-
         <div className="flex-grow flex justify-center gap-8">
           <a href="/jobpost" className="text-white font-medium hover:underline">
             Job Posts
@@ -81,7 +87,6 @@ export default function Navbar() {
             Data
           </a>
         </div>
-
         <div className="relative flex items-center ml-auto mr-4" ref={searchRef}>
           {!isExpanded ? (
             <button
@@ -116,9 +121,8 @@ export default function Navbar() {
             </div>
           )}
         </div>
-
         <ul className="flex gap-4 items-center">
-          {isCheckingAuth ? ( // While checking authentication, don't render anything
+          {isCheckingAuth ? (
             <li className="text-white">Loading...</li>
           ) : !isLoggedIn ? (
             <>
@@ -150,34 +154,27 @@ export default function Navbar() {
                 />
                 {showProfileMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg py-2">
-                    <a
-                      href="/profile"
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                    >
+                    <a href="/profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                       Profile
                     </a>
-                    <a
-                      href="#"
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                    >
+                    <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                       Job Activity
                     </a>
-                    <a
-                      href="#"
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                    >
+                    <a href="/Settings" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                       Settings
                     </a>
+
                     <div
                       onClick={handleLogout}
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center cursor-pointer"
                     >
-                      Sign Out <LogOut className="ml-auto" size={16} />
+                    
+                      Sign Out 
                     </div>
                   </div>
                 )}
               </div>
-              <span className="text-white font-bold">{username}</span>
+              <span className="text-white font-bold">{username}</span> 
             </li>
           )}
         </ul>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import Cookies from "js-cookie";
 import thanosImage from "../assets/thanos.jpg";
+import Sidebar from "../components/Sidebar"; 
 
 // Loading Skeleton Component
 const LoadingSkeleton = () => (
@@ -232,58 +232,8 @@ export default function Profile() {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside className="w-1/4 bg-white shadow-md p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="relative">
-            <img
-              src={
-                editing
-                  ? previewImage || formData.profileImage || thanosImage
-                  : formData.profileImage || thanosImage
-              }
-              alt="Profile"
-              className="w-14 h-14 rounded-full object-cover"
-            />
-            {editing && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full cursor-pointer">
-                <label htmlFor="profileImageInput" className="text-white text-xs">
-                  Change Photo
-                </label>
-                <input
-                  id="profileImageInput"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
-              </div>
-            )}
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold">
-              {user.firstName} {user.lastName}
-            </h3>
-            <p className="text-gray-500 text-sm">
-              {user.userType || "User"}
-            </p>
-          </div>
-        </div>
-
-        <nav className="space-y-3">
-          <a href="#" className="block text-gray-700 hover:text-green-500 text-sm">
-            Job Preferences
-          </a>
-          <a href="#" className="block text-gray-700 hover:text-green-500 text-sm">
-            Account Settings
-          </a>
-          <a href="#" className="block text-gray-700 hover:text-green-500 text-sm">
-            Notifications
-          </a>
-          <a href="/Login" className="block text-gray-700 hover:text-green-500 text-sm">
-            Sign Out
-          </a>
-        </nav>
-      </aside>
+      <Sidebar />
+      
 
       {/* My information Profile Content */}
       <main className="w-3/4 p-8">
