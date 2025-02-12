@@ -37,7 +37,9 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.GET, "/api/v1/job-posts").permitAll()
                         .anyExchange().authenticated()
                 )
+//                Handle token rotation and setting the Authorization header from the cookies
                 .addFilterBefore(JwtRefreshFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+//                Verifying the JWT token with the Keycloak
                 .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
 
                 .build();

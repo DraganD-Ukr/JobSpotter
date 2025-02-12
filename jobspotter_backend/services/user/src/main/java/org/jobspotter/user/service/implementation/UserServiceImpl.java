@@ -126,6 +126,7 @@ public class UserServiceImpl implements UserService {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
 
+        log.info("Updating user with id: {}", userId);
         userRepository.save(user);
 
         return ResponseEntity.ok(UserResponse.builder()

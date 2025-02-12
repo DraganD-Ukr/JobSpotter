@@ -189,7 +189,7 @@ public class UserController {
 
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
-
+        log.info("Updating user details");
         return userService.updateUser(userId, userPatchRequest);
 
     }
