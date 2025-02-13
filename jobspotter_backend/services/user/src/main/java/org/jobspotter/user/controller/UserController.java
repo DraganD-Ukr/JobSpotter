@@ -100,7 +100,7 @@ public class UserController {
                 .httpOnly(true)
                 .secure(false)
                 .path("/")
-                .maxAge(Duration.ofDays(refreshTokenExpiresIn))
+                .maxAge(Duration.ofMinutes(refreshTokenExpiresIn))
                 .sameSite("Strict")
                 .build();
 

@@ -136,7 +136,7 @@ public class JwtRefreshFilter implements WebFilter {
                             .sameSite("Strict").build());
 
                     exchange.getResponse().addCookie(ResponseCookie.from("RefreshToken", newRefreshToken)
-                            .httpOnly(true).secure(false).path("/").maxAge(Duration.ofDays(newTokenResponse.getRefresh_expires_in() / 60))
+                            .httpOnly(true).secure(false).path("/").maxAge(Duration.ofMinutes(newTokenResponse.getRefresh_expires_in() / 60))
                             .sameSite("Strict").build());
 
                     log.info("Successfully refreshed access and refresh tokens");

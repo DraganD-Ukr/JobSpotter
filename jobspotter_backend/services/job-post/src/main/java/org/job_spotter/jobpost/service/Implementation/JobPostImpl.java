@@ -209,37 +209,36 @@ public class JobPostImpl implements JobPostService {
 
 
         if (jobPost.getStatus() != JobStatus.OPEN) {
-            log.error("Job post is not open for applications");
+            log.warn("Could not apply applicant to JobPost: Job post is not open for applications");
             throw new ForbiddenException("Job post is not open for applications.");
         }
 
         if (jobPost.getJobPosterId().equals(userId)) {
-            log.error("User cannot apply to own job post");
+            log.warn("Could not apply applicant to JobPost: User cannot apply to own job post");
             throw new ForbiddenException("You cannot apply to your own job post.");
         }
 
-        if (jobPost.getApplicants().size() >= jobPost.getMaxApplicants()) {
-            log.error("Job post has reached maximum number of applicants");
-            throw new InvalidRequestException("Job post has reached maximum number of applicants.");
-        }
+
+        String applicantMessage = (jobPostApplyRequest != null) ? jobPostApplyRequest.getMessage() : "";
 
         // Create the applicant object
         Applicant applicant = Applicant.builder()
                 .userId(userId)
-                .message(jobPostApplyRequest.getMessage())
+                .message(applicantMessage)
                 .status(ApplicantStatus.PENDING)
                 .build();
-
-        // Save the applicant explicitly
-        applicant = applicantRepository.save(applicant);
 
         // Add the applicant to the job post
         boolean added = jobPost.getApplicants().add(applicant);
 
         if (!added) {
-            log.error("User already applied to job post");
+            log.warn("Could not apply applicant to JobPost: User already applied to job post");
             throw new ForbiddenException("You have already applied to this job post.");
         }
+
+        // Save the applicant explicitly
+        applicantRepository.save(applicant);
+
 
         jobPostRepository.save(jobPost);
 

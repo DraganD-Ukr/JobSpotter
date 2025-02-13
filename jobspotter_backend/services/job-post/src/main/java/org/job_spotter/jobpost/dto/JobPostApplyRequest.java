@@ -1,6 +1,7 @@
 package org.job_spotter.jobpost.dto;
 
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -11,7 +12,11 @@ import lombok.*;
 @AllArgsConstructor
 public class JobPostApplyRequest {
 
-    @Size(max = 255)
+    @Schema(description = "Message to job post creator. Not required",
+            example = "Hey, I am interested in this job!",
+            required = false
+    )
+    @Size(max = 255, message = "Message must be less than 255 characters")
     private String message;
 
 }

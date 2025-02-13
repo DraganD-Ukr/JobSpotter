@@ -18,6 +18,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Table(name = "applicant")
 public class Applicant {
 
@@ -32,7 +33,8 @@ public class Applicant {
     @JsonBackReference
     private List<JobPost> jobPost = new ArrayList<>();
 
-    // The unique identifier for the user. generated automatically
+    // The unique identifier for the user.
+    @EqualsAndHashCode.Include
     @Column(nullable = false)
     private UUID userId;
 
