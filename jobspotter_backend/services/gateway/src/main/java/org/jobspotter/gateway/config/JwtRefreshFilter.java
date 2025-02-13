@@ -91,6 +91,19 @@ public class JwtRefreshFilter implements WebFilter {
         }
         String refreshToken = refreshTokenCookie.getValue();
 
+        try {
+            Jwt decodedRefreshToken = jwtDecoder.decode(refreshToken);
+            if (decodedRefreshToken.getExpiresAt().isBefore(Instant.now())) {
+                log.warn("Refresh token is expired. User must log in again.");
+                removeCookies(exchange);
+                return returnErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Refresh token expired. Please log in again.");
+            }
+        } catch (JwtException e) {
+            log.error("Error decoding refresh token: {}", e.getMessage());
+            return returnErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Invalid refresh token. Please log in again.");
+        }
+
+
         // Prepare request body for the refresh token request
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("client_id", clientId); // Adjust based on your Keycloak setup
