@@ -3,10 +3,7 @@ package org.job_spotter.jobpost.handler;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.job_spotter.jobpost.dto.ErrorResponse;
-import org.job_spotter.jobpost.exception.ForbiddenException;
-import org.job_spotter.jobpost.exception.ResourceNotFoundException;
-import org.job_spotter.jobpost.exception.ServerException;
-import org.job_spotter.jobpost.exception.UnauthorizedException;
+import org.job_spotter.jobpost.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -158,6 +155,22 @@ public class GlobalExceptionHandler {
                 e.getMessage()
         );
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
+    /**
+     * Handles UnauthorizedException. Thrown when the user is not authorized to perform an action.
+     * @param e UnauthorizedException
+     * @return ResponseEntity with the error message.
+     */
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenException(InvalidRequestException e) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                "BAD REQUEST",
+                HttpStatus.BAD_REQUEST.value(),
+                e.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     /**

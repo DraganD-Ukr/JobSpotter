@@ -6,9 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.gateway.dto.TokenResponse;
 import org.jobspotter.gateway.exception.ErrorResponse;
-import org.jobspotter.gateway.exception.InvalidRequestException;
-import org.jobspotter.gateway.exception.ServerException;
-import org.jobspotter.gateway.exception.UnauthorizedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -37,7 +34,7 @@ public class JwtRefreshFilter implements WebFilter {
     @Value("${keycloak.admin.client-id}")
     private String clientId;
 
-    private String localHostPrefixUrl = "http://localhost:9090"; // Update with the correct Keycloak URL
+    private final String localHostPrefixUrl = "http://localhost:9090";
 
     private final JwtDecoder jwtDecoder;
     private final WebClient.Builder webClientBuilder;
@@ -75,7 +72,7 @@ public class JwtRefreshFilter implements WebFilter {
                 log.debug("Access token is expired. Refreshing token...");
             } catch (JwtException e) {
                 log.error("Error decoding access token: {}:, {}", e.getMessage(), e.getStackTrace());
-                return Mono.error(new UnauthorizedException("Invalid access token"));
+                return returnErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Invalid access token");
             }
         }
 

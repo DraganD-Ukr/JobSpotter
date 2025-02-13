@@ -1,5 +1,6 @@
 package org.job_spotter.jobpost.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,6 +29,7 @@ public class Applicant {
     // The unique identifier for the job post. generated automatically
 
     @ManyToMany(mappedBy = "applicants")
+    @JsonBackReference
     private List<JobPost> jobPost = new ArrayList<>();
 
     // The unique identifier for the user. generated automatically

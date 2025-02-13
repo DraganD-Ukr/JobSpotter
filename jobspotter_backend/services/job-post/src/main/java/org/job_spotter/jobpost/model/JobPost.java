@@ -1,5 +1,6 @@
 package org.job_spotter.jobpost.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -49,6 +50,7 @@ public class JobPost {
             joinColumns = @JoinColumn(name = "jobPostId"), // Foreign key column for JobPost
             inverseJoinColumns = @JoinColumn(name = "applicantId") // Foreign key column for Applicant
     )
+    @JsonManagedReference
     private Set<Applicant> applicants = new HashSet<>();
 
     //Title of the job

@@ -3,6 +3,8 @@ package org.job_spotter.jobpost.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.job_spotter.jobpost.authUtils.JWTUtils;
+import org.job_spotter.jobpost.dto.JobPostApplyRequest;
 import org.job_spotter.jobpost.dto.JobPostPostRequest;
 import org.job_spotter.jobpost.model.JobPost;
 import org.job_spotter.jobpost.service.JobPostService;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/job-posts")
@@ -49,6 +52,21 @@ public class JobPostController {
         log.info("Creating job post");
         Long id = jobPostService.createJobPost(jobPostPostRequest, accessToken);
         return ResponseEntity.created(new URI("/api/v1/job-posts/"+id)).build();
+    }
+
+
+    @PostMapping("/{id}/apply")
+    public ResponseEntity<HttpStatus> applyToJobPost(
+            @RequestHeader("Authorization") String accessToken,
+            @PathVariable Long id,
+            @RequestBody @Valid JobPostApplyRequest jobPostApplyRequest
+    ) throws Exception {
+        log.info("Applying to job post");
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+        jobPostService.applyToJobPost(id, userId, jobPostApplyRequest);
+
+        return ResponseEntity.noContent().build();
     }
 
     //Create job post with dummy data

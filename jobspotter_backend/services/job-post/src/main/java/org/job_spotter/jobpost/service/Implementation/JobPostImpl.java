@@ -8,14 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.job_spotter.jobpost.authUtils.JWTUtils;
 import org.job_spotter.jobpost.client.AddressServiceClient;
 import org.job_spotter.jobpost.dto.AddressResponse;
+import org.job_spotter.jobpost.dto.JobPostApplyRequest;
 import org.job_spotter.jobpost.dto.JobPostPostRequest;
-import org.job_spotter.jobpost.exception.ForbiddenException;
-import org.job_spotter.jobpost.exception.ServerException;
-import org.job_spotter.jobpost.exception.UnauthorizedException;
-import org.job_spotter.jobpost.model.JobPost;
-import org.job_spotter.jobpost.model.JobStatus;
-import org.job_spotter.jobpost.model.JobTagEnum;
-import org.job_spotter.jobpost.model.Tag;
+import org.job_spotter.jobpost.exception.*;
+import org.job_spotter.jobpost.model.*;
+import org.job_spotter.jobpost.repository.ApplicantRepository;
 import org.job_spotter.jobpost.repository.JobPostRepository;
 import org.job_spotter.jobpost.repository.TagRepository;
 import org.job_spotter.jobpost.service.JobPostService;
@@ -33,6 +30,7 @@ public class JobPostImpl implements JobPostService {
     private final JobPostRepository jobPostRepository;
     private final TagRepository tagRepository;
     private final AddressServiceClient addressServiceClient;
+    private final ApplicantRepository applicantRepository;
 
 
     @Override
@@ -201,6 +199,53 @@ public class JobPostImpl implements JobPostService {
 
         return null;
 
+    }
+
+    @Override
+    public HttpStatus applyToJobPost(Long jobPostId, UUID userId, JobPostApplyRequest jobPostApplyRequest) {
+
+        JobPost jobPost = jobPostRepository.findById(jobPostId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + jobPostId));
+
+
+        if (jobPost.getStatus() != JobStatus.OPEN) {
+            log.error("Job post is not open for applications");
+            throw new ForbiddenException("Job post is not open for applications.");
+        }
+
+        if (jobPost.getJobPosterId().equals(userId)) {
+            log.error("User cannot apply to own job post");
+            throw new ForbiddenException("You cannot apply to your own job post.");
+        }
+
+        if (jobPost.getApplicants().size() >= jobPost.getMaxApplicants()) {
+            log.error("Job post has reached maximum number of applicants");
+            throw new InvalidRequestException("Job post has reached maximum number of applicants.");
+        }
+
+        // Create the applicant object
+        Applicant applicant = Applicant.builder()
+                .userId(userId)
+                .message(jobPostApplyRequest.getMessage())
+                .status(ApplicantStatus.PENDING)
+                .build();
+
+        // Save the applicant explicitly
+        applicant = applicantRepository.save(applicant);
+
+        // Add the applicant to the job post
+        boolean added = jobPost.getApplicants().add(applicant);
+
+        if (!added) {
+            log.error("User already applied to job post");
+            throw new ForbiddenException("You have already applied to this job post.");
+        }
+
+        jobPostRepository.save(jobPost);
+
+        log.info("User applied to job post successfully");
+
+        return HttpStatus.CREATED;
     }
 
     private static void logAddressClientException(FeignClientException e) {

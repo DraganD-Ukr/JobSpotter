@@ -7,13 +7,14 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.Optional;
 
 @Repository
-public interface JobPostRepository extends JpaRepository<JobPost ,UUID> {
+public interface JobPostRepository extends JpaRepository<JobPost, Long> {
 
     @Query("SELECT jp FROM JobPost jp JOIN jp.tags t WHERE t.name = :name")
     List<JobPost> findAllByTags_Name(@Param("name") String name);
 
+    Optional<JobPost> findById(Long id);
 
 }
