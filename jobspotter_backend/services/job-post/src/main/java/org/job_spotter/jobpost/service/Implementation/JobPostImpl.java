@@ -7,9 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.job_spotter.jobpost.authUtils.JWTUtils;
 import org.job_spotter.jobpost.client.AddressServiceClient;
-import org.job_spotter.jobpost.dto.AddressResponse;
-import org.job_spotter.jobpost.dto.JobPostApplyRequest;
-import org.job_spotter.jobpost.dto.JobPostPostRequest;
+import org.job_spotter.jobpost.client.UserServiceClient;
+import org.job_spotter.jobpost.dto.*;
 import org.job_spotter.jobpost.exception.*;
 import org.job_spotter.jobpost.model.*;
 import org.job_spotter.jobpost.repository.ApplicantRepository;
@@ -21,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +30,7 @@ public class JobPostImpl implements JobPostService {
     private final JobPostRepository jobPostRepository;
     private final TagRepository tagRepository;
     private final AddressServiceClient addressServiceClient;
+    private final UserServiceClient userServiceClient;
     private final ApplicantRepository applicantRepository;
 
 
@@ -180,7 +181,7 @@ public class JobPostImpl implements JobPostService {
 
             if (e.status() == HttpStatus.NOT_FOUND.value()) {
                 logAddressClientException(e);
-                throw new ServerException(getErrorMessageFromFeignException(e));
+                throw new ResourceNotFoundException(getErrorMessageFromFeignException(e));
 
             } else if (e.status() == HttpStatus.INTERNAL_SERVER_ERROR.value()) {
                 logAddressClientException(e);
@@ -247,8 +248,74 @@ public class JobPostImpl implements JobPostService {
         return HttpStatus.CREATED;
     }
 
+    @Override
+    public List<MyJobPostResponse> getMyJobPosts(UUID userId) {
+//        TODO: Results may be large, consider adding pagination in the future
+        List<JobPost> jobPosts = jobPostRepository.findAllByJobPosterId(userId);
+
+        // Extract applicant IDs from the job posts
+        Set<UUID> applicantIds = new HashSet<>();
+        for (JobPost jobPost : jobPosts) {
+            jobPost.getApplicants().forEach(applicant -> applicantIds.add(applicant.getUserId()));
+        }
+
+        try {
+            // Fetch basic info for all applicants (map of UUID -> UserBasicInfoResponse)
+            ResponseEntity <Map<UUID, UserBasicInfoResponse>> applicantsBasicInfoResponse = userServiceClient.getUsersBasicInfoByIds(new ArrayList<>(applicantIds));
+
+            Map<UUID, UserBasicInfoResponse> applicantsBasicInfo = applicantsBasicInfoResponse.getBody();
+
+            // Now, map the job posts to MyJobPostResponse
+            List<MyJobPostResponse> myJobPostResponses = jobPosts.stream()
+                    .map(jobPost -> {
+                        // Create a list of ApplicantResponse for each job post
+                        List<ApplicantResponse> applicantResponses = jobPost.getApplicants().stream()
+                                .map(applicant -> {
+                                    // Use the map to fetch the applicant's basic info
+                                    UserBasicInfoResponse userBasicInfo = applicantsBasicInfo.get(applicant.getUserId());
+                                    return ApplicantResponse.builder()
+                                            .userId(applicant.getUserId())
+                                            .username(userBasicInfo != null ? userBasicInfo.getUsername() : null)
+                                            .firstName(userBasicInfo != null ? userBasicInfo.getFirstName() : null)
+                                            .lastName(userBasicInfo != null ? userBasicInfo.getLastName() : null)
+                                            .status(applicant.getStatus())
+                                            .build();
+                                })
+                                .collect(Collectors.toList());
+
+                        // Create MyJobPostResponse with the applicants' info included
+                        return MyJobPostResponse.builder()
+                                .jobPostId(jobPost.getJobPostId())
+                                .tags(jobPost.getTags())
+                                .applicants(applicantResponses)  // This now contains the basic info for each applicant
+                                .title(jobPost.getTitle())
+                                .description(jobPost.getDescription())
+                                .address(jobPost.getAddress())
+                                .datePosted(jobPost.getDatePosted())
+                                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                                .maxApplicants(jobPost.getMaxApplicants())
+                                .status(jobPost.getStatus())
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+
+            return myJobPostResponses;  // Returning the list of job posts with populated applicants' info
+        } catch (FeignClientException e) {
+            if (e.status() == HttpStatus.INTERNAL_SERVER_ERROR.value()) {
+                logUserClientException(e);
+                throw new ServerException(getErrorMessageFromFeignException(e));
+
+            }
+        }
+        return null;
+    }
+
     private static void logAddressClientException(FeignClientException e) {
         log.error("(job-posts): Error getting address from user-service: {}, {}", e.getMessage(), e.status());
+    }
+
+    private static void logUserClientException(FeignClientException e) {
+        log.error("(job-posts): Error getting users(basic infos) from user-service: {}, {}", e.getMessage(), e.status());
     }
 
     private Set<Tag> convertTagsFromDto(Set<JobTagEnum> tags){

@@ -1,5 +1,8 @@
 package org.job_spotter.jobpost.model;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public enum JobTagEnum {
 
     GENERAL_HELP(1L, "General Help"),
@@ -41,7 +44,14 @@ public enum JobTagEnum {
 
     @Override
     public String toString() {
-        return displayName;
+        return name();
+    }
+
+    // Method to get all enum names as string values in the format 'ENUM_NAME'
+    public static String getAllEnumNames() {
+        return Arrays.stream(JobTagEnum.values())
+                .map(JobTagEnum::name) // Get the enum constant name (e.g., GENERAL_HELP)
+                .collect(Collectors.joining(", ")); // Join the enum names with commas
     }
 
 }

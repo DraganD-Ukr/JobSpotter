@@ -3,7 +3,9 @@ package org.jobspotter.user.service.implementation;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -142,6 +144,28 @@ public class UserServiceImpl implements UserService {
                 .userType(user.getUserType())
                 .build()
         );
+    }
+
+    @Override
+    public ResponseEntity<Map<UUID, UserBasicInfoResponse>> getAllByIds(List<UUID> userIds) {
+
+        List<User> users = userRepository.findAllByUserIdIn(userIds);
+
+        // Use stream to collect the data into a map
+        Map<UUID, UserBasicInfoResponse> usersResponseMap = users.stream()
+                .collect(Collectors.toMap(
+                        User::getUserId,
+                        user -> UserBasicInfoResponse.builder()
+                                .userId(user.getUserId())
+                                .username(user.getUsername())
+                                .firstName(user.getFirstName())
+                                .lastName(user.getLastName())
+                                .build()
+                ));
+
+        // Return the map wrapped in a ResponseEntity
+        return ResponseEntity.ok(usersResponseMap);
+
     }
 
 

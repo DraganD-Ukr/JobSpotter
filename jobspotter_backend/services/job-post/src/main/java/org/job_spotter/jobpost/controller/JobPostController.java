@@ -12,6 +12,7 @@ import org.job_spotter.jobpost.authUtils.JWTUtils;
 import org.job_spotter.jobpost.dto.ErrorResponse;
 import org.job_spotter.jobpost.dto.JobPostApplyRequest;
 import org.job_spotter.jobpost.dto.JobPostPostRequest;
+import org.job_spotter.jobpost.dto.MyJobPostResponse;
 import org.job_spotter.jobpost.model.JobPost;
 import org.job_spotter.jobpost.service.JobPostService;
 import org.springframework.http.HttpStatus;
@@ -89,6 +90,17 @@ public class JobPostController {
         jobPostService.applyToJobPost(id, userId, jobPostApplyRequest);
 
         return ResponseEntity.noContent().build();
+    }
+
+
+    @GetMapping("/my-job-posts")
+    public ResponseEntity<List<MyJobPostResponse>> getMyJobPosts(
+            @RequestHeader("Authorization") String accessToken
+    ) throws Exception {
+        log.info("Getting my job posts");
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+        return ResponseEntity.ok(jobPostService.getMyJobPosts(userId));
     }
 
     //Create job post with dummy data

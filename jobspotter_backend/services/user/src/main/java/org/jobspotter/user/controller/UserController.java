@@ -22,6 +22,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -162,6 +164,15 @@ public class UserController {
     ) {
         log.info("Getting user details");
         return userService.getUserById(accessToken);
+    }
+
+
+    @GetMapping()
+    public ResponseEntity<Map<UUID, UserBasicInfoResponse>> getUsersBasicInfo(
+            @RequestParam List<UUID> userIds
+            ) {
+        log.info("Getting user details");
+        return userService.getAllByIds(userIds);
     }
 
 

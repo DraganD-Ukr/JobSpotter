@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(name = "user-service")
+@FeignClient(name = "address-service")
 public interface AddressServiceClient {
 
     @GetMapping("/api/v1/users/addresses/{user-id}")

@@ -1,10 +1,10 @@
 package org.jobspotter.user.repository;
 
-import jakarta.validation.constraints.Email;
 import org.jobspotter.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -19,4 +19,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByUsernameAndEmail(String username, String email);
 
     User findByUserId(UUID userIdFromToken);
+
+    List<User> findAllByUserIdIn(List<UUID> userIds);
 }

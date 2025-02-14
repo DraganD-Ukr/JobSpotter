@@ -2,6 +2,7 @@ package org.job_spotter.jobpost.service;
 
 import org.job_spotter.jobpost.dto.JobPostApplyRequest;
 import org.job_spotter.jobpost.dto.JobPostPostRequest;
+import org.job_spotter.jobpost.dto.MyJobPostResponse;
 import org.job_spotter.jobpost.model.JobPost;
 import org.springframework.http.HttpStatus;
 
@@ -19,4 +20,6 @@ public interface JobPostService {
     Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken);
 
     HttpStatus applyToJobPost(Long id, UUID userId, JobPostApplyRequest jobPostApplyRequest);
+
+    List<MyJobPostResponse> getMyJobPosts(UUID userId);
 }
