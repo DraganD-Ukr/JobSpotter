@@ -1,5 +1,6 @@
 package org.job_spotter.jobpost.service;
 
+import org.job_spotter.jobpost.dto.ApplicantActionRequest;
 import org.job_spotter.jobpost.dto.JobPostApplyRequest;
 import org.job_spotter.jobpost.dto.JobPostPostRequest;
 import org.job_spotter.jobpost.dto.MyJobPostResponse;
@@ -22,4 +23,6 @@ public interface JobPostService {
     HttpStatus applyToJobPost(Long id, UUID userId, JobPostApplyRequest jobPostApplyRequest);
 
     List<MyJobPostResponse> getMyJobPosts(UUID userId);
+
+    JobPost takeApplicantsAction(Long jobPostId, UUID userId, List<ApplicantActionRequest> applicantsActionRequest);
 }

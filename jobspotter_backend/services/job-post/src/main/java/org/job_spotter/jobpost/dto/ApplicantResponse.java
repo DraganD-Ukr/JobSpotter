@@ -16,6 +16,8 @@ public class ApplicantResponse {
     @EqualsAndHashCode.Include
     private UUID userId;
 
+    private Long applicantId;
+
     private String username;
 
     private String firstName;
