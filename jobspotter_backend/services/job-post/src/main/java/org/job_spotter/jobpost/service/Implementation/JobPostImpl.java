@@ -3,10 +3,10 @@ package org.job_spotter.jobpost.service.Implementation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import feign.FeignException.FeignClientException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.job_spotter.jobpost.authUtils.JWTUtils;
-import org.job_spotter.jobpost.client.AddressServiceClient;
 import org.job_spotter.jobpost.client.UserServiceClient;
 import org.job_spotter.jobpost.dto.*;
 import org.job_spotter.jobpost.exception.*;
@@ -29,7 +29,6 @@ public class JobPostImpl implements JobPostService {
 
     private final JobPostRepository jobPostRepository;
     private final TagRepository tagRepository;
-    private final AddressServiceClient addressServiceClient;
     private final UserServiceClient userServiceClient;
     private final ApplicantRepository applicantRepository;
 
@@ -139,7 +138,7 @@ public class JobPostImpl implements JobPostService {
     public Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken) {
 
         try {
-            ResponseEntity<AddressResponse> response = addressServiceClient.getAddressById(accessToken, jobPostPostRequest.getAddressId());
+            ResponseEntity<AddressResponse> response = userServiceClient.getAddressById(accessToken, jobPostPostRequest.getAddressId());
 
             AddressResponse userAddress = response.getBody();
 
@@ -275,6 +274,7 @@ public class JobPostImpl implements JobPostService {
                                     UserBasicInfoResponse userBasicInfo = applicantsBasicInfo.get(applicant.getUserId());
                                     return ApplicantResponse.builder()
                                             .userId(applicant.getUserId())
+                                            .applicantId(applicant.getApplicantId())
                                             .username(userBasicInfo != null ? userBasicInfo.getUsername() : null)
                                             .firstName(userBasicInfo != null ? userBasicInfo.getFirstName() : null)
                                             .lastName(userBasicInfo != null ? userBasicInfo.getLastName() : null)
@@ -308,6 +308,80 @@ public class JobPostImpl implements JobPostService {
             }
         }
         return null;
+    }
+
+    @Transactional
+    @Override
+    public JobPost takeApplicantsAction(Long jobPostId, UUID userId, List<ApplicantActionRequest> applicantsActionRequest) {
+
+        // Find the job post
+        JobPost jobPost = jobPostRepository.findById(jobPostId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + jobPostId));
+
+        // Check if job post status is open
+        if (jobPost.getStatus() != JobStatus.OPEN) {
+            log.warn("Could not process applicants: Job post is not open for applications");
+            throw new ForbiddenException("Job post is not open for applications.");
+        }
+
+        // Check if the user is the job poster
+        if (!jobPost.getJobPosterId().equals(userId)) {
+            log.warn("Could not process applicants: User is not the job poster");
+            throw new UnauthorizedException("You are not authorized to take actions on this job post.");
+        }
+
+        // Count the number of accepted applicants (before processing the action request)
+        long acceptedApplicantsCount = jobPost.getApplicants().stream()
+                .filter(a -> a.getStatus() == ApplicantStatus.ACCEPTED)
+                .count();
+
+        // Process each applicant action in the request list
+        for (ApplicantActionRequest applicantActionRequest : applicantsActionRequest) {
+
+            Long applicantId = (long) applicantActionRequest.getApplicantId();  // Get applicant's userId from the request
+            ApplicantStatus requestedStatus = applicantActionRequest.getStatus();  // Get the requested status (ACCEPTED, REJECTED)
+
+            // Find the applicant in the job post applicants set
+            Applicant applicant = jobPost.getApplicants().stream()
+                    .filter(a -> a.getApplicantId().equals(applicantId))
+                    .findFirst()
+                    .orElseThrow(() -> new ResourceNotFoundException("Applicant not found with id " + applicantId));
+
+            // Check if the status is valid and handle it
+            if (requestedStatus == ApplicantStatus.ACCEPTED) {
+                // If the applicant is accepted, update their status
+                applicant.setStatus(ApplicantStatus.ACCEPTED);
+                acceptedApplicantsCount++;  // Increment accepted applicants count
+
+                // Check if we exceed the max number of accepted applicants
+                if (acceptedApplicantsCount > jobPost.getMaxApplicants()) {
+                    log.warn("Cannot accept applicant: Max number of applicants exceeded.");
+                    throw new ForbiddenException("Cannot accept more applicants. Max limit reached.");
+                }
+            } else if (requestedStatus == ApplicantStatus.REJECTED) {
+                // If the applicant is rejected, update their status
+                applicant.setStatus(ApplicantStatus.REJECTED);
+            } else {
+                // If an invalid status is provided
+                log.error("Invalid applicant status in the action request: {}", requestedStatus);
+                throw new IllegalArgumentException("Invalid applicant status: " + requestedStatus);
+            }
+        }
+
+        // If the number of accepted applicants reaches the max limit, change the job post status to IN_PROGRESS
+        if (acceptedApplicantsCount >= jobPost.getMaxApplicants()) {
+            jobPost.setStatus(JobStatus.IN_PROGRESS);
+            log.info("Reached desired number of accepted applicants. Job post is now in progress.");
+        }
+
+        // Save all updated applicants in one go
+        applicantRepository.saveAll(jobPost.getApplicants());
+
+        // Save the updated job post
+        jobPostRepository.save(jobPost);
+
+        log.info("All applicant actions processed successfully.");
+        return jobPost; // Optionally return the updated job post
     }
 
     private static void logAddressClientException(FeignClientException e) {
