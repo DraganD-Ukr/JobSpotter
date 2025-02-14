@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.job_spotter.jobpost.model.JobTagEnum;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -28,7 +27,9 @@ public class TagDeserializer extends JsonDeserializer<Set<JobTagEnum>> {
                 tags.add(JobTagEnum.valueOf(tagString)); // Add the tag if it's valid
             } catch (IllegalArgumentException e) {
                 // Handle invalid tag string here if needed
-                String allowedValues = Arrays.toString(JobTagEnum.values());
+
+                String allowedValues = JobTagEnum.getAllEnumNames();
+
                 throw new InvalidFormatException("Invalid value for Job Post Tags: '" + tagString + "'. Allowed values are: " + allowedValues, tagString, JobTagEnum.class);
             }
         }
