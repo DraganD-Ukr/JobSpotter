@@ -259,50 +259,63 @@ public class JobPostImpl implements JobPostService {
             jobPost.getApplicants().forEach(applicant -> applicantIds.add(applicant.getUserId()));
         }
 
-        // Fetch basic info for all applicants (map of UUID -> UserBasicInfoResponse)
-        ResponseEntity <Map<UUID, UserBasicInfoResponse>> applicantsBasicInfoResponse = userServiceClient.getUsersBasicInfoByIds(new ArrayList<>(applicantIds));
+        try {
+            // Fetch basic info for all applicants (map of UUID -> UserBasicInfoResponse)
+            ResponseEntity <Map<UUID, UserBasicInfoResponse>> applicantsBasicInfoResponse = userServiceClient.getUsersBasicInfoByIds(new ArrayList<>(applicantIds));
 
-        Map<UUID, UserBasicInfoResponse> applicantsBasicInfo = applicantsBasicInfoResponse.getBody();
+            Map<UUID, UserBasicInfoResponse> applicantsBasicInfo = applicantsBasicInfoResponse.getBody();
 
-        // Now, map the job posts to MyJobPostResponse
-        List<MyJobPostResponse> myJobPostResponses = jobPosts.stream()
-                .map(jobPost -> {
-                    // Create a list of ApplicantResponse for each job post
-                    List<ApplicantResponse> applicantResponses = jobPost.getApplicants().stream()
-                            .map(applicant -> {
-                                // Use the map to fetch the applicant's basic info
-                                UserBasicInfoResponse userBasicInfo = applicantsBasicInfo.get(applicant.getUserId());
-                                return ApplicantResponse.builder()
-                                        .userId(applicant.getUserId())
-                                        .username(userBasicInfo != null ? userBasicInfo.getUsername() : null)
-                                        .firstName(userBasicInfo != null ? userBasicInfo.getFirstName() : null)
-                                        .lastName(userBasicInfo != null ? userBasicInfo.getLastName() : null)
-                                        .status(applicant.getStatus())
-                                        .build();
-                            })
-                            .collect(Collectors.toList());
+            // Now, map the job posts to MyJobPostResponse
+            List<MyJobPostResponse> myJobPostResponses = jobPosts.stream()
+                    .map(jobPost -> {
+                        // Create a list of ApplicantResponse for each job post
+                        List<ApplicantResponse> applicantResponses = jobPost.getApplicants().stream()
+                                .map(applicant -> {
+                                    // Use the map to fetch the applicant's basic info
+                                    UserBasicInfoResponse userBasicInfo = applicantsBasicInfo.get(applicant.getUserId());
+                                    return ApplicantResponse.builder()
+                                            .userId(applicant.getUserId())
+                                            .username(userBasicInfo != null ? userBasicInfo.getUsername() : null)
+                                            .firstName(userBasicInfo != null ? userBasicInfo.getFirstName() : null)
+                                            .lastName(userBasicInfo != null ? userBasicInfo.getLastName() : null)
+                                            .status(applicant.getStatus())
+                                            .build();
+                                })
+                                .collect(Collectors.toList());
 
-                    // Create MyJobPostResponse with the applicants' info included
-                    return MyJobPostResponse.builder()
-                            .jobPostId(jobPost.getJobPostId())
-                            .tags(jobPost.getTags())
-                            .applicants(applicantResponses)  // This now contains the basic info for each applicant
-                            .title(jobPost.getTitle())
-                            .description(jobPost.getDescription())
-                            .address(jobPost.getAddress())
-                            .datePosted(jobPost.getDatePosted())
-                            .lastUpdatedAt(jobPost.getLastUpdatedAt())
-                            .maxApplicants(jobPost.getMaxApplicants())
-                            .status(jobPost.getStatus())
-                            .build();
-                })
-                .collect(Collectors.toList());
+                        // Create MyJobPostResponse with the applicants' info included
+                        return MyJobPostResponse.builder()
+                                .jobPostId(jobPost.getJobPostId())
+                                .tags(jobPost.getTags())
+                                .applicants(applicantResponses)  // This now contains the basic info for each applicant
+                                .title(jobPost.getTitle())
+                                .description(jobPost.getDescription())
+                                .address(jobPost.getAddress())
+                                .datePosted(jobPost.getDatePosted())
+                                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                                .maxApplicants(jobPost.getMaxApplicants())
+                                .status(jobPost.getStatus())
+                                .build();
+                    })
+                    .collect(Collectors.toList());
 
-        return myJobPostResponses;  // Returning the list of job posts with populated applicants' info
+            return myJobPostResponses;  // Returning the list of job posts with populated applicants' info
+        } catch (FeignClientException e) {
+            if (e.status() == HttpStatus.INTERNAL_SERVER_ERROR.value()) {
+                logUserClientException(e);
+                throw new ServerException(getErrorMessageFromFeignException(e));
+
+            }
+        }
+        return null;
     }
 
     private static void logAddressClientException(FeignClientException e) {
         log.error("(job-posts): Error getting address from user-service: {}, {}", e.getMessage(), e.status());
+    }
+
+    private static void logUserClientException(FeignClientException e) {
+        log.error("(job-posts): Error getting users(basic infos) from user-service: {}, {}", e.getMessage(), e.status());
     }
 
     private Set<Tag> convertTagsFromDto(Set<JobTagEnum> tags){
