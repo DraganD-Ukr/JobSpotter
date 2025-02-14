@@ -81,7 +81,9 @@ public class AddressServiceImpl implements AddressService {
         Double lat = coordinates.get("lat");
         Double lng = coordinates.get("lng");
 
-
+//        Set the coordinates
+        address.setLatitude(lat);
+        address.setLongitude(lng);
 
 //          Save the address
         addressRepository.save(address);
