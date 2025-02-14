@@ -91,17 +91,6 @@ public class JwtRefreshFilter implements WebFilter {
         }
         String refreshToken = refreshTokenCookie.getValue();
 
-        try {
-            Jwt decodedRefreshToken = jwtDecoder.decode(refreshToken);
-            if (decodedRefreshToken.getExpiresAt().isBefore(Instant.now())) {
-                log.warn("Refresh token is expired. User must log in again.");
-                removeCookies(exchange);
-                return returnErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Refresh token expired. Please log in again.");
-            }
-        } catch (JwtException e) {
-            log.error("Error decoding refresh token: {}", e.getMessage());
-            return returnErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Invalid refresh token. Please log in again.");
-        }
 
 
         // Prepare request body for the refresh token request
@@ -121,7 +110,7 @@ public class JwtRefreshFilter implements WebFilter {
                 .flatMap(newTokenResponse -> {
                     if (newTokenResponse.getAccess_token() == null || newTokenResponse.getRefresh_token() == null) {
                         log.error("Invalid response from Keycloak: {}", newTokenResponse);
-                        return returnErrorResponse(exchange, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to refresh token. Please login again");
+                        return returnErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Failed to refresh token: invalid or expired. Please login again");
                     }
 
                     String newAccessToken = newTokenResponse.getAccess_token();
