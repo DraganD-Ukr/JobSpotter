@@ -1,6 +1,7 @@
 package org.job_spotter.jobpost.dto;
 
 import lombok.*;
+import org.job_spotter.jobpost.model.ApplicantStatus;
 
 import java.util.UUID;
 
@@ -20,6 +21,8 @@ public class ApplicantResponse {
     private String firstName;
 
     private String lastName;
+
+    private ApplicantStatus status;
 
 
 }

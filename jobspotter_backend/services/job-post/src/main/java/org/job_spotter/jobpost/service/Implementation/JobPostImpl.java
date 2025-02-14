@@ -253,10 +253,10 @@ public class JobPostImpl implements JobPostService {
 //        TODO: Results may be large, consider adding pagination in the future
         List<JobPost> jobPosts = jobPostRepository.findAllByJobPosterId(userId);
 
-        // Extract applicant IDs from the job posts (assuming it's a Set or List of UUIDs)
+        // Extract applicant IDs from the job posts
         Set<UUID> applicantIds = new HashSet<>();
         for (JobPost jobPost : jobPosts) {
-            jobPost.getApplicants().forEach(applicant -> applicantIds.add(applicant.getUserId())); // Assuming applicants has userId
+            jobPost.getApplicants().forEach(applicant -> applicantIds.add(applicant.getUserId()));
         }
 
         // Fetch basic info for all applicants (map of UUID -> UserBasicInfoResponse)
@@ -277,6 +277,7 @@ public class JobPostImpl implements JobPostService {
                                         .username(userBasicInfo != null ? userBasicInfo.getUsername() : null)
                                         .firstName(userBasicInfo != null ? userBasicInfo.getFirstName() : null)
                                         .lastName(userBasicInfo != null ? userBasicInfo.getLastName() : null)
+                                        .status(applicant.getStatus())
                                         .build();
                             })
                             .collect(Collectors.toList());
