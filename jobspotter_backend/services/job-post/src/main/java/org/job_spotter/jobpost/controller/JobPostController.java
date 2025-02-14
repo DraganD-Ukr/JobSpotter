@@ -9,10 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.job_spotter.jobpost.authUtils.JWTUtils;
-import org.job_spotter.jobpost.dto.ErrorResponse;
-import org.job_spotter.jobpost.dto.JobPostApplyRequest;
-import org.job_spotter.jobpost.dto.JobPostPostRequest;
-import org.job_spotter.jobpost.dto.MyJobPostResponse;
+import org.job_spotter.jobpost.dto.*;
 import org.job_spotter.jobpost.model.JobPost;
 import org.job_spotter.jobpost.service.JobPostService;
 import org.springframework.http.HttpStatus;
@@ -22,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -102,6 +100,21 @@ public class JobPostController {
 
         return ResponseEntity.ok(jobPostService.getMyJobPosts(userId));
     }
+
+    @PostMapping("/my-job-posts/{id}/applicants/approve-reject")
+    public ResponseEntity<HttpStatus> approveRejectApplicant(
+            @RequestHeader("Authorization") String accessToken,
+            @PathVariable Long id,
+            @RequestBody List <ApplicantActionRequest> applicantsActionRequest
+            ) throws Exception {
+        log.info("Accepting applicant");
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+        jobPostService.takeApplicantsAction(id, userId, applicantsActionRequest);
+
+        return ResponseEntity.noContent().build();
+    }
+
 
     //Create job post with dummy data
 //    @PostMapping()
