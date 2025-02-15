@@ -1,120 +1,109 @@
-import Sidebar from "../components/Sidebar"; 
-import { useState, useEffect } from "react";
-
-
+import { useEffect, useState } from "react";
+import Sidebar from "../components/Sidebar";
 
 export function Address() {
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [formValues, setFormValues] = useState({
-    addressLine1: "",
-    addressLine2: "",
-    city: "",
-    state: "",
-    country: "",
-    postalCode: "",
-  });
-  const [formErrors, setFormErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch addresses when the component mounts
+  const [formValues, setFormValues] = useState({
+    streetAddress: "",
+    city: "",
+    county: "",
+    eirCode: "",
+    addressType: "HOME",
+    isDefault: false,
+  });
+
   useEffect(() => {
-    fetch("/api/v1/users/addresses", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch addresses");
-        return res.json();
-      })
-      .then((data) => {
-        setAddresses(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching addresses:", err);
-        setError(err.message);
-        setLoading(false);
-      });
+    fetchAddresses();
   }, []);
 
-  // Handle form input changes
+  const fetchAddresses = async () => {
+    console.log("Fetching addresses...");
+    try {
+      const response = await fetch("/api/v1/users/addresses", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      console.log("GET Response Status:", response.status);
+      if (!response.ok) throw new Error(`Failed to fetch addresses. Status: ${response.status}`);
+
+      const data = await response.json();
+      console.log("Received addresses:", JSON.stringify(data, null, 2));
+      setAddresses(data);
+    } catch (err) {
+      console.error("Error fetching addresses:", err);
+      setError("Unable to load addresses. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormValues((prev) => ({ ...prev, [name]: value }));
-    validateForm({ ...formValues, [name]: value });
+    const { name, value, type, checked } = e.target;
+    setFormValues((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
-  // Validation function
-  const validateForm = (values) => {
-    let errors = {};
-
-    if (!values.addressLine1.trim()) errors.addressLine1 = "Address Line 1 is required.";
-    if (!values.city.trim()) errors.city = "City is required.";
-    if (!values.state.trim()) errors.state = "State is required.";
-    if (!values.country.trim()) errors.country = "Country is required.";
-    if (!values.postalCode.trim()) errors.postalCode = "Postal Code is required.";
-
-    setFormErrors(errors);
-  };
-
-  // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    validateForm(formValues);
-
-    if (Object.keys(formErrors).length > 0) return; // Stop if errors exist
-
     setIsSubmitting(true);
     setSuccessMessage(null);
     setError(null);
 
-    fetch("/api/v1/users/addresses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(formValues),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to create address");
-        return res.json();
-      })
-      .then((data) => {
-        setSuccessMessage("Address added successfully!");
-        setAddresses([...addresses, data]);
-        setFormValues({
-          addressLine1: "",
-          addressLine2: "",
-          city: "",
-          state: "",
-          country: "",
-          postalCode: "",
-        });
-      })
-      .catch((err) => {
-        console.error("Error creating address:", err);
-        setError("An error occurred. Please try again.");
-      })
-      .finally(() => setIsSubmitting(false));
+    console.log("Sending address data:", JSON.stringify(formValues, null, 2));
+
+    try {
+      const response = await fetch("/api/v1/users/addresses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(formValues),
+      });
+
+      console.log("POST Response Status:", response.status);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create address");
+      }
+
+      const newAddress = await response.json();
+      console.log("Received new address response:", JSON.stringify(newAddress, null, 2));
+
+      setSuccessMessage("Address added successfully!");
+      setAddresses([...addresses, newAddress]);
+
+      // Reset form
+      setFormValues({
+        streetAddress: "",
+        city: "",
+        county: "",
+        eirCode: "",
+        addressType: "OTHER",
+        default: false,
+      });
+    } catch (err) {
+      console.error("Error creating address:", err);
+      setError(err.message || "An error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
       <Sidebar />
-      <div className="bg-white shadow-md rounded-2xl p-8 w-3/5 max-w-4xl">
+      <main className="w-3/4 p-8">
         <h2 className="text-3xl font-bold text-gray-800 mb-6">My Addresses</h2>
-        
-        {/* Display error message if fetching fails */}
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
-        {/* Display loading message */}
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
         {loading ? (
           <p>Loading addresses...</p>
         ) : addresses.length === 0 ? (
@@ -123,116 +112,60 @@ export function Address() {
           <div className="space-y-4">
             {addresses.map((addr, idx) => (
               <div key={idx} className="border p-4 rounded bg-gray-50">
-                <p>{addr.addressLine1}</p>
-                {addr.addressLine2 && <p>{addr.addressLine2}</p>}
-                <p>
-                  {addr.city}, {addr.state}
-                </p>
-                <p>
-                  {addr.country} - {addr.postalCode}
-                </p>
+                <p>{addr.streetAddress}</p>
+                <p>{addr.city}, {addr.county}</p>
+                <p>{addr.eirCode}</p>
+                <p>Type: {addr.addressType}</p>
+                <p>{addr.default ? "Default Address" : "Secondary Address"}</p>
               </div>
             ))}
           </div>
         )}
 
-        {/* Address Form */}
-        <div className="mt-6">
+        <div className="mt-6 bg-white shadow rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-2">Add a New Address</h3>
-
-          {/* Display success message */}
           {successMessage && <p className="text-green-500 text-sm mb-2">{successMessage}</p>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Address Line 1 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Address Line 1</label>
-              <input
-                name="addressLine1"
-                value={formValues.addressLine1}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg"
-                placeholder="e.g. 123 Main St"
-                required
-              />
-              {formErrors.addressLine1 && <p className="text-red-500 text-sm">{formErrors.addressLine1}</p>}
+            <InputField name="streetAddress" value={formValues.streetAddress} onChange={handleChange} placeholder="Street Address" required />
+            <InputField name="city" value={formValues.city} onChange={handleChange} placeholder="City" required />
+            <InputField name="county" value={formValues.county} onChange={handleChange} placeholder="County" required />
+            <InputField name="eirCode" value={formValues.eirCode} onChange={handleChange} placeholder="Eir Code" required />
+
+            <select name="addressType" value={formValues.addressType} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg">
+              <option value="HOME">Home</option>
+              <option value="WORK">Work</option>
+              <option value="OTHER">Other</option>
+            </select>
+
+            <div className="flex items-center">
+              <input type="checkbox" name="default" checked={formValues.default} onChange={handleChange} className="mr-2" />
+              <label className="text-sm">Set as default address</label>
             </div>
 
-            {/* Address Line 2 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Address Line 2</label>
-              <input
-                name="addressLine2"
-                value={formValues.addressLine2}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg"
-                placeholder="e.g. Apt 4B (optional)"
-              />
-            </div>
-
-            {/* City */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">City</label>
-              <input
-                name="city"
-                value={formValues.city}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg"
-                placeholder="e.g. Dublin"
-                required
-              />
-              {formErrors.city && <p className="text-red-500 text-sm">{formErrors.city}</p>}
-            </div>
-
-            {/* State */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">State</label>
-              <input
-                name="state"
-                value={formValues.state}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg"
-                placeholder="e.g. Dublin"
-                required
-              />
-              {formErrors.state && <p className="text-red-500 text-sm">{formErrors.state}</p>}
-            </div>
-
-            {/* Country */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Country</label>
-              <input
-                name="country"
-                value={formValues.country}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg"
-                placeholder="e.g. Ireland"
-                required
-              />
-              {formErrors.country && <p className="text-red-500 text-sm">{formErrors.country}</p>}
-            </div>
-
-            {/* Postal Code */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Postal Code</label>
-              <input
-                name="postalCode"
-                value={formValues.postalCode}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-lg"
-                placeholder="e.g. D01 AB2"
-                required
-              />
-              {formErrors.postalCode && <p className="text-red-500 text-sm">{formErrors.postalCode}</p>}
-            </div>
-
-            {/* Submit Button */}
-            <button type="submit" disabled={isSubmitting} className="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+            >
               {isSubmitting ? "Saving..." : "Add Address"}
             </button>
           </form>
         </div>
-      </div>
+      </main>
     </div>
+  );
+}
+
+function InputField({ name, value, onChange, placeholder, required }) {
+  return (
+    <input
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="w-full px-4 py-2 border rounded-lg"
+      placeholder={placeholder}
+      required={required}
+    />
   );
 }
