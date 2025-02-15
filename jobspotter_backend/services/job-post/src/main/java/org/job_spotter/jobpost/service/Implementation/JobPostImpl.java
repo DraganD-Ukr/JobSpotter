@@ -473,6 +473,31 @@ public class JobPostImpl implements JobPostService {
         return HttpStatus.NO_CONTENT;
     }
 
+    @Override
+    public HttpStatus finishJobPost(UUID userId, Long id) {
+
+        JobPost jobPost = jobPostRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Could not finish job post: Job post not found with id {}", id);
+                    return new ResourceNotFoundException("Job post not found with id " + id);
+                });
+
+        checkIfUserIsJobPoster(userId, jobPost);
+
+        if (jobPost.getStatus() != JobStatus.IN_PROGRESS) {
+            log.warn("Could not finish job post: Job post status is not IN_PROGRESS");
+            throw new ForbiddenException("Job post status is not IN_PROGRESS.");
+        }
+
+        jobPost.setStatus(JobStatus.COMPLETED);
+
+        jobPostRepository.save(jobPost);
+
+//       TODO: Send notifications to all participating applicants
+
+        return HttpStatus.NO_CONTENT;
+    }
+
 
 //    ----------------------------------------- Helper methods -----------------------------------------
 

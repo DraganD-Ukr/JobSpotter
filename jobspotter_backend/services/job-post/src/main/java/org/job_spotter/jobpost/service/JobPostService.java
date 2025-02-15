@@ -29,4 +29,6 @@ public interface JobPostService {
     HttpStatus startJobPost(UUID userId, Long jobPostId);
 
     HttpStatus cancelJobPost(UUID userId, Long jobPostId);
+
+    HttpStatus finishJobPost(UUID userId, Long id);
 }

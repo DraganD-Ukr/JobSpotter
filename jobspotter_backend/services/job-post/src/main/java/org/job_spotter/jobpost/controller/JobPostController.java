@@ -240,7 +240,7 @@ public class JobPostController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    @PutMapping ("/my-job-posts/{id}/cancel")
+    @PutMapping("/my-job-posts/{id}/cancel")
     public ResponseEntity<HttpStatus> cancelJobPost(
             @RequestHeader("Authorization") String accessToken,
 
@@ -253,6 +253,22 @@ public class JobPostController {
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
         jobPostService.cancelJobPost(userId, id);
 
+        return ResponseEntity.noContent().build();
+    }
+
+
+
+    @PutMapping("/my-job-posts/{id}/finish")
+    public ResponseEntity<HttpStatus> finishJobPost(
+            @RequestHeader("Authorization") String accessToken,
+
+            @Parameter(description = "Job post id")
+            @PathVariable Long id
+    ) throws Exception {
+        log.info("Finishing job post");
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+        jobPostService.finishJobPost(userId, id);
         return ResponseEntity.noContent().build();
     }
 
