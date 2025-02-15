@@ -186,6 +186,25 @@ public class JobPostController {
     }
 
 
+    @Operation(
+            summary = "Start job post. Will be marked as In Progress",
+            description = "Start a job post. The job post to start needs to have status OPEN and have at least one confirmed applicant."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Successfully started jobPost"),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized: User is not the owner of the job post",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "403", description = "Forbidden: Job post is not open",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @PutMapping ("/my-job-posts/{id}/start")
     public ResponseEntity<HttpStatus> startJobPost(
             @RequestHeader("Authorization") String accessToken,

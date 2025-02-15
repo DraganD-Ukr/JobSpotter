@@ -390,7 +390,10 @@ public class JobPostImpl implements JobPostService {
     public HttpStatus startJobPost(UUID userId, Long jobPostId) {
 
         JobPost jobPost = jobPostRepository.findById(jobPostId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + jobPostId));
+                .orElseThrow( () -> {
+                    log.warn("Could not start job post: Job post not found with id {}", jobPostId);
+                    return new ResourceNotFoundException("Job post not found with id " + jobPostId);
+                });
 
 //        Check if the user is the job poster
         if (!jobPost.getJobPosterId().equals(userId)) {
@@ -428,6 +431,8 @@ public class JobPostImpl implements JobPostService {
         jobPost.setStatus(JobStatus.IN_PROGRESS);
 
         jobPostRepository.save(jobPost);
+
+//        TODO: Send notification to all accepted applicants
 
         log.info("Job post started successfully");
         return HttpStatus.NO_CONTENT;
