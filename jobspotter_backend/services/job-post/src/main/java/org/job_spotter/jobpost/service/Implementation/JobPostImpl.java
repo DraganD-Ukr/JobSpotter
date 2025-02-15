@@ -386,6 +386,59 @@ public class JobPostImpl implements JobPostService {
         return jobPost; // Optionally return the updated job post
     }
 
+    @Override
+    public HttpStatus startJobPost(UUID userId, Long jobPostId) {
+
+        JobPost jobPost = jobPostRepository.findById(jobPostId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + jobPostId));
+
+//        Check if the user is the job poster
+        if (!jobPost.getJobPosterId().equals(userId)) {
+            log.warn("Could not start job post: User is not the job poster");
+            throw new UnauthorizedException("You are not authorized to start this job post.");
+        }
+
+//        Check if the job post status is OPEN
+        if (jobPost.getStatus() != JobStatus.OPEN) {
+            log.warn("Could not start job post: Job post status is not OPEN");
+            throw new ForbiddenException("Job post status is not OPEN.");
+        }
+
+//        Get all applicants for the job post
+        Set<Applicant> applicants = jobPost.getApplicants();
+
+//        Check if there are any accepted applicants
+        Long numOfAcceptedApplicants = applicants.stream()
+                .filter(applicant -> applicant.getStatus() == ApplicantStatus.ACCEPTED)
+                .count();
+
+//        If no applicants are accepted, throw an exception
+        if (numOfAcceptedApplicants.intValue() == 0) {
+            log.warn("Could not start job post: No applicants accepted for job post with id {}", jobPostId);
+            throw new InvalidRequestException("At least 1 applicant must be accepted to start the job post.");
+        } else {
+
+//        For each applicant with status PENDING, set status to REJECTED as the job post has started
+//        and no more applicants can be accepted thus all pending applicants are rejected
+            applicants.stream()
+                    .filter(applicant -> applicant.getStatus() == ApplicantStatus.PENDING)
+                    .forEach(applicant -> applicant.setStatus(ApplicantStatus.REJECTED));
+        }
+
+        jobPost.setStatus(JobStatus.IN_PROGRESS);
+
+        jobPostRepository.save(jobPost);
+
+        log.info("Job post started successfully");
+        return HttpStatus.NO_CONTENT;
+    }
+
+
+
+
+
+//    ----------------------------------------- Helper methods -----------------------------------------
+
     private static void logAddressClientException(FeignClientException e) {
         log.error("(job-posts): Error getting address from user-service: {}, {}", e.getMessage(), e.status());
     }

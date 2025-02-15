@@ -186,6 +186,21 @@ public class JobPostController {
     }
 
 
+    @PutMapping ("/my-job-posts/{id}/start")
+    public ResponseEntity<HttpStatus> startJobPost(
+            @RequestHeader("Authorization") String accessToken,
+            @PathVariable Long id
+    ) throws Exception {
+
+        log.info("Starting job post");
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+        jobPostService.startJobPost(userId, id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+
     //Create job post with dummy data
 //    @PostMapping()
 //    public ResponseEntity<HttpStatus> createJobPostWithDummyData() {
