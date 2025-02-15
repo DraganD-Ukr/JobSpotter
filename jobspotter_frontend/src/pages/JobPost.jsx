@@ -447,59 +447,54 @@ export function JobPost() {
           </button>
 
           {/* All Jobs Listing */}
-{showAllJobs && (
-  <div className="mt-6">
-    <h2 className="text-xl font-bold mb-2">All Jobs</h2>
-    {jobPostsData.map((job) => (
-      <div
-        key={job.jobId || job.title}
-        className="border rounded p-4 mb-4 flex justify-between items-center"
-        data-jobpostid={job.jobId} // ✅ Storing jobId in data attribute
-      >
-        <div>
-          <h3 className="font-semibold text-lg">{job.title}</h3>
-          <p className="text-sm">{job.description}</p>
-          <p className="text-sm text-gray-600">
-            Tags:{" "}
-            {job.tags.map((tag, index) => (
-              <span key={`${job.jobId}-tag-${index}`} className="mr-1">
-                {typeof tag === "string" ? tag : tag.name}
-                {index < job.tags.length - 1 ? ", " : ""}
-              </span>
-            ))}
-          </p>
+          {showAllJobs && (
+            <div className="mt-6">
+              <h2 className="text-xl font-bold mb-2">All Jobs</h2>
+              {jobPostsData.map((job) => (
+                <div
+                  key={job.jobId || job.title}
+                  className="border rounded p-4 mb-4 flex justify-between items-center"
+                  data-jobpostid={job.jobPostId} // ✅ Storing jobId in data attribute
+                >
+                  <div>
+                    <h3 className="font-semibold text-lg">{job.title}</h3>
+                    <p className="text-sm">{job.description}</p>
+                    <p className="text-sm text-gray-600">
+                      Tags:{" "}
+                      {job.tags.map((tag, index) => (
+                        <span key={`${job.jobPostId}-tag-${index}`} className="mr-1">
+                          {typeof tag === "string" ? tag : tag.name}
+                          {index < job.tags.length - 1 ? ", " : ""}
+                        </span>
+                      ))}
+                    </p>
 
-          {/* Rating System */}
-          <div className="mt-2 flex items-center">
-            <span className="mr-2 text-gray-600">Rating:</span>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={`${job.jobId}-star-${star}`}
-                onClick={() => handleRateJob(job.jobId, star)}
-                className="text-yellow-500 text-xl cursor-pointer"
-              >
-                ★
-              </button>
-            ))}
-          </div>
-        </div>
+                    {/* Rating System */}
+                    <div className="mt-2 flex items-center">
+                      <span className="mr-2 text-gray-600">Rating:</span>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={`${job.jobId}-star-${star}`}
+                          onClick={() => handleRateJob(job.jobId, star)}
+                          className="text-yellow-500 text-xl cursor-pointer"
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-        {/* Apply Now Button */}
-        <button
-          onClick={(event) => {
-            const jobPostId = event.currentTarget
-              .closest("[data-jobpostid]")
-              .getAttribute("data-jobpostid");
-            handleApply(jobPostId);
-          }}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Apply Now
-        </button>
-      </div>
-    ))}
-  </div>
-)}
+                  {/* Apply Now Button */}
+                  <button
+                    onClick={() => handleApply(job.jobPostId)}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  >
+                    Apply Now
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
         </div>
       </main>
