@@ -314,6 +314,8 @@ public class JobPostImpl implements JobPostService {
     @Override
     public JobPost takeApplicantsAction(Long jobPostId, UUID userId, List<ApplicantActionRequest> applicantsActionRequest) {
 
+//        TODO: Refactor for readability and efficiency
+
         // Find the job post
         JobPost jobPost = jobPostRepository.findById(jobPostId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + jobPostId));
