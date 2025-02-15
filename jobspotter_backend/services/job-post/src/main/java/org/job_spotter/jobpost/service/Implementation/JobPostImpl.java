@@ -386,6 +386,7 @@ public class JobPostImpl implements JobPostService {
         return jobPost; // Optionally return the updated job post
     }
 
+    @Transactional
     @Override
     public HttpStatus startJobPost(UUID userId, Long jobPostId) {
 
@@ -396,10 +397,7 @@ public class JobPostImpl implements JobPostService {
                 });
 
 //        Check if the user is the job poster
-        if (!jobPost.getJobPosterId().equals(userId)) {
-            log.warn("Could not start job post: User is not the job poster");
-            throw new UnauthorizedException("You are not authorized to start this job post.");
-        }
+        checkIfUserIsJobPoster(userId, jobPost);
 
 //        Check if the job post status is OPEN
         if (jobPost.getStatus() != JobStatus.OPEN) {
@@ -428,8 +426,11 @@ public class JobPostImpl implements JobPostService {
                     .forEach(applicant -> applicant.setStatus(ApplicantStatus.REJECTED));
         }
 
-        jobPost.setStatus(JobStatus.IN_PROGRESS);
+//        Save the updated applicants
+        applicantRepository.saveAll(applicants);
 
+//        Set the status of the job post to IN_PROGRESS
+        jobPost.setStatus(JobStatus.IN_PROGRESS);
         jobPostRepository.save(jobPost);
 
 //        TODO: Send notification to all accepted applicants
@@ -438,11 +439,49 @@ public class JobPostImpl implements JobPostService {
         return HttpStatus.NO_CONTENT;
     }
 
+    @Transactional
+    @Override
+    public HttpStatus cancelJobPost(UUID userId, Long jobPostId) {
 
+        JobPost jobPost = jobPostRepository.findById(jobPostId)
+                .orElseThrow( () -> {
+                    log.warn("Could not cancel job post: Job post not found with id {}", jobPostId);
+                    return new ResourceNotFoundException("Job post not found with id " + jobPostId);
+                });
 
+//        Check if the user is the job poster
+        checkIfUserIsJobPoster(userId, jobPost);
+
+//        Check if the job post status is OPEN
+        if (jobPost.getStatus() != JobStatus.OPEN) {
+            log.warn("Could not cancel job post: Job post status is not OPEN");
+            throw new ForbiddenException("Job post status is not OPEN.");
+        }
+
+//        Set the status of all applicants to REJECTED
+        Set<Applicant> applicants = jobPost.getApplicants();
+        applicants.forEach(applicant -> applicant.setStatus(ApplicantStatus.REJECTED));
+
+//        Save the updated applicants
+        applicantRepository.saveAll(applicants);
+
+//        Set the status of the job post to CANCELLED
+        jobPost.setStatus(JobStatus.CANCELLED);
+        jobPostRepository.save(jobPost);
+
+        log.info("Job post cancelled successfully");
+        return HttpStatus.NO_CONTENT;
+    }
 
 
 //    ----------------------------------------- Helper methods -----------------------------------------
+
+    private void checkIfUserIsJobPoster(UUID userId, JobPost jobPost) {
+        if (!jobPost.getJobPosterId().equals(userId)) {
+            log.warn("Could not process applicants: User is not the job poster");
+            throw new UnauthorizedException("You are not authorized to take actions on this job post.");
+        }
+    }
 
     private static void logAddressClientException(FeignClientException e) {
         log.error("(job-posts): Error getting address from user-service: {}, {}", e.getMessage(), e.status());

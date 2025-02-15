@@ -27,4 +27,6 @@ public interface JobPostService {
     JobPost takeApplicantsAction(Long jobPostId, UUID userId, List<ApplicantActionRequest> applicantsActionRequest);
 
     HttpStatus startJobPost(UUID userId, Long jobPostId);
+
+    HttpStatus cancelJobPost(UUID userId, Long jobPostId);
 }

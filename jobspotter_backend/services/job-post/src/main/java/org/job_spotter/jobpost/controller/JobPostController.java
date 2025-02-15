@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -215,6 +214,44 @@ public class JobPostController {
 
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
         jobPostService.startJobPost(userId, id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+
+
+
+    @Operation(
+            summary = "Cancel job post. Will be marked as Cancelled",
+            description = "Cancel a job post. The job post to cancel needs to have status OPEN."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Successfully cancelled jobPost"),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized: User is not the owner of the job post",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PutMapping ("/my-job-posts/{id}/cancel")
+    public ResponseEntity<HttpStatus> cancelJobPost(
+            @RequestHeader("Authorization") String accessToken,
+
+            @Parameter(description = "Job post id")
+            @PathVariable Long id
+    ) throws Exception {
+
+        log.info("Cancelling job post");
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+        jobPostService.cancelJobPost(userId, id);
 
         return ResponseEntity.noContent().build();
     }
