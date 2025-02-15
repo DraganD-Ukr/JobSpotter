@@ -76,11 +76,11 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 lava-lamp-background p-4 shadow-md">
       <div className="container mx-auto flex items-center justify-between">
-        <a href="/" className="text-white font-bold text-xl">
-          JobSpotter
-        </a>
+      <a href="/">
+              <img src="/jb.png" alt="JobSpotter Logo" className="h-10 w-auto object-contain scale-500 mb-2"/>
+              </a>
         <div className="flex-grow flex justify-center gap-8">
-          <a href="/jobpost" className="text-white font-medium hover:underline">
+          <a href="/JobPost" className="text-white font-medium hover:underline">
             Job Posts
           </a>
           <a href="/data" className="text-white font-medium hover:underline">

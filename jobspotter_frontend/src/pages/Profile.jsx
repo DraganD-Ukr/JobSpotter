@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import thanosImage from "../assets/thanos.jpg";
 import Sidebar from "../components/Sidebar"; 
 
 // Loading Skeleton Component
@@ -76,7 +75,9 @@ export default function Profile() {
       credentials: "include",
     })
       .then((res) => {
+        
         if (!res.ok) throw new Error("Failed to fetch user info");
+        console.log("Response:", res);
         return res.json();
       })
       .then((data) => {

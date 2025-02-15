@@ -8,9 +8,10 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import { TermsOfService } from "./pages/TermsOfService";
+import { JobPost } from "./pages/JobPost";
 import { Address } from "./pages/Address";
 import Data from "./pages/Data";
-import { JobPost } from "./pages/JobPost";
+
 
 import Profile from "./pages/Profile";
 
