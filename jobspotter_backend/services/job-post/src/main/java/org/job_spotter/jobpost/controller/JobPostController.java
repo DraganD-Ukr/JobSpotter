@@ -222,7 +222,7 @@ public class JobPostController {
 
 
     @Operation(
-            summary = "Cancel job post. Will be marked as Cancelled",
+            summary = "Cancel job post. Will be marked as CANCELLED",
             description = "Cancel a job post. The job post to cancel needs to have status OPEN."
     )
     @ApiResponses(value = {
@@ -231,6 +231,9 @@ public class JobPostController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(responseCode = "401", description = "Unauthorized: User is not the owner of the job post",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "403", description = "Forbidden: Job post is not open",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
@@ -258,6 +261,28 @@ public class JobPostController {
 
 
 
+    @Operation(
+            summary = "Finish job post. Will be marked as COMPLETED",
+            description = "Cancel a job post. The job post to finish needs to have status IN_PROGRESS."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Successfully finished Job Post"),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized: User is not the owner of the job post",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "403", description = "Forbidden: Job post is not in progress",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @PutMapping("/my-job-posts/{id}/finish")
     public ResponseEntity<HttpStatus> finishJobPost(
             @RequestHeader("Authorization") String accessToken,
