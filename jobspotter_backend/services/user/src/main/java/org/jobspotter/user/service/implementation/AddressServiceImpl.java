@@ -37,7 +37,7 @@ public class AddressServiceImpl implements AddressService {
     private final GeoCodingService geoCodingService;
 
     @Override
-    public ResponseEntity<HttpStatus> createAddress(UUID userId, AddressRequest addressRequest) {
+    public Long createAddress(UUID userId, AddressRequest addressRequest) {
 
 //        TODO: Check for duplicate addresses
 //        Check if user exists
@@ -86,9 +86,9 @@ public class AddressServiceImpl implements AddressService {
         address.setLongitude(lng);
 
 //          Save the address
-        addressRepository.save(address);
+         addressRepository.save(address);
 
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return address.getAddressId();
 
     }
 
@@ -273,13 +273,19 @@ public class AddressServiceImpl implements AddressService {
     private boolean hasDuplicateOrHomeConflict(List<Address> addresses, Address addressToUpdate) {
 
         for(Address currAdr : addresses) {
-            if (addressToUpdate.getAddressType().equals(AddressType.HOME)
-                    && currAdr.getAddressType().equals(AddressType.HOME)) {
+
+            if (    !currAdr.getAddressId().equals(addressToUpdate.getAddressId())
+                    && addressToUpdate.getAddressType().equals(AddressType.HOME)
+                    && currAdr.getAddressType().equals(AddressType.HOME)
+            ) {
+                log.warn("User with id {} already has an address with type HOME", addressToUpdate.getUser().getUserId());
                 throw new ResourceAlreadyExistsException("User already has an address with type HOME");
             }
             if (currAdr.getAddress().equals(addressToUpdate.getAddress())) {
+                log.warn("Duplicate address found when trying to add a new address for user with ID {}", addressToUpdate.getUser().getUserId());
                 throw new ResourceAlreadyExistsException("Duplicate address found, please provide a different address");
             }
+
         }
         return false;
     }
