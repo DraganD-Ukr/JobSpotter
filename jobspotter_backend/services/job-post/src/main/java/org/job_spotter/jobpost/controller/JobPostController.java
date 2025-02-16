@@ -13,6 +13,7 @@ import org.job_spotter.jobpost.authUtils.JWTUtils;
 import org.job_spotter.jobpost.dto.*;
 import org.job_spotter.jobpost.model.JobPost;
 import org.job_spotter.jobpost.service.JobPostService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -146,6 +147,27 @@ public class JobPostController {
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
         return ResponseEntity.ok(jobPostService.getMyJobPosts(userId));
+    }
+
+
+
+    @GetMapping("/history")
+    public ResponseEntity<Page<JobPostsUserWorkedOnResponse>> getJobsUserWorkedOn(
+
+            @RequestHeader("Authorization") String accessToken,
+
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "datePosted") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "title", required = false) String title
+
+    ) throws Exception {
+        log.info("Getting my worked jobs");
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+        return ResponseEntity.ok(jobPostService.getJobsUserWorkedOn(userId, page, size, sortBy, sortDirection, status, title));
     }
 
 
