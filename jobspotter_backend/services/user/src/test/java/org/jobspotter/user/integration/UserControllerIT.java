@@ -16,6 +16,11 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
@@ -38,6 +43,7 @@ public class UserControllerIT {
 
     private String baseUrl;
 
+
     @DynamicPropertySource
     static void configureTestDatabase(DynamicPropertyRegistry registry) {
         postgres.start();
@@ -56,6 +62,7 @@ public class UserControllerIT {
 
 
     public static String accessToken;
+    public static UUID userId;
 
 
     @Test
@@ -127,7 +134,6 @@ public class UserControllerIT {
     void shouldUpdateUserProfileSuccessfully() {// Use a valid token here
 
         UserPatchRequest patchRequest = UserPatchRequest.builder()
-                .username("john_updated")
                 .email("john_updated@gmail.com")
                 .firstName("UpdatedJohn")
                 .lastName("UpdatedDoe")
@@ -135,7 +141,7 @@ public class UserControllerIT {
                 .about("I am a software engineer")
                 .build();
 
-        given()
+        userId = given()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .contentType(ContentType.JSON)
                 .body(patchRequest)
@@ -144,12 +150,12 @@ public class UserControllerIT {
                 .then()
                 .log().body()
                 .statusCode(HttpStatus.OK.value())
-                .body("username", equalTo("john_updated"))
                 .body("email", equalTo("john_updated@gmail.com"))
-                .body("firstName", equalTo("Updated John"))
-                .body("lastName", equalTo("Updated Doe"))
-                .body("phoneNumber", equalTo("0831234567"))
-                .body("about", equalTo("I am a software engineer"));
+                .body("firstName", equalTo("UpdatedJohn"))
+                .body("lastName", equalTo("UpdatedDoe"))
+                .body("phoneNumber", equalTo("0877654321"))
+                .body("about", equalTo("I am a software engineer"))
+                .extract().body().jsonPath().getUUID("userId");
     }
 
     @Test
@@ -165,6 +171,28 @@ public class UserControllerIT {
 //                .cookie("AccessToken", nullValue())
 //                .cookie("RefreshToken", nullValue());
         ;
+    }
+
+    @Test
+    @Order(6)
+    void shouldReturnBasicUserInfo(){
+
+        List<UUID> userIds = List.of(userId);
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .contentType(ContentType.JSON)
+                .queryParam("userIds", userIds)
+                .when()
+                .get(baseUrl)
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.OK.value())
+                .body(userId + ".userId", equalTo(userId.toString()))  // Use userId as the key
+                .body(userId + ".username", equalTo("john_doe"))
+                .body(userId + ".firstName", equalTo("UpdatedJohn"))
+                .body(userId + ".lastName", equalTo("UpdatedDoe"));
+
     }
 
 
