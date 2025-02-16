@@ -257,6 +257,7 @@ public class JobPostImpl implements JobPostService {
 
     @Override
     public List<MyJobPostResponse> getMyJobPosts(UUID userId) {
+//        TODO: implement pagination and filtering
 //        TODO: Results may be large, consider adding pagination in the future
         List<JobPost> jobPosts = jobPostRepository.findAllByJobPosterId(userId);
 
