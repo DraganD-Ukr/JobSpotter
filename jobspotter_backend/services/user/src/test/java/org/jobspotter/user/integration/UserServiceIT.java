@@ -18,8 +18,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static io.restassured.RestAssured.given;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -88,13 +90,34 @@ public class UserServiceIT {
                 .log().body()
                 .statusCode(HttpStatus.CREATED.value());
 
-        Thread.sleep(2000);
+        await().atMost(3, TimeUnit.SECONDS);
     }
 
 
 
     @Test
     @Order(2)
+    void shouldNotRegisterExistingUser() {
+        UserRegisterRequest request = new UserRegisterRequest(
+                "john_doe",
+                "John",
+                "Doe",
+                "password123",
+                "john.doe@example.com"
+        );
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(request)
+                .when()
+                .post(baseUrl + "/auth/register")
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.CONFLICT.value());
+    }
+
+    @Test
+    @Order(3)
     void shouldLoginUserSuccessfully() {
         UserLoginRequest loginRequest = new UserLoginRequest("john_doe", "password123");
 
@@ -118,7 +141,7 @@ public class UserServiceIT {
 
 
     @Test
-    @Order(3)
+    @Order(4)
     void shouldGetUserProfileSuccessfully() {
         // Use a valid token here
 
@@ -136,7 +159,7 @@ public class UserServiceIT {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     void shouldUpdateUserProfileSuccessfully() {// Use a valid token here
 
         UserPatchRequest patchRequest = UserPatchRequest.builder()
@@ -165,7 +188,7 @@ public class UserServiceIT {
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     void shouldLogoutUserSuccessfully() {
 
         given()
@@ -180,7 +203,7 @@ public class UserServiceIT {
     }
 
     @Test
-    @Order(6)
+    @Order(7)
     void shouldReturnBasicUserInfo(){
 
         List<UUID> userIds = List.of(userId);
@@ -224,7 +247,7 @@ public class UserServiceIT {
             .build();
 
     @Test
-    @Order(7)
+    @Order(8)
     void shouldCreateAddressSuccessfully() {
 
 
@@ -250,7 +273,7 @@ public class UserServiceIT {
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     void shouldCreateAnotherAddressSuccessfully() {
 
         given()
@@ -265,7 +288,7 @@ public class UserServiceIT {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     void shouldRetrieveAllUserAddresses() {
         given()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
@@ -281,7 +304,7 @@ public class UserServiceIT {
 
 
     @Test
-    @Order(10)
+    @Order(11)
     void shouldRetrieveUserAddressById() {
         given()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
@@ -301,7 +324,7 @@ public class UserServiceIT {
 
 
     @Test
-    @Order(11)
+    @Order(12)
     void shouldUpdateUserAddressSuccessfully() {
 
         AddressPatchRequest updatedAddress = AddressPatchRequest.builder()
@@ -341,7 +364,7 @@ public class UserServiceIT {
     }
 
     @Test
-    @Order(12)
+    @Order(13)
     void shouldUpdateUserAddressWithoutChangesSuccessfully() {
 
         AddressPatchRequest updatedAddress = AddressPatchRequest.builder()
@@ -364,7 +387,7 @@ public class UserServiceIT {
     }
 
     @Test
-    @Order(13)
+    @Order(14)
     void shouldDeleteUserAddressByIdAndReturnNotFoundOnRetrieval() {
         // Step 1: Delete the address
         given()
@@ -390,7 +413,7 @@ public class UserServiceIT {
 
 
     @Test
-    @Order(14)
+    @Order(15)
     void shouldFailToCreateAddressDueToInvalidData() {
         AddressRequest invalidAddressRequest = AddressRequest.builder()
                 .streetAddress("") // Empty street address (invalid)
