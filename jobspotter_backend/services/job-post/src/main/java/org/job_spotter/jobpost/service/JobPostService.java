@@ -15,6 +15,7 @@ public interface JobPostService {
 
     void createJobPostDomainDummyData();
 
+    List<JobPost> searchJobPosts(String title, String tag);
 
     Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken);
 

@@ -51,6 +51,13 @@ public class JobPostImpl implements JobPostService {
         return jobPostRepository.findAllByTags_Name(tag);
     }
 
+    @Override
+    public List<JobPost> searchJobPosts(String title, String tag) {
+        Specification<JobPost> spec = Specification.where(JobPostSpecification.hasTitle(title))
+                .and(JobPostSpecification.hasTags(tag));
+        log.info("hello"+jobPostSpecificationRepository.findAll(spec).toString());
+        return jobPostSpecificationRepository.findAll(spec);
+    }
 
     @Override
     public void createJobPostDomainDummyData() {

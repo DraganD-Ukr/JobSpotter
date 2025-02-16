@@ -1,11 +1,13 @@
 package org.job_spotter.jobpost.repository.specification;
 
+import lombok.extern.slf4j.Slf4j;
 import org.job_spotter.jobpost.model.JobPost;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
 import java.util.UUID;
 
+@Slf4j
 public class JobPostSpecification {
 
     public static Specification<JobPost> hasStatus(String status) {
@@ -13,6 +15,13 @@ public class JobPostSpecification {
                 StringUtils.hasText(status) ?
                         criteriaBuilder.equal(root.get("status"), status) :
                         criteriaBuilder.conjunction(); // Match all if status is null
+    }
+
+    public static Specification<JobPost> hasTags(String tag) {
+        return (root, query, criteriaBuilder) ->
+                StringUtils.hasText(tag) ?
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("tags")), "%" + tag.toLowerCase() + "%") :
+                        criteriaBuilder.conjunction(); // Match all if tag is null
     }
 
     public static Specification<JobPost> hasTitle(String title) {

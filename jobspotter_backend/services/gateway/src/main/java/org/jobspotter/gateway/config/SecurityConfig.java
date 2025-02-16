@@ -34,6 +34,7 @@ public class SecurityConfig {
                                 "/webjars/**", "/api/v1/users/v3/api-docs", "/api/v1/job-posts/v3/api-docs").permitAll()
                         .pathMatchers("/api/v1/users/auth/**").permitAll()
                         .pathMatchers("/eureka/**").permitAll()
+                        .pathMatchers(HttpMethod.GET,"/api/v1/job-posts/search").permitAll()
                         .pathMatchers(HttpMethod.GET, "/api/v1/job-posts").permitAll()
                         .anyExchange().authenticated()
                 )

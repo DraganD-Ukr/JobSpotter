@@ -49,6 +49,20 @@ public class JobPostController {
         return ResponseEntity.ok(jobPosts);
     }
 
+    //Search job posts using query parameters 'title' and 'tag'
+    @GetMapping("/search")
+    public ResponseEntity<List<JobPost>> searchJobPosts(
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "tag", required = false) String tag
+    ) {
+        log.info("Searching job posts by title: {} and tag: {}", title, tag);
+        List<JobPost> jobPosts = jobPostService.searchJobPosts(title, tag);
+
+        if (jobPosts.isEmpty()) {
+            log.info("No jobs found for title: {} and tag: {}", title, tag);
+        }
+        return ResponseEntity.ok(jobPosts);
+    }
 
     @Operation(
             summary = "Create job post",
@@ -321,11 +335,11 @@ public class JobPostController {
 
 
     //Create job post with dummy data
-//    @PostMapping()
-//    public ResponseEntity<HttpStatus> createJobPostWithDummyData() {
-//        log.info("Populating job post with dummy data");
-//        jobPostService.createJobPostDomainDummyData();
-//        return ResponseEntity.ok(HttpStatus.CREATED);
-//    }
+    @PostMapping("/dummy")
+    public ResponseEntity<HttpStatus> createJobPostWithDummyData() {
+        log.info("Populating job post with dummy data");
+        jobPostService.createJobPostDomainDummyData();
+        return ResponseEntity.ok(HttpStatus.CREATED);
+    }
 
 }
