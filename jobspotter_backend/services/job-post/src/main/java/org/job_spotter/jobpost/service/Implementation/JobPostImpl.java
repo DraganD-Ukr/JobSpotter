@@ -13,8 +13,15 @@ import org.job_spotter.jobpost.exception.*;
 import org.job_spotter.jobpost.model.*;
 import org.job_spotter.jobpost.repository.ApplicantRepository;
 import org.job_spotter.jobpost.repository.JobPostRepository;
+import org.job_spotter.jobpost.repository.JobPostSpecificationRepository;
 import org.job_spotter.jobpost.repository.TagRepository;
+import org.job_spotter.jobpost.repository.specification.JobPostSpecification;
 import org.job_spotter.jobpost.service.JobPostService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,6 +38,7 @@ public class JobPostImpl implements JobPostService {
     private final TagRepository tagRepository;
     private final UserServiceClient userServiceClient;
     private final ApplicantRepository applicantRepository;
+    private final JobPostSpecificationRepository jobPostSpecificationRepository;
 
 
     @Override
@@ -249,6 +257,7 @@ public class JobPostImpl implements JobPostService {
 
     @Override
     public List<MyJobPostResponse> getMyJobPosts(UUID userId) {
+//        TODO: implement pagination and filtering
 //        TODO: Results may be large, consider adding pagination in the future
         List<JobPost> jobPosts = jobPostRepository.findAllByJobPosterId(userId);
 
@@ -498,8 +507,50 @@ public class JobPostImpl implements JobPostService {
         return HttpStatus.NO_CONTENT;
     }
 
+    @Override
+    public Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title) {
+
+        // Define allowed sorting fields
+        Set<String> allowedSortFields = Set.of("datePosted", "lastUpdatedAt", "title", "status");
+
+        // Validate the sortBy parameter
+        if (!allowedSortFields.contains(sortBy)) {
+            throw new InvalidRequestException("Invalid sortBy parameter: " + sortBy);
+        }
+
+        // Create a Specification with dynamic filters
+        Specification<JobPost> spec = JobPostSpecification.filterByParams(status, title, userId);
+
+//
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        // Paginate and sort
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        // Fetch the filtered and paginated results
+        Page<JobPost> jobPosts = jobPostSpecificationRepository.findAll(spec, pageable);
+
+        return jobPosts.map(this::convertToResponse);
+
+    }
+
 
 //    ----------------------------------------- Helper methods -----------------------------------------
+
+    // Helper method to map JobPost to MyJobPostResponse
+    private JobPostsUserWorkedOnResponse convertToResponse(JobPost jobPost) {
+        return JobPostsUserWorkedOnResponse.builder()
+                .jobPostId(jobPost.getJobPostId())
+                .tags(jobPost.getTags())
+                .applicantsCount(jobPost.getApplicants().size()) // Assuming applicants is a collection
+                .title(jobPost.getTitle())
+                .description(jobPost.getDescription())
+                .address(jobPost.getAddress())
+                .datePosted(jobPost.getDatePosted())
+                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                .maxApplicants(jobPost.getMaxApplicants())
+                .status(jobPost.getStatus())
+                .build();
+    }
 
     private void checkIfUserIsJobPoster(UUID userId, JobPost jobPost) {
         if (!jobPost.getJobPosterId().equals(userId)) {

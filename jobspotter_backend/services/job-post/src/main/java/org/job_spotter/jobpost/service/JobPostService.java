@@ -1,10 +1,8 @@
 package org.job_spotter.jobpost.service;
 
-import org.job_spotter.jobpost.dto.ApplicantActionRequest;
-import org.job_spotter.jobpost.dto.JobPostApplyRequest;
-import org.job_spotter.jobpost.dto.JobPostPostRequest;
-import org.job_spotter.jobpost.dto.MyJobPostResponse;
+import org.job_spotter.jobpost.dto.*;
 import org.job_spotter.jobpost.model.JobPost;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 
 import java.util.List;
@@ -31,4 +29,6 @@ public interface JobPostService {
     HttpStatus cancelJobPost(UUID userId, Long jobPostId);
 
     HttpStatus finishJobPost(UUID userId, Long id);
+
+    Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title);
 }
