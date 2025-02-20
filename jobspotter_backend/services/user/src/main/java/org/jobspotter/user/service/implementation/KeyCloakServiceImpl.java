@@ -42,11 +42,21 @@ public class KeyCloakServiceImpl implements KeyCloakService {
     @Value("${keycloak.admin.client-id}")
     private String clientId;
 
-    private String localHostPrefixUrl = "http://localhost:9090";
+    private String cachedAdminToken;
+    private long tokenExpiryTime;
+
+
+    private final String localHostPrefixUrl = "http://localhost:9090";
 
 
     public String getAdminToken() {
-        String url = localHostPrefixUrl+"/realms/JobSpotter/protocol/openid-connect/token";
+
+        // If the cached token exists and is still valid, return it
+        if (cachedAdminToken != null && System.currentTimeMillis() < tokenExpiryTime) {
+            return cachedAdminToken;
+        }
+
+        String url = localHostPrefixUrl + "/realms/JobSpotter/protocol/openid-connect/token";
 
         // Prepare the form data (application/x-www-form-urlencoded)
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
@@ -62,7 +72,6 @@ public class KeyCloakServiceImpl implements KeyCloakService {
         // Create the HTTP request
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
 
-
         try {
             // Make the POST request
             ResponseEntity<String> response = restTemplate.exchange(
@@ -72,17 +81,29 @@ public class KeyCloakServiceImpl implements KeyCloakService {
                     String.class
             );
 
-            // Return the response body (JWT token)
+            // Parse the response to extract the token and expiry time
             String responseBody = response.getBody();
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(responseBody);
 
+            String accessToken = jsonNode.get("access_token").asText();
+            int expiresIn = jsonNode.get("expires_in").asInt(); // Expiry time in seconds
+
+            // Calculate the token expiry time with a buffer (e.g., refresh 1 minute before actual expiry)
+            tokenExpiryTime = System.currentTimeMillis() + (expiresIn * 1000L) - 60000; // 1 minute before expiry
+            cachedAdminToken = accessToken;
+
             log.info("Successfully got admin JWT token");
 
-            return jsonNode.get("access_token").asText();
+            return cachedAdminToken;
 
+        } catch (RestClientResponseException e) {
+            // Specific handling for 4xx/5xx errors from Keycloak
+            log.error("Keycloak request failed: {}", e.getMessage(), e);
+            throw new UnauthorizedException("Invalid credentials or access denied.");
         } catch (Exception e) {
+            // General error handling
             log.error("Failed to get admin JWT token: {}", e.getMessage(), e);
             throw new ServerException("Something went wrong on our end, please try again later");
         }

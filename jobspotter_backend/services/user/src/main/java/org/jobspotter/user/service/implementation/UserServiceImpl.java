@@ -33,6 +33,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<HttpStatus> registerUser(UserRegisterRequest userRegisterRequest) {
         if (userRepository.existsByUsernameAndEmail(userRegisterRequest.getUsername(), userRegisterRequest.getEmail())) {
+            log.warn("Could not register user: user with same email or username already exists");
             throw new ResourceAlreadyExistsException("User already exists");
         }
 

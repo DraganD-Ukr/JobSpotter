@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -50,7 +51,9 @@ public class AddressController {
 
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
-        return addressService.createAddress(userId, addressRequest);
+        Long addressId = addressService.createAddress(userId, addressRequest);
+
+        return ResponseEntity.created(new URI("/api/v1/users/addresses/" + addressId)).build();
     }
 
     @Operation(summary = "Delete address. User can have up to 5 addresses and only one can be with 'HOME' type. Only one default address is allowed.")

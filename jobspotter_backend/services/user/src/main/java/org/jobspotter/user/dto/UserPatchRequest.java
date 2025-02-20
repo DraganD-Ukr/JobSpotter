@@ -5,12 +5,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class UserPatchRequest {
 
@@ -25,10 +25,6 @@ public class UserPatchRequest {
     @Schema(description = "Email", example = "johnDoe@test.com")
     @Pattern(regexp = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$", message = "Invalid email format. Correct format: test@domain.example")
     private String email;
-
-    @Schema(description = "Username", example = "john_doe")
-    @Pattern(regexp = "^[a-zA-ZáéíóúÁÉÍÓÚ0-9_'-]{4,20}$", message = "Username must be at least 4 characters long and contain only letters and digits")
-    private String username;
 
     @Schema(description = "Phone number", example = "08123456789")
     @Pattern(regexp = "^(?<prefix>08[3-9])(?<subscriber>[0-9]{7})$", message = "Invalid phone number format")
