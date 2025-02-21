@@ -37,18 +37,33 @@ public class JobPostController {
         log.info("Viewing all job posts");
         return ResponseEntity.ok(jobPostService.getAllJobPosts());
     }
+//Deptricated
+//    // Get job post by tag using query parameter 'tag'
+//    @GetMapping("/by-tag")
+//    public ResponseEntity<List<JobPost>> getJobPostByTag(@RequestParam("tag") String tag) {
+//        log.info("Getting job posts by tag: {}", tag);
+//        List<JobPost> jobPosts = jobPostService.getJobPostByTag(tag);
+//        if (jobPosts.isEmpty()) {
+//            log.info("No jobs found for tag: {}", tag);
+//        }
+//        return ResponseEntity.ok(jobPosts);
+//    }
 
-    // Get job post by tag using query parameter 'tag'
-    @GetMapping("/by-tag")
-    public ResponseEntity<List<JobPost>> getJobPostByTag(@RequestParam("tag") String tag) {
-        log.info("Getting job posts by tag: {}", tag);
-        List<JobPost> jobPosts = jobPostService.getJobPostByTag(tag);
-        if (jobPosts.isEmpty()) {
-            log.info("No jobs found for tag: {}", tag);
-        }
-        return ResponseEntity.ok(jobPosts);
+    //Search job posts using query parameters 'title' and 'tag'
+    @GetMapping("/search")
+    public ResponseEntity<Page<JobPostSearchResponse>> searchJobPosts(
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "tags", required = false) String tags,
+            @RequestParam(required = false) Double latitude,   // User’s lat
+            @RequestParam(required = false) Double longitude,  // User’s long
+            @RequestParam(required = false) Double radius,  // Radius in km
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int size){
+
+
+        Page<JobPostSearchResponse> results = jobPostService.searchJobPosts(title, tags, latitude, longitude, radius, pageNumber, size);
+        return ResponseEntity.ok(results);
     }
-
 
     @Operation(
             summary = "Create job post",
@@ -319,9 +334,9 @@ public class JobPostController {
         return ResponseEntity.noContent().build();
     }
 
-
-    //Create job post with dummy data
-//    @PostMapping()
+//Depticated
+//    //Create job post with dummy data
+//    @PostMapping("/dummy")
 //    public ResponseEntity<HttpStatus> createJobPostWithDummyData() {
 //        log.info("Populating job post with dummy data");
 //        jobPostService.createJobPostDomainDummyData();

@@ -9,13 +9,15 @@ import java.util.List;
 import java.util.UUID;
 
 public interface JobPostService {
+
+    //Job Post Search Functions
     List<JobPost> getAllJobPosts();
 
-    List<JobPost> getJobPostByTag(String tag);
+    Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize);
 
-    void createJobPostDomainDummyData();
+    Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title);
 
-
+    //Job Post Functions
     Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken);
 
     HttpStatus applyToJobPost(Long id, UUID userId, JobPostApplyRequest jobPostApplyRequest);
@@ -30,5 +32,9 @@ public interface JobPostService {
 
     HttpStatus finishJobPost(UUID userId, Long id);
 
-    Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title);
+
+    //Deprecated
+    //    List<JobPost> getJobPostByTag(String tag);
+
+    //    void createJobPostDomainDummyData();
 }
