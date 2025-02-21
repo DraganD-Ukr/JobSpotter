@@ -37,31 +37,30 @@ public class JobPostController {
         log.info("Viewing all job posts");
         return ResponseEntity.ok(jobPostService.getAllJobPosts());
     }
-
-    // Get job post by tag using query parameter 'tag'
-    @GetMapping("/by-tag")
-    public ResponseEntity<List<JobPost>> getJobPostByTag(@RequestParam("tag") String tag) {
-        log.info("Getting job posts by tag: {}", tag);
-        List<JobPost> jobPosts = jobPostService.getJobPostByTag(tag);
-        if (jobPosts.isEmpty()) {
-            log.info("No jobs found for tag: {}", tag);
-        }
-        return ResponseEntity.ok(jobPosts);
-    }
+//Deptricated
+//    // Get job post by tag using query parameter 'tag'
+//    @GetMapping("/by-tag")
+//    public ResponseEntity<List<JobPost>> getJobPostByTag(@RequestParam("tag") String tag) {
+//        log.info("Getting job posts by tag: {}", tag);
+//        List<JobPost> jobPosts = jobPostService.getJobPostByTag(tag);
+//        if (jobPosts.isEmpty()) {
+//            log.info("No jobs found for tag: {}", tag);
+//        }
+//        return ResponseEntity.ok(jobPosts);
+//    }
 
     //Search job posts using query parameters 'title' and 'tag'
     @GetMapping("/search")
     public ResponseEntity<List<JobPost>> searchJobPosts(
             @RequestParam(value = "title", required = false) String title,
-            @RequestParam(value = "tags", required = false) String tag
-    ) {
-        log.info("Searching job posts by title: {} and tag: {}", title, tag);
-        List<JobPost> jobPosts = jobPostService.searchJobPosts(title, tag);
+            @RequestParam(value = "tags", required = false) String tags,
+            @RequestParam(required = false) Double latitude,   // User’s lat
+            @RequestParam(required = false) Double longitude,  // User’s long
+            @RequestParam(defaultValue = "3") Double radius) {
 
-        if (jobPosts.isEmpty()) {
-            log.info("No jobs found for title: {} and tag: {}", title, tag);
-        }
-        return ResponseEntity.ok(jobPosts);
+
+        List<JobPost> results = jobPostService.searchJobPosts(title, tags, latitude, longitude, radius);
+        return ResponseEntity.ok(results);
     }
 
     @Operation(
@@ -333,13 +332,13 @@ public class JobPostController {
         return ResponseEntity.noContent().build();
     }
 
-
-    //Create job post with dummy data
-    @PostMapping("/dummy")
-    public ResponseEntity<HttpStatus> createJobPostWithDummyData() {
-        log.info("Populating job post with dummy data");
-        jobPostService.createJobPostDomainDummyData();
-        return ResponseEntity.ok(HttpStatus.CREATED);
-    }
+//Depticated
+//    //Create job post with dummy data
+//    @PostMapping("/dummy")
+//    public ResponseEntity<HttpStatus> createJobPostWithDummyData() {
+//        log.info("Populating job post with dummy data");
+//        jobPostService.createJobPostDomainDummyData();
+//        return ResponseEntity.ok(HttpStatus.CREATED);
+//    }
 
 }
