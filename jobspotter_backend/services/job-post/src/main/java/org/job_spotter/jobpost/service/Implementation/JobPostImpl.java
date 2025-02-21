@@ -14,10 +14,9 @@ import org.job_spotter.jobpost.model.*;
 import org.job_spotter.jobpost.repository.ApplicantRepository;
 import org.job_spotter.jobpost.repository.JobPostRepository;
 import org.job_spotter.jobpost.repository.JobPostSpecificationRepository;
-import org.job_spotter.jobpost.repository.TagRepository;
 import org.job_spotter.jobpost.repository.specification.JobPostSpecification;
 import org.job_spotter.jobpost.service.JobPostService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.job_spotter.jobpost.utils.GeoUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -47,14 +46,20 @@ public class JobPostImpl implements JobPostService {
         return jobPostRepository.findAll();
     }
 
-    //Deprecated method
-//    @Override
-//    public List<JobPost> getJobPostByTag(String tag) {
-//        return jobPostRepository.findAllByTags_Name(tag);
-//    }
-
+    /**
+     * Search for job posts based on the given parameters
+     *
+     * @param title
+     * @param tags
+     * @param longitude
+     * @param latitude
+     * @param radius
+     * @param pageNumber
+     * @param pageSize
+     * @return Page of JobPostSearchResponse
+     */
     @Override
-    public Page<JobPost> searchJobPosts(String title, String tags, Double longitude, Double latitude, Double radius, int pageNumber, int pageSize) {
+    public Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize) {
         // Split the tags string into a list of tag names
         List<String> tagList = (tags != null && !tags.isEmpty())
                 ? Arrays.stream(tags.split(",")).map(String::trim).toList()
@@ -64,28 +69,34 @@ public class JobPostImpl implements JobPostService {
 
         PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
 
-        // Check if no filters are applied, return all job posts
-        if ((title == null || title.isEmpty()) && (tagList == null || tagList.isEmpty()) && radius <= 0) {
-            return jobPostRepository.findAll(pageRequest);
-        }
 
         // Build the specification for filtering
-        Specification<JobPost> spec = Specification.where(null);
+        Specification<JobPost> spec = JobPostSpecification.filterByParams(title, tagList, latitude, longitude, radius);
 
-        if (title != null && !title.isEmpty()) {
-            spec = spec.and(JobPostSpecification.hasTitle(title));
-        }
+        // Fetch the job posts with the specification
+        Page<JobPost> jobPosts = jobPostSpecificationRepository.findAll(spec, pageRequest);
 
-        if (tagList != null && !tagList.isEmpty()) {
-            spec = spec.and(JobPostSpecification.hasTags(tagList));
-        }
 
-        if (latitude != null && longitude != null && radius != null) {
-            spec = spec.and(JobPostSpecification.filterByDistance(latitude, longitude, radius));
-        }
+        // Map the job posts to JobPostSearchResponse
+        Page<JobPostSearchResponse> jobPostSearchResponses = jobPosts.map(jobPost -> JobPostSearchResponse.builder()
+                .jobPostId(jobPost.getJobPostId())
+                .jobPosterId(jobPost.getJobPosterId())
+                .tags(jobPost.getTags())
+                .applicantsCount(jobPost.getApplicants().size())
+                .title(jobPost.getTitle())
+                .description(jobPost.getDescription())
+                .address(jobPost.getAddress())
+                .longitude(jobPost.getLongitude())
+                .latitude(jobPost.getLatitude())
+                .relevantDistance((latitude!=null&&longitude!=null)?GeoUtils.haversine(latitude, longitude, jobPost.getLatitude(), jobPost.getLongitude(), GeoUtils.EARTH_RADIUS_KM):0)
+                .datePosted(jobPost.getDatePosted())
+                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                .maxApplicants(jobPost.getMaxApplicants())
+                .status(jobPost.getStatus())
+                .build());
 
         // Fetch the filtered results
-        return jobPostSpecificationRepository.findAll(spec, pageRequest);
+        return jobPostSearchResponses;
     }
 
 
@@ -543,7 +554,6 @@ public class JobPostImpl implements JobPostService {
             return "An unknown error occurred while parsing the error response.";
         }
     }
-
 
 }
 

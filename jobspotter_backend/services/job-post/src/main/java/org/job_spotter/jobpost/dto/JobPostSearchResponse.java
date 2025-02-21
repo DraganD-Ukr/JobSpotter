@@ -30,4 +30,5 @@ public class JobPostSearchResponse {
     private LocalDateTime lastUpdatedAt;
     private int maxApplicants;
     private JobStatus status;
+
 }

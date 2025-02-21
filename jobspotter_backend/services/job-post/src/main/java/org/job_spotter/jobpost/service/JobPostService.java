@@ -13,7 +13,7 @@ public interface JobPostService {
     //Job Post Search Functions
     List<JobPost> getAllJobPosts();
 
-    Page<JobPost> searchJobPosts(String title, String tags, Double longitude, Double latitude, Double radius, int pageNumber, int pageSize);
+    Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize);
 
     Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title);
 

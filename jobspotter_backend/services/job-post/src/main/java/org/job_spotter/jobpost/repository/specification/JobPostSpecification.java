@@ -75,9 +75,11 @@ public class JobPostSpecification {
      @param radiusKm Radius in km from which Job posts can be
      @return Specification*/
 //This filterByDistance method returns if the distance is present in the job post
-    public static Specification<JobPost> filterByDistance(double userLat, double userLon, double radiusKm) {
+    public static Specification<JobPost> filterByDistance(Double userLat, Double userLon, Double radiusKm) {
         return (root, query, criteriaBuilder) -> {
-
+            if(userLat == null || userLon == null || radiusKm == null) {
+                return criteriaBuilder.conjunction(); // Always true condition
+            }
             Expression<Double> lat = root.get("latitude");
             Expression<Double> lon = root.get("longitude");
 
@@ -114,11 +116,29 @@ public class JobPostSpecification {
     }
 
 
+
+
+
+    public static Specification<JobPost> isOpen() {
+        return (root, query, criteriaBuilder) -> {
+            // Join with applications table (assuming the relationship exists)
+            return criteriaBuilder.equal(root.get("status"), "OPEN");
+        };
+    }
+
     public static Specification<JobPost> wasWorkedOnBy(UUID userId) {
         return (root, query, criteriaBuilder) -> {
             // Join with applications table (assuming the relationship exists)
             return criteriaBuilder.equal(root.join("applicants").get("userId"), userId);
         };
+    }
+
+
+    public static Specification<JobPost> filterByParams(String title, List<String> tagNames, Double userLat, Double userLon, Double radiusKm) {
+        return Specification.where(isOpen())
+                .and(hasTitle(title))
+                .and(hasTags(tagNames))
+                .and(filterByDistance(userLat, userLon, radiusKm));
     }
 
     // Combine multiple filters into a single specification
