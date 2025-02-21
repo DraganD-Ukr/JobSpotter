@@ -52,10 +52,20 @@ public class JobPostImpl implements JobPostService {
     }
 
     @Override
-    public List<JobPost> searchJobPosts(String title, String tag) {
+    public List<JobPost> searchJobPosts(String title, String tags) {
+        // Split the tags string into a list of tag names
+        List<String> tagList = (tags != null && !tags.isEmpty())
+                ? Arrays.stream(tags.split(",")).map(String::trim).toList()
+                : null;
+
+        //Checks For which search paramenters were imputed and returns the job posts that match the search parameters
+        if ((title == null || title.isEmpty()) && (tagList == null || tagList.isEmpty())) {
+            return jobPostRepository.findAll();
+        }
+
         Specification<JobPost> spec = Specification.where(JobPostSpecification.hasTitle(title))
-                .and(JobPostSpecification.hasTags(tag));
-        log.info("hello"+jobPostSpecificationRepository.findAll(spec).toString());
+                .and(JobPostSpecification.hasTags(tagList));
+
         return jobPostSpecificationRepository.findAll(spec);
     }
 

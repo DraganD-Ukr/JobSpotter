@@ -53,7 +53,7 @@ public class JobPostController {
     @GetMapping("/search")
     public ResponseEntity<List<JobPost>> searchJobPosts(
             @RequestParam(value = "title", required = false) String title,
-            @RequestParam(value = "tag", required = false) String tag
+            @RequestParam(value = "tags", required = false) String tag
     ) {
         log.info("Searching job posts by title: {} and tag: {}", title, tag);
         List<JobPost> jobPosts = jobPostService.searchJobPosts(title, tag);
