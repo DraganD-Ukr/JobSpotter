@@ -17,6 +17,7 @@ import org.job_spotter.jobpost.repository.JobPostSpecificationRepository;
 import org.job_spotter.jobpost.repository.TagRepository;
 import org.job_spotter.jobpost.repository.specification.JobPostSpecification;
 import org.job_spotter.jobpost.service.JobPostService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,10 +36,10 @@ import java.util.stream.Collectors;
 public class JobPostImpl implements JobPostService {
 
     private final JobPostRepository jobPostRepository;
-    private final TagRepository tagRepository;
     private final UserServiceClient userServiceClient;
     private final ApplicantRepository applicantRepository;
     private final JobPostSpecificationRepository jobPostSpecificationRepository;
+
 
 
     @Override
@@ -53,16 +54,19 @@ public class JobPostImpl implements JobPostService {
 //    }
 
     @Override
-    public List<JobPost> searchJobPosts(String title, String tags, Double longitude, Double latitude, Double radius) {
+    public Page<JobPost> searchJobPosts(String title, String tags, Double longitude, Double latitude, Double radius, int pageNumber, int pageSize) {
         // Split the tags string into a list of tag names
         List<String> tagList = (tags != null && !tags.isEmpty())
                 ? Arrays.stream(tags.split(",")).map(String::trim).toList()
                 : null;
         log.info("Tag list: {}", tagList);
         log.info("Title: {}", title);
+
+        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
+
         // Check if no filters are applied, return all job posts
         if ((title == null || title.isEmpty()) && (tagList == null || tagList.isEmpty()) && radius <= 0) {
-            return jobPostRepository.findAll();
+            return jobPostRepository.findAll(pageRequest);
         }
 
         // Build the specification for filtering
@@ -81,7 +85,7 @@ public class JobPostImpl implements JobPostService {
         }
 
         // Fetch the filtered results
-        return jobPostSpecificationRepository.findAll(spec);
+        return jobPostSpecificationRepository.findAll(spec, pageRequest);
     }
 
 

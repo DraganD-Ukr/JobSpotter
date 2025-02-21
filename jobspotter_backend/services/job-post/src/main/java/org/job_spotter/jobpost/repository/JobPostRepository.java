@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface JobPostRepository extends JpaRepository<JobPost, Long>{
+public interface JobPostRepository extends JpaRepository<JobPost, Long> {
 
     //Deprecated
 //    @Query("SELECT jp FROM JobPost jp JOIN jp.tags t WHERE t.name = :name")

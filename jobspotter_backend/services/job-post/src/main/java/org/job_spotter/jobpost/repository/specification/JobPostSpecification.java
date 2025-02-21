@@ -67,68 +67,51 @@ public class JobPostSpecification {
     }
 
     /**
-     * Filter job posts by distance and location from the user
-     * uses the harvesine formula to calculate the distance between two points
-     *
-     * @param userLat  Latitude of the user
-     * @param userLon  Longitude of the user
-     * @param radiusKm Radius in km from which Job posts can be
-     * @return Specification
-     */
-    //This filterByDistance method returns if the distance is present in the job post
+
+     Filter job posts by distance and location from the user
+     uses the harvesine formula to calculate the distance between two points*
+     @param userLat  Latitude of the user
+     @param userLon  Longitude of the user
+     @param radiusKm Radius in km from which Job posts can be
+     @return Specification*/
+//This filterByDistance method returns if the distance is present in the job post
     public static Specification<JobPost> filterByDistance(double userLat, double userLon, double radiusKm) {
         return (root, query, criteriaBuilder) -> {
 
-            // Latitude and Longitude columns in the JobPost entity
             Expression<Double> lat = root.get("latitude");
             Expression<Double> lon = root.get("longitude");
 
-            // Step 1: Convert latitude and longitude to radians
             Expression<Double> radUserLat = criteriaBuilder.function("radians", Double.class, criteriaBuilder.literal(userLat));
             Expression<Double> radUserLon = criteriaBuilder.function("radians", Double.class, criteriaBuilder.literal(userLon));
             Expression<Double> radJobPostLat = criteriaBuilder.function("radians", Double.class, lat);
             Expression<Double> radJobPostLon = criteriaBuilder.function("radians", Double.class, lon);
 
-            // Step 2: Haversine formula components
-            Expression<Double> deltaLat = criteriaBuilder.diff(radJobPostLat, radUserLat);
-            Expression<Double> deltaLon = criteriaBuilder.diff(radJobPostLon, radUserLon);
-
-            Expression<Double> sinDeltaLatDiv2 = criteriaBuilder.function("sin", Double.class, criteriaBuilder.prod(deltaLat, 0.5));
-            Expression<Double> sinDeltaLonDiv2 = criteriaBuilder.function("sin", Double.class, criteriaBuilder.prod(deltaLon, 0.5));
-
-            Expression<Double> a = criteriaBuilder.sum(
-                    criteriaBuilder.prod(sinDeltaLatDiv2, sinDeltaLatDiv2),
-                    criteriaBuilder.prod(
-                            criteriaBuilder.prod(
-                                    criteriaBuilder.function("cos", Double.class, radUserLat),
-                                    criteriaBuilder.function("cos", Double.class, radJobPostLat)
-                            ),
-                            criteriaBuilder.prod(sinDeltaLonDiv2, sinDeltaLonDiv2)
+            Expression<Double> distanceExpr = criteriaBuilder.prod(
+                    6371.0,
+                    criteriaBuilder.function("acos", Double.class,
+                            criteriaBuilder.sum(
+                                    criteriaBuilder.prod(
+                                            criteriaBuilder.function("cos", Double.class, radUserLat),
+                                            criteriaBuilder.prod(
+                                                    criteriaBuilder.function("cos", Double.class, radJobPostLat),
+                                                    criteriaBuilder.function("cos", Double.class, criteriaBuilder.diff(radJobPostLon, radUserLon))
+                                            )
+                                    ),
+                                    criteriaBuilder.prod(
+                                            criteriaBuilder.function("sin", Double.class, radUserLat),
+                                            criteriaBuilder.function("sin", Double.class, radJobPostLat)
+                                    )
+                            )
                     )
             );
 
-            // Step 3: Calculate distance: distance = 6371 * acos(sqrt(a))
-            Expression<Double> sqrtA = criteriaBuilder.function("sqrt", Double.class, a);
-            Expression<Double> acosA = criteriaBuilder.function("acos", Double.class, sqrtA); // acos(sqrt(a))
+            // To reflect ORDER BY distance ASC in SQL (optional, for sorting results if needed)
+            assert query != null;
+            query.orderBy(criteriaBuilder.asc(distanceExpr));
 
-            Expression<Double> distance = criteriaBuilder.prod(
-                    criteriaBuilder.literal(6371.0), // Earth's radius in km
-                    acosA // acos(sqrt(a))
-            );
-
-            // Step 4: Log the computed distance for debugging
-            System.out.println("Computed Distance: " + distance.toString());  // Log the distance formula
-            System.out.println("Radius filter: " + radiusKm);  // Log the radius filter value
-
-            // Step 5: Apply the radius filter (less than or equal to radius)
-            return criteriaBuilder.lessThanOrEqualTo(distance, criteriaBuilder.literal(radiusKm));
+            return criteriaBuilder.lessThanOrEqualTo(distanceExpr, radiusKm);
         };
     }
-
-
-
-
-
 
 
     public static Specification<JobPost> wasWorkedOnBy(UUID userId) {

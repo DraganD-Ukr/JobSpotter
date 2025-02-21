@@ -51,15 +51,17 @@ public class JobPostController {
 
     //Search job posts using query parameters 'title' and 'tag'
     @GetMapping("/search")
-    public ResponseEntity<List<JobPost>> searchJobPosts(
+    public ResponseEntity<Page<JobPost>> searchJobPosts(
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "tags", required = false) String tags,
             @RequestParam(required = false) Double latitude,   // User’s lat
             @RequestParam(required = false) Double longitude,  // User’s long
-            @RequestParam(defaultValue = "3") Double radius) {
+            @RequestParam(defaultValue = "3") Double radius,  // Radius in km
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int size){
 
 
-        List<JobPost> results = jobPostService.searchJobPosts(title, tags, latitude, longitude, radius);
+        Page<JobPost> results = jobPostService.searchJobPosts(title, tags, longitude, latitude, radius, pageNumber, size);
         return ResponseEntity.ok(results);
     }
 
