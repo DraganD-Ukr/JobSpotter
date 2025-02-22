@@ -11,7 +11,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.jobspotter.review.authUtils.JWTUtils;
 import org.jobspotter.review.dto.ErrorResponse;
-import org.jobspotter.review.dto.JobPostResponse;
+import org.jobspotter.review.dto.RatingsResponse;
 import org.jobspotter.review.dto.ReviewPostRequest;
 import org.jobspotter.review.exception.ServerException;
 import org.jobspotter.review.service.ReviewService;
@@ -77,6 +77,32 @@ public class ReviewController {
             throw new ServerException("Could not create review");
         }
 
+    }
+
+
+
+
+
+    @Operation(
+            summary = "Create review.",
+            description = "Get ratings of a user (both provider(job-poster) and seeker(applicant) ratings) by provided user id."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved ratings of user", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = RatingsResponse.class))
+            }),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/ratings")
+    public ResponseEntity<RatingsResponse> getRatingsOfUser(
+            @RequestParam UUID userId
+    ) {
+        return ResponseEntity.ok(reviewService.getRatingsByUserId(userId));
     }
 
 
