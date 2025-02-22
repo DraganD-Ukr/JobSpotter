@@ -466,6 +466,47 @@ public class JobPostImpl implements JobPostService {
         return HttpStatus.NO_CONTENT;
     }
 
+    /**
+     * Get a job post by its ID
+     * @param id The ID of the job post
+     * @return The job post with the given ID
+     */
+    @Override
+    public JobPostResponse getJobPostById( Long id) {
+
+//        Fetch the job post from the repository
+        JobPost jobPost = jobPostRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + id));
+
+//        Map the applicants to ApplicantResponse
+        Set<ApplicantResponse> applicantResponses = jobPost.getApplicants().stream()
+                .map(applicant -> ApplicantResponse.builder()
+                        .userId(applicant.getUserId())
+                        .status(applicant.getStatus())
+                        .build())
+                .collect(Collectors.toSet());
+
+//        Create the JobPostResponse object
+        JobPostResponse jobPostResponse = JobPostResponse.builder()
+                .jobPostId(jobPost.getJobPostId())
+                .jobPosterId(jobPost.getJobPosterId())
+                .tags(jobPost.getTags())
+                .applicants(applicantResponses)
+                .title(jobPost.getTitle())
+                .description(jobPost.getDescription())
+                .address(jobPost.getAddress())
+                .longitude(jobPost.getLongitude())
+                .latitude(jobPost.getLatitude())
+                .datePosted(jobPost.getDatePosted())
+                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                .maxApplicants(jobPost.getMaxApplicants())
+                .status(jobPost.getStatus())
+                .build();
+
+        return jobPostResponse;
+
+    }
+
     @Override
     public Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title) {
 

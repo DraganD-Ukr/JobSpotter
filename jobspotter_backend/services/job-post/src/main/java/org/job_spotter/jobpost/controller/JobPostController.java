@@ -334,6 +334,34 @@ public class JobPostController {
         return ResponseEntity.noContent().build();
     }
 
+
+    @Operation(
+            summary = "Get job post by id.",
+            description = "Gets job post by provided id"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully got job post by id",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobPostResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<JobPostResponse> getJobPostById(
+            @PathVariable Long id
+    ) {
+        log.info("Getting job post by id: {}", id);
+
+        return ResponseEntity.ok(jobPostService.getJobPostById(id));
+    }
+
 //Depticated
 //    //Create job post with dummy data
 //    @PostMapping("/dummy")
