@@ -88,16 +88,10 @@ public class ReviewController {
             description = "Get ratings of a user (both provider(job-poster) and seeker(applicant) ratings) by provided user id."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Successfully created review", headers = {
-                    @Header(name = "Location", description = "Location of the created review")
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved ratings of user", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = RatingsResponse.class))
             }),
             @ApiResponse(responseCode = "400", description = "Bad request",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(responseCode = "403", description = "Forbidden",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(responseCode = "404", description = "Not Found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(responseCode = "500", description = "Internal server error",
