@@ -77,7 +77,7 @@ public class ReviewServiceImpl implements ReviewService {
 //        Get the ratings of the user being reviewed
         Rating rating = ratingRepository.findByUserId(reviewRequest.getReviewedUserId());
 
-        Rating updated = updateRating(reviewRequest, rating, userId);
+        Rating updated = updateRating(reviewRequest, rating, reviewRequest.getReviewedUserId());
 
 //        Save the updated rating
         ratingRepository.save(updated);
@@ -149,7 +149,7 @@ public class ReviewServiceImpl implements ReviewService {
                     .build();
         }
 
-//        Update the rating based on the reviewer role
+// Update the rating based on the reviewer role
         if (request.getReviewerRole().equals(ReviewerRole.SEEKER)) {
             updatedRating.setProviderRatingCount(updatedRating.getProviderRatingCount() + 1);
             updatedRating.setProviderRatingSum(updatedRating.getProviderRatingSum() + request.getRating());
