@@ -3,6 +3,7 @@ package org.jobspotter.review.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,8 +14,12 @@ import org.jobspotter.review.authUtils.JWTUtils;
 import org.jobspotter.review.dto.ErrorResponse;
 import org.jobspotter.review.dto.RatingsResponse;
 import org.jobspotter.review.dto.ReviewPostRequest;
+import org.jobspotter.review.dto.ReviewResponse;
 import org.jobspotter.review.exception.ServerException;
+import org.jobspotter.review.model.ReviewerRole;
 import org.jobspotter.review.service.ReviewService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -84,7 +89,7 @@ public class ReviewController {
 
 
     @Operation(
-            summary = "Create review.",
+            summary = "Get ratings of a user.",
             description = "Get ratings of a user (both provider(job-poster) and seeker(applicant) ratings) by provided user id."
     )
     @ApiResponses(value = {
@@ -98,11 +103,48 @@ public class ReviewController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    @GetMapping("/ratings")
+    @GetMapping("/user/{userId}/ratings")
     public ResponseEntity<RatingsResponse> getRatingsOfUser(
-            @RequestParam UUID userId
+            @PathVariable UUID userId
     ) {
         return ResponseEntity.ok(reviewService.getRatingsByUserId(userId));
+    }
+
+
+
+
+
+
+    @Operation(
+            summary = "Get reviews of a user.",
+            description = "Get reviews of a user based on the provided user id and reviewer role. " +
+                    "You can get all reviews received by a user(userId) from providers(job posters) or seekers(applicants). " +
+                    "Request parameter 'reviewerRole' is used to specify the role of the reviewer."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved reviews of user", content = {
+                    @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PageImpl.class),
+                            array = @ArraySchema(
+                                    schema = @Schema(implementation = ReviewResponse.class)
+                            )
+                    ),
+            }),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/user/{userId}/reviews")
+    public ResponseEntity<Page<ReviewResponse>> getReviewsOfUser(
+            @PathVariable UUID userId,
+            @RequestParam ReviewerRole reviewerRole,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(reviewService.getReviewsByUserId(userId, reviewerRole, page, size));
     }
 
 

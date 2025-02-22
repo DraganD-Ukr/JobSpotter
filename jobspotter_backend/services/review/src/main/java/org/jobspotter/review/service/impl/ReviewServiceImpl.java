@@ -5,19 +5,19 @@ import feign.FeignException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.jobspotter.review.client.JobPostServiceClient;
-import org.jobspotter.review.dto.ApplicantResponse;
-import org.jobspotter.review.dto.JobPostResponse;
-import org.jobspotter.review.dto.RatingsResponse;
-import org.jobspotter.review.dto.ReviewPostRequest;
+import org.jobspotter.review.dto.*;
 import org.jobspotter.review.exception.*;
 import org.jobspotter.review.model.Rating;
 import org.jobspotter.review.model.Review;
+import org.jobspotter.review.model.ReviewedUserRole;
 import org.jobspotter.review.model.ReviewerRole;
 import org.jobspotter.review.repository.RatingRepository;
 import org.jobspotter.review.repository.ReviewRepository;
 import org.jobspotter.review.service.ReviewService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -77,7 +77,7 @@ public class ReviewServiceImpl implements ReviewService {
 //        Get the ratings of the user being reviewed
         Rating rating = ratingRepository.findByUserId(reviewRequest.getReviewedUserId());
 
-        Rating updated = updateRating(reviewRequest, rating, reviewRequest.getReviewedUserId());
+        Rating updated = updateRating(reviewRequest, rating);
 
 //        Save the updated rating
         ratingRepository.save(updated);
@@ -125,6 +125,33 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
 
+//    Fetch all reviews received by a user (userId) from job seekers or job posters based on the reviewer role
+    @Override
+    public Page<ReviewResponse> getReviewsByUserId(UUID userId, ReviewerRole reviewerRole, int pageNumber, int pageSize) {
+        log.info("Getting reviews for user with id: {}", userId);
+
+        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
+
+//        Fetch reviews based on the reviewer role, user id and page request
+        Page<Review> reviews = reviewRepository.findByReviewedUserIdAndReviewerRole(userId, reviewerRole, pageRequest);
+
+//        Map the reviews to review response objects and return result
+        return reviews.map(
+                review -> ReviewResponse.builder()
+                .reviewId(review.getReviewId())
+                .reviewerId(review.getReviewerId())
+                .reviewedUserId(review.getReviewedUserId())
+                .jobPostId(review.getJobPostId())
+                .reviewerRole(review.getReviewerRole())
+                .rating(review.getRating())
+                .comment(review.getComment())
+                .dateCreated(review.getDateCreated())
+                .dateUpdated(review.getDateUpdated())
+                .build()
+        );
+    }
+
+
 
     /* -------------------------------------------Helper Methods-------------------------------------------------------*/
 
@@ -134,7 +161,7 @@ public class ReviewServiceImpl implements ReviewService {
      * @param request Review request
      * @param toUpdate Rating to update
      */
-    private Rating updateRating(ReviewPostRequest request, Rating toUpdate, UUID userId) {
+    private Rating updateRating(ReviewPostRequest request, Rating toUpdate) {
 
 //        If the user being reviewed does not have a rating, create a new rating Object
         Rating updatedRating = toUpdate;
