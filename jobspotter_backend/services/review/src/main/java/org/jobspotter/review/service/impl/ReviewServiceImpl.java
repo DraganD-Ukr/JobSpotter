@@ -72,7 +72,7 @@ public class ReviewServiceImpl implements ReviewService {
 //        Get the ratings of the user being reviewed
         Rating rating = ratingRepository.findByUserId(userId);
 
-        Rating updated = updateRating(reviewRequest, rating, userId);
+        Rating updated = updateRating(reviewRequest, rating, reviewRequest.getReviewedUserId());
 
 //        Save the updated rating
         ratingRepository.save(updated);
@@ -102,14 +102,15 @@ public class ReviewServiceImpl implements ReviewService {
                     .build();
         }
 
-//        Update the rating based on the reviewer role
+//        If the reviewer is a seeker, update the provider rating count and sum
         if (request.getReviewerRole().equals(ReviewerRole.SEEKER)) {
-            updatedRating.setSeekerRatingCount(updatedRating.getSeekerRatingCount() + 1);
-            updatedRating.setSeekerRatingSum(updatedRating.getSeekerRatingSum() + request.getRating());
+            updatedRating.setProviderRatingCount(updatedRating.getSeekerRatingCount() + 1);
+            updatedRating.setProviderRatingSum(updatedRating.getSeekerRatingSum() + request.getRating());
 
-        } else {
-            updatedRating.setProviderRatingCount(updatedRating.getProviderRatingCount() + 1);
-            updatedRating.setProviderRatingSum(updatedRating.getProviderRatingSum() + request.getRating());
+//            If the reviewer is a provider, update the seeker rating count and sum
+        } else if (request.getReviewerRole().equals(ReviewerRole.PROVIDER)) {
+            updatedRating.setSeekerRatingCount(updatedRating.getProviderRatingCount() + 1);
+            updatedRating.setSeekerRatingSum(updatedRating.getProviderRatingSum() + request.getRating());
         }
 
         return updatedRating;
