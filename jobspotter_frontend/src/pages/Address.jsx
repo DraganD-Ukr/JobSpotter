@@ -7,7 +7,10 @@ export function Address() {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingAddress, setEditingAddress] = useState(null); // NEW state for update
+  const [editingAddress, setEditingAddress] = useState(null);
+
+  // New toggle for the "Add Address" form
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const [formValues, setFormValues] = useState({
     streetAddress: "",
@@ -62,7 +65,7 @@ export function Address() {
   };
 
   // -------------------------------------------
-  // Submit New Address (no JSON parse on success)
+  // Submit New Address
   // -------------------------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -94,14 +97,13 @@ export function Address() {
         throw new Error(errorMessage);
       }
 
-      // SUCCESS: do not parse JSON => skip "Unexpected end of JSON input"
       console.log("Address created successfully with no JSON parse.");
       setSuccessMessage("Address added successfully!");
 
       // Re-fetch addresses so we see the new one in the list
       await fetchAddresses();
 
-      // Reset form
+      // Reset form and hide it again
       setFormValues({
         streetAddress: "",
         city: "",
@@ -110,6 +112,7 @@ export function Address() {
         addressType: "OTHER",
         default: false,
       });
+      setShowAddForm(false); // Hide form after successful add
     } catch (err) {
       console.error("Error creating address:", err);
       setError(err.message || "An error occurred. Please try again.");
@@ -119,7 +122,7 @@ export function Address() {
   };
 
   // -------------------------------------------
-  // Remove an Address (unchanged)
+  // Remove an Address
   // -------------------------------------------
   const handleRemove = async (addressId) => {
     setError(null);
@@ -166,7 +169,7 @@ export function Address() {
   };
 
   // -------------------------------------------
-  // Submit Updated Address (no JSON parse on success)
+  // Submit Updated Address
   // -------------------------------------------
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
@@ -199,7 +202,6 @@ export function Address() {
         throw new Error(errorMessage);
       }
 
-      // SUCCESS: do not parse JSON => skip "Unexpected end of JSON input"
       console.log("Address updated successfully with no JSON parse.");
       setSuccessMessage("Address updated successfully!");
 
@@ -215,23 +217,27 @@ export function Address() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen">
       <Sidebar />
-      <main className="w-3/4 p-8">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6">My Addresses</h2>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="main-content w-3/4 p-8">
+        <h2 className="text-3xl font-bold mb-6">My Addresses</h2>
 
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
         {successMessage && (
           <p className="text-green-500 text-sm mb-4">{successMessage}</p>
         )}
+
+        {/* LOADING OR RENDER ADDRESSES */}
         {loading ? (
           <p>Loading addresses...</p>
         ) : addresses.length === 0 ? (
           <p>No addresses found. Please add one below.</p>
         ) : (
           <div className="space-y-4">
-            {addresses.map((addr, idx) => (
-              <div key={idx} className="border p-4 rounded bg-gray-50">
+            {addresses.map((addr) => (
+              <div key={addr.addressId} className="card p-4">
                 <p>{addr.streetAddress}</p>
                 <p>
                   {addr.city}, {addr.county}
@@ -262,10 +268,8 @@ export function Address() {
 
         {/* Update Address Form (only shown when editingAddress is set) */}
         {editingAddress && (
-          <div className="mt-6 bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              Update Address
-            </h3>
+          <div className="card mt-6 p-6">
+            <h3 className="text-lg font-semibold mb-2">Update Address</h3>
             <form onSubmit={handleUpdateSubmit} className="space-y-4">
               <InputField
                 name="streetAddress"
@@ -315,6 +319,7 @@ export function Address() {
                 placeholder="Eir Code"
                 required
               />
+              {/* Dark-mode-friendly select */}
               <select
                 name="addressType"
                 value={editingAddress.addressType}
@@ -324,7 +329,9 @@ export function Address() {
                     addressType: e.target.value,
                   })
                 }
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full px-4 py-2 border rounded-lg 
+                           bg-white text-black 
+                           dark:bg-gray-700 dark:text-white"
               >
                 <option value="HOME">Home</option>
                 <option value="WORK">Work</option>
@@ -365,71 +372,85 @@ export function Address() {
           </div>
         )}
 
-        <div className="mt-6 bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">
-            Add a New Address
-          </h3>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <InputField
-              name="streetAddress"
-              value={formValues.streetAddress}
-              onChange={handleChange}
-              placeholder="Street Address"
-              required
-            />
-            <InputField
-              name="city"
-              value={formValues.city}
-              onChange={handleChange}
-              placeholder="City"
-              required
-            />
-            <InputField
-              name="county"
-              value={formValues.county}
-              onChange={handleChange}
-              placeholder="County"
-              required
-            />
-            <InputField
-              name="eirCode"
-              value={formValues.eirCode}
-              onChange={handleChange}
-              placeholder="Eir Code"
-              required
-            />
-
-            <select
-              name="addressType"
-              value={formValues.addressType}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-lg"
-            >
-              <option value="HOME">Home</option>
-              <option value="WORK">Work</option>
-              <option value="OTHER">Other</option>
-            </select>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="default"
-                checked={formValues.default}
-                onChange={handleChange}
-                className="mr-2"
-              />
-              <label className="text-sm">Set as default address</label>
-            </div>
-
+        {/* ADD ADDRESS SECTION */}
+        <div className="card mt-6 p-4">
+          {/* Accordion header: "Add a New Address" + button to show/hide */}
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Add a New Address</h3>
             <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+              type="button"
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="px-3 py-1 bg-green-600 text-white font-bold rounded hover:bg-green-700"
             >
-              {isSubmitting ? "Saving..." : "Add Address"}
+              {showAddForm ? "Cancel" : "Add Address"}
             </button>
-          </form>
+          </div>
+
+          {/* The form is hidden unless showAddForm is true */}
+          {showAddForm && (
+            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+              <InputField
+                name="streetAddress"
+                value={formValues.streetAddress}
+                onChange={handleChange}
+                placeholder="Street Address"
+                required
+              />
+              <InputField
+                name="city"
+                value={formValues.city}
+                onChange={handleChange}
+                placeholder="City"
+                required
+              />
+              <InputField
+                name="county"
+                value={formValues.county}
+                onChange={handleChange}
+                placeholder="County"
+                required
+              />
+              <InputField
+                name="eirCode"
+                value={formValues.eirCode}
+                onChange={handleChange}
+                placeholder="Eir Code"
+                required
+              />
+
+              <select
+                name="addressType"
+                value={formValues.addressType}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-lg
+                           bg-white text-black
+                           dark:bg-gray-700 dark:text-white"
+              >
+                <option value="HOME">Home</option>
+                <option value="WORK">Work</option>
+                <option value="OTHER">Other</option>
+              </select>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="default"
+                  checked={formValues.default}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                <label className="text-sm">Set as default address</label>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+              >
+                {isSubmitting ? "Saving..." : "Add Address"}
+              </button>
+            </form>
+          )}
         </div>
       </main>
     </div>

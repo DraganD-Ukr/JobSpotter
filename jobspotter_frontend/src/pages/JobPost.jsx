@@ -32,6 +32,18 @@ const tagMapping = new Map([
   ["Personal Services", "PERSONAL_SERVICES"],
   ["Tutoring Languages", "TUTORING_LANGUAGES"],
   ["Music Instruction", "MUSIC_INSTRUCTION"],
+  ["Home Maintenance", "HOME_MAINTENANCE"],
+  ["Transportation Assistance", "TRANSPORTATION_ASSISTANCE"],
+  ["Errands/Shopping", "ERRANDS_SHOPPING"],
+  ["Volunteer Work", "VOLUNTEER_WORK"], 
+  ["Community Events", "COMMUNITY_EVENTS"],
+  ["Fundraising", "FUNDRAISING"],
+  ["Animal Welfare", "ANIMAL_WELFARE"],
+  ["Mentoring (Community)", "MENTORING"],
+  ["Health Support", "HEALTH_SUPPORT"],
+  ["Counseling Support", "COUNSELING_SUPPORT"],
+  ["Disaster Relief", "DISASTER_RELIEF"],
+  ["Environmental Conservation", "ENVIRONMENTAL_CONSERVATION"],
   ["Other", "OTHER"],
 ]);
 
@@ -58,7 +70,7 @@ export function JobPost() {
   const [showForm, setShowForm] = useState(false);
   const [showAllJobs, setShowAllJobs] = useState(false);
 
-  // User and loading/error states (like Profile)
+  // User and loading/error states
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -70,7 +82,7 @@ export function JobPost() {
     fetchUserAddresses();
   }, []);
 
-  // Fetch signed-in user from API
+  // Fetch signed-in user
   const fetchUserData = () => {
     setLoading(true);
     fetch("/api/v1/users/me", {
@@ -82,9 +94,7 @@ export function JobPost() {
         if (!res.ok) throw new Error("Failed to fetch user info");
         return res.json();
       })
-      .then((data) => {
-        setUser(data);
-      })
+      .then((data) => setUser(data))
       .catch((err) => {
         console.error("Error fetching user info:", err);
         setErrorMessage(err.message);
@@ -92,7 +102,7 @@ export function JobPost() {
       .finally(() => setLoading(false));
   };
 
-  // Fetch addresses from API
+  // Fetch addresses
   const fetchUserAddresses = () => {
     fetch("/api/v1/users/addresses", {
       method: "GET",
@@ -103,16 +113,14 @@ export function JobPost() {
         if (!res.ok) throw new Error("Failed to fetch addresses");
         return res.json();
       })
-      .then((data) => {
-        setAddresses(data);
-      })
+      .then((data) => setAddresses(data))
       .catch((err) => {
         console.error("Error fetching addresses:", err);
         setErrorMessage(err.message);
       });
   };
 
-  // Fetch all job posts
+  // Fetch all jobs
   const fetchAllJobs = () => {
     setLoading(true);
     fetch("/api/v1/job-posts", {
@@ -131,15 +139,13 @@ export function JobPost() {
           );
           return { ...job, tags: friendlyTags };
         });
-
-        // ADDED: Make sure we have jobId set (if the backend is using "id" instead).
+        // Ensure we have jobId
         const finalJobs = jobsWithFriendlyTags.map((job) => {
           if (!job.jobId && job.id) {
             return { ...job, jobId: job.id };
           }
           return job;
         });
-
         setJobPostsData(finalJobs);
       })
       .catch((err) => {
@@ -149,7 +155,7 @@ export function JobPost() {
       .finally(() => setLoading(false));
   };
 
-  // Fetch only my job posts
+  // Fetch only my jobs
   const fetchMyJobs = () => {
     setLoading(true);
     fetch("/api/v1/job-posts/my-job-posts", {
@@ -168,15 +174,12 @@ export function JobPost() {
           );
           return { ...job, tags: friendlyTags };
         });
-
-        // ADDED: Again, ensure jobId is set if the server uses "id"
         const finalJobs = jobsWithFriendlyTags.map((job) => {
           if (!job.jobId && job.id) {
             return { ...job, jobId: job.id };
           }
           return job;
         });
-
         setJobPostsData(finalJobs);
       })
       .catch((err) => {
@@ -186,7 +189,7 @@ export function JobPost() {
       .finally(() => setLoading(false));
   };
 
-  // Form handlers for job post creation
+  // Form handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     setJobData((prev) => ({ ...prev, [name]: value }));
@@ -194,6 +197,7 @@ export function JobPost() {
 
   const handleAddTag = () => {
     const trimmedTag = newTag.trim();
+    // If "Other" was typed, it's not in tagMapping => skip
     if (trimmedTag !== "" && tagMapping.has(trimmedTag)) {
       setJobData((prev) => ({
         ...prev,
@@ -210,7 +214,7 @@ export function JobPost() {
     }));
   };
 
-  // Create a new job post
+  // CREATE a new job post
   const handleSubmit = (e) => {
     e.preventDefault();
     if (jobData.tags.length === 0) return;
@@ -230,10 +234,8 @@ export function JobPost() {
             throw new Error(text);
           });
         }
-        return res.json();
       })
-      .then((newJob) => {
-        setJobPostsData((prev) => [...prev, newJob]);
+      .then(() => {
         setShowForm(false);
       })
       .catch((err) => {
@@ -243,7 +245,7 @@ export function JobPost() {
       .finally(() => setSaving(false));
   };
 
-  // Function to handle job application
+  // APPLY for a job
   const handleApply = (jobId) => {
     const requestBody = { jobId };
     console.log("Request body:", requestBody);
@@ -257,10 +259,8 @@ export function JobPost() {
       .then((res) => {
         console.log("Response status:", res.status);
         if (!res.ok) throw new Error("Failed to apply for job");
-        return res.json();
       })
-      .then((data) => {
-        console.log("Response data:", data);
+      .then(() => {
         alert("Successfully applied for the job!");
       })
       .catch((err) => {
@@ -269,10 +269,9 @@ export function JobPost() {
       });
   };
 
-  // ADDED: Define the handleRateJob function so the rating buttons don’t break
+  // Simple rating function
   const handleRateJob = (jobId, star) => {
     console.log(`Rated job ${jobId} with ${star} stars`);
-    // You can add your own rating logic here.
   };
 
   // Toggle "View All Jobs"
@@ -283,26 +282,28 @@ export function JobPost() {
     setShowAllJobs((prev) => !prev);
   };
 
+  // Loading or saving state
   if (loading || saving) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="main-content flex items-center justify-center min-h-screen">
         <p>Loading...</p>
       </div>
     );
   }
 
+  // If user not loaded
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="main-content flex items-center justify-center min-h-screen">
         <p>Error loading user info. Please try again later.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      {/* SIDEBAR: same styling as Profile page */}
-      <aside className="w-1/4 bg-white shadow-md p-6">
+    <div className="flex min-h-screen">
+      {/* SIDEBAR */}
+      <aside className="sidebar w-1/4 p-6 shadow-md">
         <div className="flex items-center gap-3 mb-6">
           <img
             src={user.profileImage || thanosImage}
@@ -338,11 +339,11 @@ export function JobPost() {
         </nav>
       </aside>
 
-      {/* MAIN CONTENT: Same as Profile page */}
-      <main className="w-3/4 p-8">
-        <div className="bg-white shadow rounded-lg p-6">
+      {/* MAIN CONTENT */}
+      <main className="main-content w-3/4 p-8">
+        <div className="card">
           <h1 className="text-2xl font-bold mb-4">Welcome to the Job Post Page</h1>
-          <p className="text-gray-700 mb-6">
+          <p className="mb-6">
             Use the sidebar on the left to create a new job post, view your own
             job listings, or see all available jobs.
           </p>
@@ -454,7 +455,7 @@ export function JobPost() {
                 <div
                   key={job.jobId || job.title}
                   className="border rounded p-4 mb-4 flex justify-between items-center"
-                  data-jobpostid={job.jobPostId} // ✅ Storing jobId in data attribute
+                  data-jobpostid={job.jobPostId}
                 >
                   <div>
                     <h3 className="font-semibold text-lg">{job.title}</h3>
@@ -462,7 +463,10 @@ export function JobPost() {
                     <p className="text-sm text-gray-600">
                       Tags:{" "}
                       {job.tags.map((tag, index) => (
-                        <span key={`${job.jobPostId}-tag-${index}`} className="mr-1">
+                        <span
+                          key={`${job.jobPostId}-tag-${index}`}
+                          className="mr-1"
+                        >
                           {typeof tag === "string" ? tag : tag.name}
                           {index < job.tags.length - 1 ? ", " : ""}
                         </span>
@@ -495,7 +499,6 @@ export function JobPost() {
               ))}
             </div>
           )}
-
         </div>
       </main>
     </div>
