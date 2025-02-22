@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import org.jobspotter.review.client.JobPostServiceClient;
 import org.jobspotter.review.dto.ApplicantResponse;
 import org.jobspotter.review.dto.JobPostResponse;
+import org.jobspotter.review.dto.RatingsResponse;
 import org.jobspotter.review.dto.ReviewPostRequest;
 import org.jobspotter.review.exception.*;
 import org.jobspotter.review.model.Rating;
@@ -19,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,6 +37,8 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public Long createReview(UUID userId, ReviewPostRequest reviewRequest) {
+
+        log.info("Creating review for user with id: {}", userId);
 
         JobPostResponse jobPost = null;
 //        Try to get the job post from the job-post service and handle response exceptions
@@ -70,7 +75,7 @@ public class ReviewServiceImpl implements ReviewService {
 
 
 //        Get the ratings of the user being reviewed
-        Rating rating = ratingRepository.findByUserId(userId);
+        Rating rating = ratingRepository.findByUserId(reviewRequest.getReviewedUserId());
 
         Rating updated = updateRating(reviewRequest, rating, userId);
 
@@ -81,6 +86,48 @@ public class ReviewServiceImpl implements ReviewService {
 
         return review.getReviewId();
     }
+
+
+    @Override
+    public RatingsResponse getRatingsByUserId(UUID userId) {
+        log.info("Getting ratings for user with id: {}", userId);
+
+        Rating rating = ratingRepository.findByUserId(userId);
+
+        if (rating == null) {
+            log.warn("Rating not found for user with id: {}", userId);
+            return RatingsResponse.builder()
+                    .seekerRatingCount(0)
+                    .avgSeekerRating(0.0)
+                    .providerRatingCount(0)
+                    .avgProviderRating(0.0)
+                    .build();
+        }
+
+        double avgSeekerRating = rating.getSeekerRatingCount() == 0
+                ? 0.0
+                : new BigDecimal((double) rating.getSeekerRatingSum() / rating.getSeekerRatingCount())
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
+
+        double avgProviderRating = rating.getProviderRatingCount() == 0
+                ? 0.0
+                : new BigDecimal((double) rating.getProviderRatingSum() / rating.getProviderRatingCount())
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
+
+        return RatingsResponse.builder()
+                .seekerRatingCount(rating.getSeekerRatingCount())
+                .avgSeekerRating(avgSeekerRating)
+                .providerRatingCount(rating.getProviderRatingCount())
+                .avgProviderRating(avgProviderRating)
+                .build();
+    }
+
+
+
+    /* -------------------------------------------Helper Methods-------------------------------------------------------*/
+
 
     /**
      * Update the rating of the user being reviewed based on provided request and existing ratings
@@ -94,7 +141,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         if (updatedRating == null) {
             updatedRating = Rating.builder()
-                    .userId(userId)
+                    .userId(request.getReviewedUserId())
                     .seekerRatingCount(0)
                     .seekerRatingSum(0)
                     .providerRatingCount(0)
@@ -104,12 +151,12 @@ public class ReviewServiceImpl implements ReviewService {
 
 //        Update the rating based on the reviewer role
         if (request.getReviewerRole().equals(ReviewerRole.SEEKER)) {
-            updatedRating.setSeekerRatingCount(updatedRating.getSeekerRatingCount() + 1);
-            updatedRating.setSeekerRatingSum(updatedRating.getSeekerRatingSum() + request.getRating());
-
-        } else {
             updatedRating.setProviderRatingCount(updatedRating.getProviderRatingCount() + 1);
             updatedRating.setProviderRatingSum(updatedRating.getProviderRatingSum() + request.getRating());
+
+        } else {
+            updatedRating.setSeekerRatingCount(updatedRating.getSeekerRatingCount() + 1);
+            updatedRating.setSeekerRatingSum(updatedRating.getSeekerRatingSum() + request.getRating());
         }
 
         return updatedRating;
@@ -144,7 +191,7 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
 
-//        Check if the user is seeker
+//        Check if the user is provider
         if (reviewRequest.getReviewerRole().equals(ReviewerRole.PROVIDER) ) {
 
 //        Find the applicant in the job post applicants set
@@ -162,11 +209,18 @@ public class ReviewServiceImpl implements ReviewService {
                 log.warn("User with id: {} was not accepted to the job post with id: {}", reviewRequest.getReviewedUserId(), reviewRequest.getJobPostId());
                 throw new ForbiddenException("Could not create rating: Applicant was not accepted to the job post");
             }
+            else if (!userId.equals(jobPost.getJobPosterId())) {
+                log.warn("User with id: {} is not authorized to review user with id: {} under job post with id: {}", userId, reviewRequest.getReviewedUserId(), reviewRequest.getJobPostId());
+                throw new UnauthorizedException("Could not create rating: You are not authorized to review this user");
+            }
 
         }
 
 //        Check if the user is provider and if he is authorized to review the user
-        if (reviewRequest.getReviewerRole().equals(ReviewerRole.SEEKER) && !jobPost.getJobPosterId().equals(reviewRequest.getReviewedUserId())) {
+        if (reviewRequest.getReviewerRole().equals(ReviewerRole.SEEKER)
+                &&
+            !jobPost.getJobPosterId().equals(reviewRequest.getReviewedUserId())
+        ) {
             log.warn("User with id: {} is not authorized to review user with id: {} under job post with id: {}", userId, reviewRequest.getReviewedUserId(), reviewRequest.getJobPostId());
             throw new UnauthorizedException("Could not create rating: Provided reviewed user id does not match the job poster id");
         }
