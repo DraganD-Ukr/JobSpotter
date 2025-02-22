@@ -32,6 +32,8 @@ public interface JobPostService {
 
     HttpStatus finishJobPost(UUID userId, Long id);
 
+    JobPostResponse getJobPostById(Long id);
+
 
     //Deprecated
     //    List<JobPost> getJobPostByTag(String tag);
