@@ -15,5 +15,5 @@ public interface ReviewService {
 
     RatingsResponse getRatingsByUserId(UUID userId);
 
-    Page<ReviewResponse> getReviewsByUserId(UUID userId, ReviewerRole reviewerRole, int page, int size);
+    Page<ReviewResponse> getReviewsByUserId(UUID reviewedUserId, ReviewerRole reviewerRole, Double minRating, Double maxRating, String dateCreatedMin, String dateCreatedMax, String searchQuery, int pageNum, int pageSize);
 }

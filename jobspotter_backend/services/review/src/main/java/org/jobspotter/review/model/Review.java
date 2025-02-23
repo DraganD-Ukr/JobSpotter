@@ -7,12 +7,11 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.TimeZoneStorage;
-import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -21,6 +20,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
+@Indexed
 public class Review {
 
     @Id
@@ -45,6 +45,7 @@ public class Review {
     @Column(nullable = false, precision = 2)
     private Double rating;
 
+    @FullTextField(analyzer = "customAnalyzer")
     @Column(length = 450)
     private String comment;
 

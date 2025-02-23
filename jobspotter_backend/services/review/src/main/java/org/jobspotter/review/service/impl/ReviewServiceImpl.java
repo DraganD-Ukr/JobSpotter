@@ -11,13 +11,16 @@ import org.jobspotter.review.model.Rating;
 import org.jobspotter.review.model.Review;
 import org.jobspotter.review.model.ReviewedUserRole;
 import org.jobspotter.review.model.ReviewerRole;
+import org.jobspotter.review.model.specification.ReviewSpecification;
 import org.jobspotter.review.repository.RatingRepository;
 import org.jobspotter.review.repository.ReviewRepository;
+import org.jobspotter.review.repository.ReviewSpecRepository;
 import org.jobspotter.review.service.ReviewService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -33,6 +36,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final RatingRepository ratingRepository;
     private final JobPostServiceClient jobPostServiceClient;
+    private final ReviewSpecRepository reviewSpecRepository;
 
     @Override
     @Transactional
@@ -126,14 +130,18 @@ public class ReviewServiceImpl implements ReviewService {
 
 
 //    Fetch all reviews received by a user (userId) from job seekers or job posters based on the reviewer role
+    @Transactional
     @Override
-    public Page<ReviewResponse> getReviewsByUserId(UUID userId, ReviewerRole reviewerRole, int pageNumber, int pageSize) {
-        log.info("Getting reviews for user with id: {}", userId);
+    public Page<ReviewResponse> getReviewsByUserId(UUID reviewedUserId, ReviewerRole reviewerRole, Double minRating, Double maxRating, String dateCreatedMin, String dateCreatedMax, String searchQuery, int page, int size) {
+        log.info("Getting reviews for user with id: {}", reviewedUserId);
 
-        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
+        PageRequest pageRequest = PageRequest.of(page, size);
 
-//        Fetch reviews based on the reviewer role, user id and page request
-        Page<Review> reviews = reviewRepository.findByReviewedUserIdAndReviewerRole(userId, reviewerRole, pageRequest);
+        Specification<Review> spec = ReviewSpecification.filterReviewByParams(
+                reviewedUserId, String.valueOf(reviewerRole), minRating, maxRating, dateCreatedMin, dateCreatedMax, searchQuery
+        );
+
+        Page<Review> reviews = reviewSpecRepository.findAll(spec, pageRequest);
 
 //        Map the reviews to review response objects and return result
         return reviews.map(

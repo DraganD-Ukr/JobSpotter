@@ -9,6 +9,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import org.jobspotter.review.authUtils.JWTUtils;
 import org.jobspotter.review.dto.ErrorResponse;
@@ -20,14 +23,18 @@ import org.jobspotter.review.model.ReviewerRole;
 import org.jobspotter.review.service.ReviewService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Validated
 @AllArgsConstructor
 @RestController()
 @RequestMapping("/api/v1/reviews")
@@ -137,15 +144,22 @@ public class ReviewController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    @GetMapping("/user/{userId}/reviews")
+    @GetMapping("/user/{reviewedUserId}/reviews")
     public ResponseEntity<Page<ReviewResponse>> getReviewsOfUser(
-            @PathVariable UUID userId,
+            @PathVariable UUID reviewedUserId,
             @RequestParam ReviewerRole reviewerRole,
-            @RequestParam(required = false, defaultValue = "0") int page,
-            @RequestParam(required = false, defaultValue = "10") int size
+            @RequestParam(required = false, defaultValue = "1") @Min(1) @Max(5) Double minRating,
+            @RequestParam(required = false, defaultValue = "5") @Min(1) @Max(5) Double maxRating,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") String dateCreatedMin,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") String dateCreatedMax,
+            @RequestParam(required = false) @Size(max = 100) String searchQuery,
+            @RequestParam(required = false, defaultValue = "0") int pageNum,
+            @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
-        return ResponseEntity.ok(reviewService.getReviewsByUserId(userId, reviewerRole, page, size));
+        return ResponseEntity.ok(reviewService.getReviewsByUserId(
+                reviewedUserId, reviewerRole, minRating, maxRating, dateCreatedMin, dateCreatedMax, searchQuery,  pageNum, pageSize
+        ));
     }
 
-
+//Filter by reviewerRole(must be provided), range of ratings, fulltext search.
 }
