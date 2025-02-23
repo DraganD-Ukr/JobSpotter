@@ -157,7 +157,7 @@ public class ReviewSpecification implements ApplicationContextAware {
                     .toList();
 
             if (matchingReviewIds.isEmpty()) {
-                return criteriaBuilder.conjunction();
+                return criteriaBuilder.disjunction();
             }
 
             // Filter results in JPA query based on matched IDs
