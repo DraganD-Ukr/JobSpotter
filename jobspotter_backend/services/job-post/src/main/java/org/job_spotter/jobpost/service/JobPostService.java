@@ -13,16 +13,19 @@ public interface JobPostService {
     //Job Post Search Functions
     List<JobPost> getAllJobPosts();
 
+    JobPostDetailedResponse getMyJobPostDetails(Long jobPostId);
+
     Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize);
 
     Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title);
+
+    List<MyJobPostResponse> getMyJobPosts(UUID userId);
 
     //Job Post Functions
     Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken);
 
     HttpStatus applyToJobPost(Long id, UUID userId, JobPostApplyRequest jobPostApplyRequest);
 
-    List<MyJobPostResponse> getMyJobPosts(UUID userId);
 
     JobPost takeApplicantsAction(Long jobPostId, UUID userId, List<ApplicantActionRequest> applicantsActionRequest);
 

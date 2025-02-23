@@ -37,17 +37,16 @@ public class JobPostController {
         log.info("Viewing all job posts");
         return ResponseEntity.ok(jobPostService.getAllJobPosts());
     }
-//Deptricated
-//    // Get job post by tag using query parameter 'tag'
-//    @GetMapping("/by-tag")
-//    public ResponseEntity<List<JobPost>> getJobPostByTag(@RequestParam("tag") String tag) {
-//        log.info("Getting job posts by tag: {}", tag);
-//        List<JobPost> jobPosts = jobPostService.getJobPostByTag(tag);
-//        if (jobPosts.isEmpty()) {
-//            log.info("No jobs found for tag: {}", tag);
-//        }
-//        return ResponseEntity.ok(jobPosts);
-//    }
+
+    //Get job post with detailed information
+    @GetMapping("/{id}/job-post-details")
+    public ResponseEntity<JobPostDetailedResponse> getMyJobPostDetails(
+            @Parameter(description = "Job post id")
+            @PathVariable Long id
+            ) throws Exception {
+        log.info("Getting my job post details");
+        return ResponseEntity.ok(jobPostService.getMyJobPostDetails(id));
+    }
 
     //Search job posts using query parameters 'title' and 'tag'
     @GetMapping("/search")
@@ -341,6 +340,18 @@ public class JobPostController {
 //        log.info("Populating job post with dummy data");
 //        jobPostService.createJobPostDomainDummyData();
 //        return ResponseEntity.ok(HttpStatus.CREATED);
+//    }
+
+//Deptricated
+//    // Get job post by tag using query parameter 'tag'
+//    @GetMapping("/by-tag")
+//    public ResponseEntity<List<JobPost>> getJobPostByTag(@RequestParam("tag") String tag) {
+//        log.info("Getting job posts by tag: {}", tag);
+//        List<JobPost> jobPosts = jobPostService.getJobPostByTag(tag);
+//        if (jobPosts.isEmpty()) {
+//            log.info("No jobs found for tag: {}", tag);
+//        }
+//        return ResponseEntity.ok(jobPosts);
 //    }
 
 }
