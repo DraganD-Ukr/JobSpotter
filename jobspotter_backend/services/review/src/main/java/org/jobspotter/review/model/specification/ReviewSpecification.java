@@ -136,6 +136,7 @@ public class ReviewSpecification implements ApplicationContextAware {
 
         return (root, query, criteriaBuilder) -> {
             if (!StringUtils.hasText(comment)) {
+//                No filter if comment is empty
                 return criteriaBuilder.conjunction();
             }
 
@@ -147,7 +148,9 @@ public class ReviewSpecification implements ApplicationContextAware {
             List<Long> matchingReviewIds = searchSession.search(Review.class)
                     .where(f -> f.match()
                             .field("comment")
-                            .matching(comment))
+                            .matching(comment)
+                            .fuzzy(1)
+                    )
                     .fetchHits(100) // Limit to 100 results
                     .stream()
                     .map(Review::getReviewId) // Assuming your Review entity has an `id` field
@@ -179,12 +182,26 @@ public class ReviewSpecification implements ApplicationContextAware {
     }
 
     public static Specification<Review> filterReviewByParams(UUID reviewedUserId, String reviewerRole, Double minRating, Double maxRating, String dateCreatedMin, String dateCreatedMax, String query) {
-        return Specification.where(hasReviewerId(reviewedUserId))
-                .and(hasReviewerRole(reviewerRole))
-                .and(inBetweenRatings(minRating, maxRating))
-                .and(createdInBetweenDates(dateCreatedMin, dateCreatedMax))
-                .and(fullTextSearchByComment(query));
+        // Start with the reviewedUserId filter
+        Specification<Review> spec = Specification.where(hasReviewerId(reviewedUserId));
 
+        // Check if the query is not empty and apply full-text search filter
+        if (StringUtils.hasText(query)) {
+            Specification<Review> fullTextSpec = fullTextSearchByComment(query);
+
+            // Apply the full-text search specification if the query is not empty
+            spec = spec.and(fullTextSpec);
+        } else {
+            // If query is empty, we use an empty specification to ensure no results are matched
+            spec = spec.and((root, query1, criteriaBuilder) -> criteriaBuilder.conjunction());
+        }
+
+        // Apply the rest of the filters directly without checking for null/empty
+        spec = spec.and(hasReviewerRole(reviewerRole))
+                .and(inBetweenRatings(minRating, maxRating))
+                .and(createdInBetweenDates(dateCreatedMin, dateCreatedMax));
+
+        return spec;
     }
 
 }
