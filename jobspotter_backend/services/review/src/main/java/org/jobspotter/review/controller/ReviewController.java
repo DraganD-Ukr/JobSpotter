@@ -14,10 +14,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import org.jobspotter.review.authUtils.JWTUtils;
-import org.jobspotter.review.dto.ErrorResponse;
-import org.jobspotter.review.dto.RatingsResponse;
-import org.jobspotter.review.dto.ReviewPostRequest;
-import org.jobspotter.review.dto.ReviewResponse;
+import org.jobspotter.review.dto.*;
 import org.jobspotter.review.exception.ServerException;
 import org.jobspotter.review.model.ReviewerRole;
 import org.jobspotter.review.service.ReviewService;
@@ -161,5 +158,29 @@ public class ReviewController {
         ));
     }
 
-//Filter by reviewerRole(must be provided), range of ratings, fulltext search.
+    @PutMapping("/{reviewId}")
+    public ResponseEntity<HttpStatus> updateReview(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestBody @Valid ReviewEditRequest reviewRequest,
+            @PathVariable Long reviewId) {
+
+        UUID userId;
+        try {
+            userId = JWTUtils.getUserIdFromToken(accessToken);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+
+        Long createdReviewId = reviewService.updateReview(userId, reviewRequest, reviewId);
+
+        try {
+            return ResponseEntity.created(new URI("/api/v1/reviews/" + createdReviewId)).build();
+        } catch (URISyntaxException e) {
+            throw new ServerException("Could not create review");
+        }
+
+    }
+
+
+
 }
