@@ -31,12 +31,7 @@ public class JobPostController {
 
     private final JobPostService jobPostService;
 
-    //View all job posts
-    @GetMapping()
-    public ResponseEntity<List<JobPost>> viewAllJobPosts() {
-        log.info("Viewing all job posts");
-        return ResponseEntity.ok(jobPostService.getAllJobPosts());
-    }
+
 
 
     //Get job post details with JobPostId
@@ -180,6 +175,13 @@ public class JobPostController {
             summary = "Get job posts created by user",
             description = "Retrieves all job posts created by the authenticated user. Job posts also contain basic info of applicants. "
                     + "This method depends on the user-service."
+                    + "This method returns a paginated list of job posts created by the user."
+                    + " - If title is provided, the search will be based on the title."
+                    + " - If tags are provided, the search will be based on the tags."
+                    + " - If status is provided, the search will be based on the status."
+                    + " - If page and size are provided, the search will be paginated. Default page is 0 and size is 10."
+                    + "All parameters are optional. Combining multiple parameters will narrow down the search."
+
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully got job posts created by user",
@@ -193,13 +195,18 @@ public class JobPostController {
             )
     })
     @GetMapping("/my-job-posts")
-    public ResponseEntity<List<MyJobPostResponse>> getMyJobPosts(
-            @RequestHeader("Authorization") String accessToken
+    public ResponseEntity<Page<MyJobPostResponse>> getMyJobPosts(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "tags", required = false) String tags,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int size
     ) throws Exception {
         log.info("Getting my job posts");
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
-        return ResponseEntity.ok(jobPostService.getMyJobPosts(userId));
+        return ResponseEntity.ok(jobPostService.getMyJobPosts(userId, title, tags, status, pageNumber, size));
     }
 
 
@@ -400,16 +407,14 @@ public class JobPostController {
         return ResponseEntity.ok(jobPostService.getJobPostById(id));
     }
 
-//Depticated
-//    //Create job post with dummy data
-//    @PostMapping("/dummy")
-//    public ResponseEntity<HttpStatus> createJobPostWithDummyData() {
-//        log.info("Populating job post with dummy data");
-//        jobPostService.createJobPostDomainDummyData();
-//        return ResponseEntity.ok(HttpStatus.CREATED);
+//Deptricated
+//    //View all job posts
+//    @GetMapping()
+//    public ResponseEntity<List<JobPost>> viewAllJobPosts() {
+//        log.info("Viewing all job posts");
+//        return ResponseEntity.ok(jobPostService.getAllJobPosts());
 //    }
 
-//Deptricated
 //    // Get job post by tag using query parameter 'tag'
 //    @GetMapping("/by-tag")
 //    public ResponseEntity<List<JobPost>> getJobPostByTag(@RequestParam("tag") String tag) {
@@ -419,6 +424,14 @@ public class JobPostController {
 //            log.info("No jobs found for tag: {}", tag);
 //        }
 //        return ResponseEntity.ok(jobPosts);
+//    }
+
+//    //Create job post with dummy data
+//    @PostMapping("/dummy")
+//    public ResponseEntity<HttpStatus> createJobPostWithDummyData() {
+//        log.info("Populating job post with dummy data");
+//        jobPostService.createJobPostDomainDummyData();
+//        return ResponseEntity.ok(HttpStatus.CREATED);
 //    }
 
 }

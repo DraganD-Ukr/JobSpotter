@@ -41,10 +41,6 @@ public class JobPostImpl implements JobPostService {
 
 
 
-    @Override
-    public List<JobPost> getAllJobPosts() {
-        return jobPostRepository.findAll();
-    }
 
     @Override
     public JobPostDetailedResponse getMyJobPostDetails(Long jobPostId) {
@@ -77,6 +73,8 @@ public class JobPostImpl implements JobPostService {
 
     /**
      * Search for job posts based on the given parameters
+     * Returns a paginated list of job posts with response optimised for large lists
+     * Details can then be fetched on with another method using the given jobPostId
      *
      * @param title Title of the job post
      * @param tags comma separated list of tags
@@ -89,10 +87,13 @@ public class JobPostImpl implements JobPostService {
      */
     @Override
     public Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize) {
+        //TODO: Sort By and Sort Direction
+        //TODO: Trim Discription For better request performance
+        //TODO: Optimize Search Response DTO (users will be sent to view details of job post on another page)
+
         // Split the tags string into a list of tag names
-        List<String> tagList = (tags != null && !tags.isEmpty())
-                ? Arrays.stream(tags.split(",")).map(String::trim).toList()
-                : null;
+        List<String> tagList = covertTagsToListFromString(tags);
+
         log.info("Tag list: {}", tagList);
         log.info("Title: {}", title);
 
@@ -107,7 +108,9 @@ public class JobPostImpl implements JobPostService {
 
 
         // Map the job posts to JobPostSearchResponse
-        Page<JobPostSearchResponse> jobPostSearchResponses = jobPosts.map(jobPost -> JobPostSearchResponse.builder()
+
+        // Fetch the filtered results
+        return jobPosts.map(jobPost -> JobPostSearchResponse.builder()
                 .jobPostId(jobPost.getJobPostId())
                 .jobPosterId(jobPost.getJobPosterId())
                 .tags(jobPost.getTags())
@@ -123,9 +126,6 @@ public class JobPostImpl implements JobPostService {
                 .maxApplicants(jobPost.getMaxApplicants())
                 .status(jobPost.getStatus())
                 .build());
-
-        // Fetch the filtered results
-        return jobPostSearchResponses;
     }
 
 
@@ -243,68 +243,50 @@ public class JobPostImpl implements JobPostService {
         return HttpStatus.CREATED;
     }
 
+    /**
+     * Get all job posts created by the user
+     * Filter by title, tags, and status
+     * Returns a paginated list of job posts created by the user with response optimised for large lists
+     * Details can then be fetched on with another method using the given jobPostId
+     *
+     * @param userId The user ID of the job poster
+     * @param title  The title of the job post
+     * @param tags  The tags associated with the job post
+     * @param status The status of the job post
+     * @param pageNumber The page number
+     * @param pageSize The page size
+     * @return Page of MyJobPostResponse
+     */
     @Override
-    public List<MyJobPostResponse> getMyJobPosts(UUID userId) {
-//        TODO: implement pagination and filtering
-//        TODO: Results may be large, consider adding pagination in the future
-        List<JobPost> jobPosts = jobPostRepository.findAllByJobPosterId(userId);
+    public Page<MyJobPostResponse> getMyJobPosts(UUID userId, String title, String tags, String status, int pageNumber, int pageSize) {
+        //TODO: Sort By and Sort Direction
+        //TODO: Trim Discription For better request performance
 
-        // Extract applicant IDs from the job posts
-        Set<UUID> applicantIds = new HashSet<>();
-        for (JobPost jobPost : jobPosts) {
-            jobPost.getApplicants().forEach(applicant -> applicantIds.add(applicant.getUserId()));
-        }
+        // Split the tags string into a list of tag names
+        List<String> tagList = covertTagsToListFromString(tags);
 
-        try {
-            // Fetch basic info for all applicants (map of UUID -> UserBasicInfoResponse)
-            ResponseEntity <Map<UUID, UserBasicInfoResponse>> applicantsBasicInfoResponse = userServiceClient.getUsersBasicInfoByIds(new ArrayList<>(applicantIds));
+        // Create a PageRequest object for pagination
+        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
 
-            Map<UUID, UserBasicInfoResponse> applicantsBasicInfo = applicantsBasicInfoResponse.getBody();
+        // Build the specification for filtering
+        Specification<JobPost> spec = JobPostSpecification.filterByParams(userId, title, tagList, status);
 
-            // Now, map the job posts to MyJobPostResponse
-            List<MyJobPostResponse> myJobPostResponses = jobPosts.stream()
-                    .map(jobPost -> {
-                        // Create a list of ApplicantResponse for each job post
-                        List<ApplicantResponse> applicantResponses = jobPost.getApplicants().stream()
-                                .map(applicant -> {
-                                    // Use the map to fetch the applicant's basic info
-                                    UserBasicInfoResponse userBasicInfo = applicantsBasicInfo.get(applicant.getUserId());
-                                    return ApplicantResponse.builder()
-                                            .userId(applicant.getUserId())
-                                            .applicantId(applicant.getApplicantId())
-                                            .username(userBasicInfo != null ? userBasicInfo.getUsername() : null)
-                                            .firstName(userBasicInfo != null ? userBasicInfo.getFirstName() : null)
-                                            .lastName(userBasicInfo != null ? userBasicInfo.getLastName() : null)
-                                            .status(applicant.getStatus())
-                                            .build();
-                                })
-                                .collect(Collectors.toList());
+        // Fetch the job posts with the specification
+        Page<JobPost> jobPosts = jobPostSpecificationRepository.findAll(spec, pageRequest);
 
-                        // Create MyJobPostResponse with the applicants' info included
-                        return MyJobPostResponse.builder()
-                                .jobPostId(jobPost.getJobPostId())
-                                .tags(jobPost.getTags())
-                                .applicants(applicantResponses)  // This now contains the basic info for each applicant
-                                .title(jobPost.getTitle())
-                                .description(jobPost.getDescription())
-                                .address(jobPost.getAddress())
-                                .datePosted(jobPost.getDatePosted())
-                                .lastUpdatedAt(jobPost.getLastUpdatedAt())
-                                .maxApplicants(jobPost.getMaxApplicants())
-                                .status(jobPost.getStatus())
-                                .build();
-                    })
-                    .collect(Collectors.toList());
-
-            return myJobPostResponses;  // Returning the list of job posts with populated applicants' info
-        } catch (FeignClientException e) {
-            if (e.status() == HttpStatus.INTERNAL_SERVER_ERROR.value()) {
-                logUserClientException(e);
-                throw new ServerException(getErrorMessageFromFeignException(e));
-
-            }
-        }
-        return null;
+        // Map the job posts to MyJobPostResponse
+        return jobPosts.map(jobPost -> MyJobPostResponse.builder()
+                .jobPostId(jobPost.getJobPostId())
+                .tags(jobPost.getTags())
+                .title(jobPost.getTitle())
+                .description(jobPost.getDescription())
+                .address(jobPost.getAddress())
+                .datePosted(jobPost.getDatePosted())
+                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                .ApplicantsCount(jobPost.getApplicants().size())
+                .maxApplicants(jobPost.getMaxApplicants())
+                .status(jobPost.getStatus())
+                .build());
     }
 
     @Transactional
@@ -594,6 +576,12 @@ public class JobPostImpl implements JobPostService {
 
     private static void logUserClientException(FeignClientException e) {
         log.error("(job-posts): Error getting users(basic infos) from user-service: {}, {}", e.getMessage(), e.status());
+    }
+
+    private List<String> covertTagsToListFromString(String tags) {
+        return (tags != null && !tags.isEmpty())
+                ? Arrays.stream(tags.split(",")).map(String::trim).toList()
+                : null;
     }
 
     private Set<Tag> convertTagsFromDto(Set<JobTagEnum> tags){
