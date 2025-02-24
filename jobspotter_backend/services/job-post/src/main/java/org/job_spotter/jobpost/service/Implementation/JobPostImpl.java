@@ -46,16 +46,45 @@ public class JobPostImpl implements JobPostService {
         return jobPostRepository.findAll();
     }
 
+    @Override
+    public JobPostDetailedResponse getMyJobPostDetails(Long jobPostId) {
+        JobPost jobPost = jobPostRepository.findById(jobPostId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + jobPostId));
+
+        return JobPostDetailedResponse.builder()
+                .jobPostId(jobPost.getJobPostId())
+                .jobPosterId(jobPost.getJobPosterId())
+                .tags(jobPost.getTags())
+                .applicants(jobPost.getApplicants().stream()
+                        .map(applicant -> ApplicantDetailedResponse.builder()
+                                .applicantId(applicant.getApplicantId())
+                                .userId(applicant.getUserId())
+                                .message(applicant.getMessage())
+                                .status(applicant.getStatus())
+                                .build())
+                        .collect(Collectors.toList()))
+                .title(jobPost.getTitle())
+                .description(jobPost.getDescription())
+                .address(jobPost.getAddress())
+                .longitude(jobPost.getLongitude())
+                .latitude(jobPost.getLatitude())
+                .datePosted(jobPost.getDatePosted())
+                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                .maxApplicants(jobPost.getMaxApplicants())
+                .status(jobPost.getStatus())
+                .build();
+    }
+
     /**
      * Search for job posts based on the given parameters
      *
-     * @param title
-     * @param tags
-     * @param longitude
-     * @param latitude
-     * @param radius
-     * @param pageNumber
-     * @param pageSize
+     * @param title Title of the job post
+     * @param tags comma separated list of tags
+     * @param longitude Longitude of the user's location
+     * @param latitude Latitude of the user's location
+     * @param radius Radius in kilometers from the user's location
+     * @param pageNumber  Page number
+     * @param pageSize Number of items per page
      * @return Page of JobPostSearchResponse
      */
     @Override
