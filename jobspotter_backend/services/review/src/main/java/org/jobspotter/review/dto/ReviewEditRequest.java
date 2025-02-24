@@ -1,6 +1,7 @@
 package org.jobspotter.review.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -16,9 +17,11 @@ import java.math.RoundingMode;
 @NoArgsConstructor
 public class ReviewEditRequest {
 
+    @Schema(description = "Comment of the review. Must be between 5 and 450 characters")
     @Size(min=5, max = 450)
     private String comment;
 
+    @Schema(description = "Rating of the review. Must be between 1.0 and 5.0 with at most one decimal place")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     @DecimalMin(value = "1.0", inclusive = true, message = "Rating must be at least 1.0")
     @DecimalMax(value = "5.0", inclusive = true, message = "Rating must be at most 5.0")
