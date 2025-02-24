@@ -47,7 +47,7 @@ public class Review {
 
 
 
-    @FullTextField
+    @FullTextField(analyzer = "custom_analyzer_simple")
     @Column(length = 450)
     private String comment;
 
