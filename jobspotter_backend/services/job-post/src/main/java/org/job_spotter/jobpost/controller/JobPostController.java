@@ -38,6 +38,24 @@ public class JobPostController {
         return ResponseEntity.ok(jobPostService.getAllJobPosts());
     }
 
+
+    //Get job post details with JobPostId
+    @Operation(
+            summary = "Gets job post details with JobPostId",
+            description = "Get job post details with job post id given in path. "
+                    + "This method Returns a detailed job post information. along with applicants information."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved job post details along with applicants information",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyJobPostResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     //Get job post with detailed information
     @GetMapping("/{id}/job-post-details")
     public ResponseEntity<JobPostDetailedResponse> getMyJobPostDetails(
