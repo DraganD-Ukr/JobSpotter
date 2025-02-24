@@ -183,6 +183,33 @@ public class ReviewServiceImpl implements ReviewService {
         return review.getReviewId();
     }
 
+    @Transactional
+    @Override
+    public void deleteReview(UUID userId, Long reviewId) {
+        log.info("Deleting review with id: {} for user with id: {}", reviewId, userId);
+
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + reviewId));
+
+        if (!review.getReviewerId().equals(userId)) {
+            log.warn("User with id: {} is not authorized to delete review with id: {}", userId, reviewId);
+            throw new UnauthorizedException("Could not delete review: You are not authorized to delete this review");
+        }
+
+        Rating userRatings = ratingRepository.findByUserId(review.getReviewedUserId());
+
+        if (review.getReviewerRole().equals(ReviewerRole.SEEKER)) {
+            userRatings.setProviderRatingSum(userRatings.getProviderRatingSum() - review.getRating());
+            userRatings.setProviderRatingCount(userRatings.getProviderRatingCount() - 1);
+        } else {
+            userRatings.setSeekerRatingSum(userRatings.getSeekerRatingSum() - review.getRating());
+            userRatings.setSeekerRatingCount(userRatings.getSeekerRatingCount() - 1);
+        }
+
+        reviewRepository.delete(review);
+        ratingRepository.save(userRatings);
+    }
+
 
 
 

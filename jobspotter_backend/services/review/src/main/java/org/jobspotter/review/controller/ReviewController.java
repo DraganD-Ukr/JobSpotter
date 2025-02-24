@@ -3,7 +3,6 @@ package org.jobspotter.review.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.headers.Header;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,7 +15,6 @@ import lombok.AllArgsConstructor;
 import org.jobspotter.review.authUtils.JWTUtils;
 import org.jobspotter.review.dto.*;
 import org.jobspotter.review.exception.ServerException;
-import org.jobspotter.review.model.Review;
 import org.jobspotter.review.model.ReviewerRole;
 import org.jobspotter.review.service.ReviewService;
 import org.springframework.data.domain.Page;
@@ -29,7 +27,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Validated
@@ -205,6 +202,27 @@ public class ReviewController {
             throw new ServerException("Could not create review");
         }
 
+    }
+
+
+
+
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<HttpStatus> deleteReview(
+            @RequestHeader("Authorization") String accessToken,
+            @PathVariable Long reviewId
+    ) {
+
+        UUID userId;
+        try {
+            userId = JWTUtils.getUserIdFromToken(accessToken);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+
+        reviewService.deleteReview(userId, reviewId);
+
+        return ResponseEntity.noContent().build();
     }
 
 
