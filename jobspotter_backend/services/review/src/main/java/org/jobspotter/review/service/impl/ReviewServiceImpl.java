@@ -5,19 +5,22 @@ import feign.FeignException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.jobspotter.review.client.JobPostServiceClient;
-import org.jobspotter.review.dto.ApplicantResponse;
-import org.jobspotter.review.dto.JobPostResponse;
-import org.jobspotter.review.dto.RatingsResponse;
-import org.jobspotter.review.dto.ReviewPostRequest;
+import org.jobspotter.review.dto.*;
 import org.jobspotter.review.exception.*;
 import org.jobspotter.review.model.Rating;
 import org.jobspotter.review.model.Review;
+import org.jobspotter.review.model.ReviewedUserRole;
 import org.jobspotter.review.model.ReviewerRole;
+import org.jobspotter.review.model.specification.ReviewSpecification;
 import org.jobspotter.review.repository.RatingRepository;
 import org.jobspotter.review.repository.ReviewRepository;
+import org.jobspotter.review.repository.ReviewSpecRepository;
 import org.jobspotter.review.service.ReviewService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -33,6 +36,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final RatingRepository ratingRepository;
     private final JobPostServiceClient jobPostServiceClient;
+    private final ReviewSpecRepository reviewSpecRepository;
 
     @Override
     @Transactional
@@ -77,7 +81,7 @@ public class ReviewServiceImpl implements ReviewService {
 //        Get the ratings of the user being reviewed
         Rating rating = ratingRepository.findByUserId(reviewRequest.getReviewedUserId());
 
-        Rating updated = updateRating(reviewRequest, rating, reviewRequest.getReviewedUserId());
+        Rating updated = updateRating(reviewRequest, rating);
 
 //        Save the updated rating
         ratingRepository.save(updated);
@@ -125,6 +129,37 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
 
+//    Fetch all reviews received by a user (userId) from job seekers or job posters based on the reviewer role
+    @Transactional
+    @Override
+    public Page<ReviewResponse> getReviewsByUserId(UUID reviewedUserId, ReviewerRole reviewerRole, Double minRating, Double maxRating, String dateCreatedMin, String dateCreatedMax, String searchQuery, int page, int size) {
+        log.info("Getting reviews for user with id: {}", reviewedUserId);
+
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        Specification<Review> spec = ReviewSpecification.filterReviewByParams(
+                reviewedUserId, String.valueOf(reviewerRole), minRating, maxRating, dateCreatedMin, dateCreatedMax, searchQuery
+        );
+
+        Page<Review> reviews = reviewSpecRepository.findAll(spec, pageRequest);
+
+//        Map the reviews to review response objects and return result
+        return reviews.map(
+                review -> ReviewResponse.builder()
+                .reviewId(review.getReviewId())
+                .reviewerId(review.getReviewerId())
+                .reviewedUserId(review.getReviewedUserId())
+                .jobPostId(review.getJobPostId())
+                .reviewerRole(review.getReviewerRole())
+                .rating(review.getRating())
+                .comment(review.getComment())
+                .dateCreated(review.getDateCreated())
+                .dateUpdated(review.getDateUpdated())
+                .build()
+        );
+    }
+
+
 
     /* -------------------------------------------Helper Methods-------------------------------------------------------*/
 
@@ -134,7 +169,7 @@ public class ReviewServiceImpl implements ReviewService {
      * @param request Review request
      * @param toUpdate Rating to update
      */
-    private Rating updateRating(ReviewPostRequest request, Rating toUpdate, UUID userId) {
+    private Rating updateRating(ReviewPostRequest request, Rating toUpdate) {
 
 //        If the user being reviewed does not have a rating, create a new rating Object
         Rating updatedRating = toUpdate;
