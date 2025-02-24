@@ -1,24 +1,25 @@
 package org.job_spotter.jobpost.dto;
+
 import lombok.*;
 import org.job_spotter.jobpost.model.JobStatus;
 import org.job_spotter.jobpost.model.Tag;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class JobPostDetailedResponse {
 
     private Long jobPostId;
-    private UUID jobPosterId; // Subject to change
-    private Set<Tag> tags;
-    private List<ApplicantDetailedResponse> applicants;
+    private UUID jobPosterId;
+    private Set<Tag> tags = new HashSet<>();
     private String title;
     private String description;
     private String address;
@@ -26,6 +27,7 @@ public class JobPostDetailedResponse {
     private Double latitude;
     private LocalDateTime datePosted;
     private LocalDateTime lastUpdatedAt;
+    private int applicantsCount;
     private int maxApplicants;
     private JobStatus status;
 

@@ -43,11 +43,11 @@ public class JobPostImpl implements JobPostService {
 
 
     @Override
-    public JobPostDetailedResponse getMyJobPostDetails(Long jobPostId) {
+    public MyJobPostDetailedResponse getMyJobPostDetails(Long jobPostId) {
         JobPost jobPost = jobPostRepository.findById(jobPostId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + jobPostId));
 
-        return JobPostDetailedResponse.builder()
+        return MyJobPostDetailedResponse.builder()
                 .jobPostId(jobPost.getJobPostId())
                 .jobPosterId(jobPost.getJobPosterId())
                 .tags(jobPost.getTags())
@@ -479,30 +479,23 @@ public class JobPostImpl implements JobPostService {
 
     /**
      * Get a job post by its ID
+     *
      * @param id The ID of the job post
      * @return The job post with the given ID
      */
     @Override
-    public JobPostResponse getJobPostById( Long id) {
+    public JobPostDetailedResponse getJobPostById(Long id) {
 
 //        Fetch the job post from the repository
         JobPost jobPost = jobPostRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + id));
 
-//        Map the applicants to ApplicantResponse
-        Set<ApplicantResponse> applicantResponses = jobPost.getApplicants().stream()
-                .map(applicant -> ApplicantResponse.builder()
-                        .userId(applicant.getUserId())
-                        .status(applicant.getStatus())
-                        .build())
-                .collect(Collectors.toSet());
 
 //        Create the JobPostResponse object
-        JobPostResponse jobPostResponse = JobPostResponse.builder()
+        return JobPostDetailedResponse.builder()
                 .jobPostId(jobPost.getJobPostId())
                 .jobPosterId(jobPost.getJobPosterId())
                 .tags(jobPost.getTags())
-                .applicants(applicantResponses)
                 .title(jobPost.getTitle())
                 .description(jobPost.getDescription())
                 .address(jobPost.getAddress())
@@ -510,11 +503,10 @@ public class JobPostImpl implements JobPostService {
                 .latitude(jobPost.getLatitude())
                 .datePosted(jobPost.getDatePosted())
                 .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                .applicantsCount(jobPost.getApplicants().size())
                 .maxApplicants(jobPost.getMaxApplicants())
                 .status(jobPost.getStatus())
                 .build();
-
-        return jobPostResponse;
 
     }
 

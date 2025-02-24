@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface JobPostService {
 
-    JobPostDetailedResponse getMyJobPostDetails(Long jobPostId);
+    MyJobPostDetailedResponse getMyJobPostDetails(Long jobPostId);
 
     Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize);
 
@@ -31,13 +31,6 @@ public interface JobPostService {
 
     HttpStatus finishJobPost(UUID userId, Long id);
 
-    JobPostResponse getJobPostById(Long id);
+    JobPostDetailedResponse getJobPostById(Long id);
 
-
-    //Deprecated
-    //    List<JobPost> getAllJobPosts();
-
-    //    List<JobPost> getJobPostByTag(String tag);
-
-    //    void createJobPostDomainDummyData();
 }

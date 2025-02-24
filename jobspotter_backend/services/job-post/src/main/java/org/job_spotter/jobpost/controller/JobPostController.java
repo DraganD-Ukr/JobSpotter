@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.job_spotter.jobpost.authUtils.JWTUtils;
 import org.job_spotter.jobpost.dto.*;
-import org.job_spotter.jobpost.model.JobPost;
 import org.job_spotter.jobpost.service.JobPostService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -31,8 +30,38 @@ public class JobPostController {
 
     private final JobPostService jobPostService;
 
+    //Get Detailed job post by id
+    @Operation(
+            summary = "Get Detailed job post by id from perspective of Applicants.",
+            description = "Gets job post by provided id in path. "
+                    + "This method returns detailed job post information."
+                    + "This method is used by applicants to view job post details."
+                    + "Therefore does not contain information about other applicants."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully got job post by id",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobPostDetailedResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
 
+    //TODO: Return response based on the perspective of the applicant
+    @GetMapping("/{id}")
+    public ResponseEntity<JobPostDetailedResponse> getJobPostById(
+            @PathVariable Long id
+    ) {
+        log.info("Getting job post by id: {}", id);
 
+        return ResponseEntity.ok(jobPostService.getJobPostById(id));
+    }
 
     //Get job post details with JobPostId
     @Operation(
@@ -52,8 +81,8 @@ public class JobPostController {
             )
     })
     //Get job post with detailed information
-    @GetMapping("/{id}/job-post-details")
-    public ResponseEntity<JobPostDetailedResponse> getMyJobPostDetails(
+    @GetMapping("/my-job-post/{id}")
+    public ResponseEntity<MyJobPostDetailedResponse> getMyJobPostDetails(
             @Parameter(description = "Job post id")
             @PathVariable Long id
             ) throws Exception {
@@ -380,58 +409,6 @@ public class JobPostController {
     }
 
 
-    @Operation(
-            summary = "Get job post by id.",
-            description = "Gets job post by provided id"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully got job post by id",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobPostResponse.class))
-            ),
-            @ApiResponse(responseCode = "400", description = "Bad request",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
-            )
-    })
-    @GetMapping("/{id}")
-    public ResponseEntity<JobPostResponse> getJobPostById(
-            @PathVariable Long id
-    ) {
-        log.info("Getting job post by id: {}", id);
 
-        return ResponseEntity.ok(jobPostService.getJobPostById(id));
-    }
-
-//Deptricated
-//    //View all job posts
-//    @GetMapping()
-//    public ResponseEntity<List<JobPost>> viewAllJobPosts() {
-//        log.info("Viewing all job posts");
-//        return ResponseEntity.ok(jobPostService.getAllJobPosts());
-//    }
-
-//    // Get job post by tag using query parameter 'tag'
-//    @GetMapping("/by-tag")
-//    public ResponseEntity<List<JobPost>> getJobPostByTag(@RequestParam("tag") String tag) {
-//        log.info("Getting job posts by tag: {}", tag);
-//        List<JobPost> jobPosts = jobPostService.getJobPostByTag(tag);
-//        if (jobPosts.isEmpty()) {
-//            log.info("No jobs found for tag: {}", tag);
-//        }
-//        return ResponseEntity.ok(jobPosts);
-//    }
-
-//    //Create job post with dummy data
-//    @PostMapping("/dummy")
-//    public ResponseEntity<HttpStatus> createJobPostWithDummyData() {
-//        log.info("Populating job post with dummy data");
-//        jobPostService.createJobPostDomainDummyData();
-//        return ResponseEntity.ok(HttpStatus.CREATED);
-//    }
 
 }
