@@ -37,19 +37,57 @@ public class JobPostController {
         log.info("Viewing all job posts");
         return ResponseEntity.ok(jobPostService.getAllJobPosts());
     }
-//Deptricated
-//    // Get job post by tag using query parameter 'tag'
-//    @GetMapping("/by-tag")
-//    public ResponseEntity<List<JobPost>> getJobPostByTag(@RequestParam("tag") String tag) {
-//        log.info("Getting job posts by tag: {}", tag);
-//        List<JobPost> jobPosts = jobPostService.getJobPostByTag(tag);
-//        if (jobPosts.isEmpty()) {
-//            log.info("No jobs found for tag: {}", tag);
-//        }
-//        return ResponseEntity.ok(jobPosts);
-//    }
 
-    //Search job posts using query parameters 'title' and 'tag'
+
+    //Get job post details with JobPostId
+    @Operation(
+            summary = "Gets job post details with JobPostId",
+            description = "Get job post details with job post id given in path. "
+                    + "This method Returns a detailed job post information. along with applicants information."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved job post details along with applicants information",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyJobPostResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    //Get job post with detailed information
+    @GetMapping("/{id}/job-post-details")
+    public ResponseEntity<JobPostDetailedResponse> getMyJobPostDetails(
+            @Parameter(description = "Job post id")
+            @PathVariable Long id
+            ) throws Exception {
+        log.info("Getting my job post details");
+        return ResponseEntity.ok(jobPostService.getMyJobPostDetails(id));
+    }
+
+    //Search job posts using query parameters 'title', 'tag' , 'latitude' , 'longitude' , 'radius' and 'page' and 'size'
+    @Operation(
+            summary = "Search job posts",
+            description = "Search job posts using query parameters 'title', 'tag' , 'latitude' , 'longitude' , 'radius' and 'page' and 'size'. "
+                    + "This method returns a list of job posts that match the search criteria."
+                    + " - If title is provided, the search will be based on the title."
+                    + " - If tags are provided, the search will be based on the tags."
+                    + " - If latitude, longitude and radius are provided, the search will be based on the user's location."
+                    + " - If page and size are provided, the search will be paginated. Default page is 0 and size is 10."
+                    + "All parameters are optional. Combining multiple parameters will narrow down the search."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully searched job posts",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobPostSearchResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @GetMapping("/search")
     public ResponseEntity<Page<JobPostSearchResponse>> searchJobPosts(
             @RequestParam(value = "title", required = false) String title,
@@ -369,6 +407,18 @@ public class JobPostController {
 //        log.info("Populating job post with dummy data");
 //        jobPostService.createJobPostDomainDummyData();
 //        return ResponseEntity.ok(HttpStatus.CREATED);
+//    }
+
+//Deptricated
+//    // Get job post by tag using query parameter 'tag'
+//    @GetMapping("/by-tag")
+//    public ResponseEntity<List<JobPost>> getJobPostByTag(@RequestParam("tag") String tag) {
+//        log.info("Getting job posts by tag: {}", tag);
+//        List<JobPost> jobPosts = jobPostService.getJobPostByTag(tag);
+//        if (jobPosts.isEmpty()) {
+//            log.info("No jobs found for tag: {}", tag);
+//        }
+//        return ResponseEntity.ok(jobPosts);
 //    }
 
 }
