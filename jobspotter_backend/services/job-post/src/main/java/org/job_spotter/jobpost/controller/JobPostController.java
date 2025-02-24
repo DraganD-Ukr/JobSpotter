@@ -66,7 +66,28 @@ public class JobPostController {
         return ResponseEntity.ok(jobPostService.getMyJobPostDetails(id));
     }
 
-    //Search job posts using query parameters 'title' and 'tag'
+    //Search job posts using query parameters 'title', 'tag' , 'latitude' , 'longitude' , 'radius' and 'page' and 'size'
+    @Operation(
+            summary = "Search job posts",
+            description = "Search job posts using query parameters 'title', 'tag' , 'latitude' , 'longitude' , 'radius' and 'page' and 'size'. "
+                    + "This method returns a list of job posts that match the search criteria."
+                    + " - If title is provided, the search will be based on the title."
+                    + " - If tags are provided, the search will be based on the tags."
+                    + " - If latitude, longitude and radius are provided, the search will be based on the user's location."
+                    + " - If page and size are provided, the search will be paginated. Default page is 0 and size is 10."
+                    + "All parameters are optional. Combining multiple parameters will narrow down the search."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully searched job posts",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobPostSearchResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @GetMapping("/search")
     public ResponseEntity<Page<JobPostSearchResponse>> searchJobPosts(
             @RequestParam(value = "title", required = false) String title,
