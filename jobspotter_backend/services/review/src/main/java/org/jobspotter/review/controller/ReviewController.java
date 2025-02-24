@@ -156,6 +156,35 @@ public class ReviewController {
 
 
 
+    @Operation(
+            summary = "Get reviews left under a job post.",
+            description = "Get reviews of a job post based on the provided job post id. "
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved reviews of user",
+
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PageImpl.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/job-post/{jobPostId}")
+    public ResponseEntity<Page<ReviewResponse>> getReviewsOfJobPost(
+            @PathVariable Long jobPostId,
+            @RequestParam(required = false, defaultValue = "0") int pageNum,
+            @RequestParam(required = false, defaultValue = "10") int pageSize
+    ) {
+        Page<ReviewResponse> result = reviewService.getReviewsByJobPostId(jobPostId, pageNum, pageSize);
+
+        return ResponseEntity.ok(result);
+    }
+
+
+
 
 
 

@@ -20,4 +20,6 @@ public interface ReviewService {
     Long updateReview(UUID userId, ReviewEditRequest reviewRequest, Long reviewId);
 
     void deleteReview(UUID userId, Long reviewId);
+
+    Page<ReviewResponse> getReviewsByJobPostId(Long jobPostId, int pageNum, int pageSize);
 }
