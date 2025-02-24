@@ -3,7 +3,6 @@ package org.jobspotter.review.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.headers.Header;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,7 +27,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Validated
@@ -126,14 +124,10 @@ public class ReviewController {
                     "Request parameter 'reviewerRole' is used to specify the role of the reviewer."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved reviews of user", content = {
-                    @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = PageImpl.class),
-                            array = @ArraySchema(
-                                    schema = @Schema(implementation = ReviewResponse.class)
-                            )
-                    ),
-            }),
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved reviews of user",
+
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PageImpl.class))
+            ),
             @ApiResponse(responseCode = "400", description = "Bad request",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
@@ -153,11 +147,40 @@ public class ReviewController {
             @RequestParam(required = false, defaultValue = "0") int pageNum,
             @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
-        return ResponseEntity.ok(reviewService.getReviewsByUserId(
+        Page<ReviewResponse> result = reviewService.getReviewsByUserId(
                 reviewedUserId, reviewerRole, minRating, maxRating, dateCreatedMin, dateCreatedMax, searchQuery,  pageNum, pageSize
-        ));
+        );
+
+        return ResponseEntity.ok(result);
     }
 
+
+
+
+
+
+
+    @Operation(
+            summary = "Update review.",
+            description = "Updates review(comment, rating) of specified review id. "
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved reviews of user", headers = {
+                   @Header(name = "Location", description = "Location of the updated review")
+            }),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Not Found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @PutMapping("/{reviewId}")
     public ResponseEntity<HttpStatus> updateReview(
             @RequestHeader("Authorization") String accessToken,
@@ -179,6 +202,27 @@ public class ReviewController {
             throw new ServerException("Could not create review");
         }
 
+    }
+
+
+
+
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<HttpStatus> deleteReview(
+            @RequestHeader("Authorization") String accessToken,
+            @PathVariable Long reviewId
+    ) {
+
+        UUID userId;
+        try {
+            userId = JWTUtils.getUserIdFromToken(accessToken);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+
+        reviewService.deleteReview(userId, reviewId);
+
+        return ResponseEntity.noContent().build();
     }
 
 

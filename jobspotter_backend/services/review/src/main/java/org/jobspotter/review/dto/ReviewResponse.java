@@ -17,6 +17,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @Builder
+@Schema(name = "ReviewResponse", description = "Review response")
 public class ReviewResponse {
 
     @Schema(description = "Review ID", example = "1")

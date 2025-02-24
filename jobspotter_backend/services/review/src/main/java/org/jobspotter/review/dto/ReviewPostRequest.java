@@ -1,5 +1,6 @@
 package org.jobspotter.review.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -16,17 +17,21 @@ import java.util.UUID;
 @Builder
 public class ReviewPostRequest {
 
+    @Schema(description = "UUID of the user that is leaving the review")
     @NotNull
     @Pattern(regexp = "^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$", message = "Invalid UUID format")
     private UUID reviewedUserId;
 
+    @Schema(description = "UUID of the user that is being reviewed")
     @NotNull(message = "Job post id is required")
     private Long jobPostId;
 
+    @Schema(description = "Role of the reviewer")
     @NotNull(message = "Reviewer role is required")
     @Enumerated(EnumType.STRING)
     private ReviewerRole reviewerRole;
 
+    @Schema(description = "Rating of the review. Must be between 1.0 and 5.0 with at most one decimal place")
     @Digits(integer = 1, fraction = 1, message = "Rating must be a number with one decimal place")
     @DecimalMin(value = "1.0", message = "Rating must be between 1.0 and 5.0")
     @DecimalMax(value = "5.0", message = "Rating must be between 1.0 and 5.0")
@@ -44,6 +49,7 @@ public class ReviewPostRequest {
         }
     }
 
+    @Schema(description = "Comment of the review. Must be less than 450 characters")
     @Size(max = 450, message = "Comment must be less than 450 characters")
     private String comment;
 
