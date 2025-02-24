@@ -1,23 +1,23 @@
 package org.job_spotter.jobpost.service;
 
-import org.job_spotter.jobpost.dto.ApplicantActionRequest;
-import org.job_spotter.jobpost.dto.JobPostApplyRequest;
-import org.job_spotter.jobpost.dto.JobPostPostRequest;
-import org.job_spotter.jobpost.dto.MyJobPostResponse;
+import org.job_spotter.jobpost.dto.*;
 import org.job_spotter.jobpost.model.JobPost;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface JobPostService {
+
+    //Job Post Search Functions
     List<JobPost> getAllJobPosts();
 
-    List<JobPost> getJobPostByTag(String tag);
+    Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize);
 
-    void createJobPostDomainDummyData();
+    Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title);
 
-
+    //Job Post Functions
     Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken);
 
     HttpStatus applyToJobPost(Long id, UUID userId, JobPostApplyRequest jobPostApplyRequest);
@@ -25,4 +25,18 @@ public interface JobPostService {
     List<MyJobPostResponse> getMyJobPosts(UUID userId);
 
     JobPost takeApplicantsAction(Long jobPostId, UUID userId, List<ApplicantActionRequest> applicantsActionRequest);
+
+    HttpStatus startJobPost(UUID userId, Long jobPostId);
+
+    HttpStatus cancelJobPost(UUID userId, Long jobPostId);
+
+    HttpStatus finishJobPost(UUID userId, Long id);
+
+    JobPostResponse getJobPostById(Long id);
+
+
+    //Deprecated
+    //    List<JobPost> getJobPostByTag(String tag);
+
+    //    void createJobPostDomainDummyData();
 }

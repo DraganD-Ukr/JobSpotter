@@ -13,8 +13,15 @@ import org.job_spotter.jobpost.exception.*;
 import org.job_spotter.jobpost.model.*;
 import org.job_spotter.jobpost.repository.ApplicantRepository;
 import org.job_spotter.jobpost.repository.JobPostRepository;
-import org.job_spotter.jobpost.repository.TagRepository;
+import org.job_spotter.jobpost.repository.JobPostSpecificationRepository;
+import org.job_spotter.jobpost.repository.specification.JobPostSpecification;
 import org.job_spotter.jobpost.service.JobPostService;
+import org.job_spotter.jobpost.utils.GeoUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -28,9 +35,10 @@ import java.util.stream.Collectors;
 public class JobPostImpl implements JobPostService {
 
     private final JobPostRepository jobPostRepository;
-    private final TagRepository tagRepository;
     private final UserServiceClient userServiceClient;
     private final ApplicantRepository applicantRepository;
+    private final JobPostSpecificationRepository jobPostSpecificationRepository;
+
 
 
     @Override
@@ -38,101 +46,60 @@ public class JobPostImpl implements JobPostService {
         return jobPostRepository.findAll();
     }
 
+    /**
+     * Search for job posts based on the given parameters
+     *
+     * @param title
+     * @param tags
+     * @param longitude
+     * @param latitude
+     * @param radius
+     * @param pageNumber
+     * @param pageSize
+     * @return Page of JobPostSearchResponse
+     */
     @Override
-    public List<JobPost> getJobPostByTag(String tag) {
-        return jobPostRepository.findAllByTags_Name(tag);
+    public Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize) {
+        // Split the tags string into a list of tag names
+        List<String> tagList = (tags != null && !tags.isEmpty())
+                ? Arrays.stream(tags.split(",")).map(String::trim).toList()
+                : null;
+        log.info("Tag list: {}", tagList);
+        log.info("Title: {}", title);
+
+        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
+
+
+        // Build the specification for filtering
+        Specification<JobPost> spec = JobPostSpecification.filterByParams(title, tagList, latitude, longitude, radius);
+
+        // Fetch the job posts with the specification
+        Page<JobPost> jobPosts = jobPostSpecificationRepository.findAll(spec, pageRequest);
+
+
+        // Map the job posts to JobPostSearchResponse
+        Page<JobPostSearchResponse> jobPostSearchResponses = jobPosts.map(jobPost -> JobPostSearchResponse.builder()
+                .jobPostId(jobPost.getJobPostId())
+                .jobPosterId(jobPost.getJobPosterId())
+                .tags(jobPost.getTags())
+                .applicantsCount(jobPost.getApplicants().size())
+                .title(jobPost.getTitle())
+                .description(jobPost.getDescription())
+                .address(jobPost.getAddress())
+                .longitude(jobPost.getLongitude())
+                .latitude(jobPost.getLatitude())
+                .relevantDistance((latitude!=null&&longitude!=null)?GeoUtils.haversine(latitude, longitude, jobPost.getLatitude(), jobPost.getLongitude(), GeoUtils.EARTH_RADIUS_KM):0)
+                .datePosted(jobPost.getDatePosted())
+                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                .maxApplicants(jobPost.getMaxApplicants())
+                .status(jobPost.getStatus())
+                .build());
+
+        // Fetch the filtered results
+        return jobPostSearchResponses;
     }
 
 
-    @Override
-    public void createJobPostDomainDummyData() {
-        // Define the allowed tags
-        List<String> tagNames = List.of("Cleaner", "IT", "Handyman", "Gardening", "Delivery", "Painting");
-
-        // Create and save tags if they don't exist
-        Map<String, Tag> tagMap = new HashMap<>();
-        for (String tagName : tagNames) {
-            Tag existingTag = tagRepository.findByName(tagName);
-            if (existingTag == null) {
-                Tag newTag = tagRepository.save(new Tag(null, new HashSet<>(), tagName));
-                tagMap.put(tagName, newTag);
-            } else {
-                tagMap.put(tagName, existingTag);
-            }
-        }
-
-        // List of job locations in Ireland
-        List<String> locations = List.of(
-                "Dublin", "Cork", "Galway", "Limerick", "Waterford",
-                "Kilkenny", "Sligo", "Wexford", "Athlone", "Drogheda"
-        );
-
-        // Create job posts with only the allowed tags
-        List<JobPost> jobPosts = List.of(
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("Cleaner")))
-                        .title("Window Cleaning Needed").description("Clean my house windows").address("Dublin")
-                        .longitude(-6.2603).latitude(53.3498).maxApplicants(5).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("Cleaner"), tagMap.get("Handyman")))
-                        .title("House Cleaning & Repairs").description("Need someone to clean and fix minor issues").address("Cork")
-                        .longitude(-8.472).latitude(51.8985).maxApplicants(3).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("IT")))
-                        .title("Need Help with Computer Issues").description("Laptop not working properly, need a technician").address("Galway")
-                        .longitude(-9.0579).latitude(53.2707).maxApplicants(2).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("Handyman"), tagMap.get("Gardening")))
-                        .title("Garden Maintenance").description("Lawn mowing and trimming required").address("Limerick")
-                        .longitude(-8.6238).latitude(52.668).maxApplicants(3).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("Delivery")))
-                        .title("Parcel Delivery").description("Need someone to deliver a package").address("Waterford")
-                        .longitude(-7.1101).latitude(52.2567).maxApplicants(1).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("Painting"), tagMap.get("Handyman")))
-                        .title("Paint a Small Room").description("Looking for someone to paint my room").address("Kilkenny")
-                        .longitude(-7.254).latitude(52.6541).maxApplicants(3).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("Handyman")))
-                        .title("Fix a Door Handle").description("Need a handyman to fix a broken door handle").address("Sligo")
-                        .longitude(-8.4695).latitude(54.2766).maxApplicants(2).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("Gardening")))
-                        .title("Trim Overgrown Hedge").description("Garden hedge is overgrown, need trimming").address("Wexford")
-                        .longitude(-6.4575).latitude(52.3361).maxApplicants(2).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("Cleaner")))
-                        .title("Office Cleaning Needed").description("Need someone to clean an office after hours").address("Athlone")
-                        .longitude(-7.9407).latitude(53.4239).maxApplicants(2).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("Delivery")))
-                        .title("Grocery Delivery").description("Pick up groceries and deliver them to my home").address("Drogheda")
-                        .longitude(-6.3478).latitude(53.7179).maxApplicants(2).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("IT"), tagMap.get("Handyman")))
-                        .title("Set Up Home WiFi").description("Need someone to configure and secure WiFi network").address("Dublin")
-                        .longitude(-6.2603).latitude(53.3498).maxApplicants(2).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("Painting")))
-                        .title("Fence Painting Needed").description("Looking for someone to paint my wooden fence").address("Cork")
-                        .longitude(-8.472).latitude(51.8985).maxApplicants(2).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("Gardening"), tagMap.get("Cleaner")))
-                        .title("Yard Cleanup").description("Clean up leaves and debris from my yard").address("Galway")
-                        .longitude(-9.0579).latitude(53.2707).maxApplicants(3).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("Delivery"), tagMap.get("Handyman")))
-                        .title("Furniture Pickup and Assembly").description("Pick up a table and assemble it at my home").address("Limerick")
-                        .longitude(-8.6238).latitude(52.668).maxApplicants(1).status(JobStatus.OPEN).build(),
-
-                JobPost.builder().jobPosterId(UUID.randomUUID()).tags(Set.of(tagMap.get("IT")))
-                        .title("Fix Printer Issue").description("My printer is not working, need troubleshooting").address("Waterford")
-                        .longitude(-7.1101).latitude(52.2567).maxApplicants(1).status(JobStatus.OPEN).build()
-        );
-
-        // Save job posts
-        jobPostRepository.saveAll(jobPosts);
-    }
 
     @Override
     public Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken) {
@@ -249,6 +216,7 @@ public class JobPostImpl implements JobPostService {
 
     @Override
     public List<MyJobPostResponse> getMyJobPosts(UUID userId) {
+//        TODO: implement pagination and filtering
 //        TODO: Results may be large, consider adding pagination in the future
         List<JobPost> jobPosts = jobPostRepository.findAllByJobPosterId(userId);
 
@@ -313,6 +281,8 @@ public class JobPostImpl implements JobPostService {
     @Transactional
     @Override
     public JobPost takeApplicantsAction(Long jobPostId, UUID userId, List<ApplicantActionRequest> applicantsActionRequest) {
+
+//        TODO: Refactor for readability and efficiency
 
         // Find the job post
         JobPost jobPost = jobPostRepository.findById(jobPostId)
@@ -384,6 +354,211 @@ public class JobPostImpl implements JobPostService {
         return jobPost; // Optionally return the updated job post
     }
 
+    @Transactional
+    @Override
+    public HttpStatus startJobPost(UUID userId, Long jobPostId) {
+
+        JobPost jobPost = jobPostRepository.findById(jobPostId)
+                .orElseThrow( () -> {
+                    log.warn("Could not start job post: Job post not found with id {}", jobPostId);
+                    return new ResourceNotFoundException("Job post not found with id " + jobPostId);
+                });
+
+//        Check if the user is the job poster
+        checkIfUserIsJobPoster(userId, jobPost);
+
+//        Check if the job post status is OPEN
+        if (jobPost.getStatus() != JobStatus.OPEN) {
+            log.warn("Could not start job post: Job post status is not OPEN");
+            throw new ForbiddenException("Job post status is not OPEN.");
+        }
+
+//        Get all applicants for the job post
+        Set<Applicant> applicants = jobPost.getApplicants();
+
+//        Check if there are any accepted applicants
+        Long numOfAcceptedApplicants = applicants.stream()
+                .filter(applicant -> applicant.getStatus() == ApplicantStatus.ACCEPTED)
+                .count();
+
+//        If no applicants are accepted, throw an exception
+        if (numOfAcceptedApplicants.intValue() == 0) {
+            log.warn("Could not start job post: No applicants accepted for job post with id {}", jobPostId);
+            throw new InvalidRequestException("At least 1 applicant must be accepted to start the job post.");
+        } else {
+
+//        For each applicant with status PENDING, set status to REJECTED as the job post has started
+//        and no more applicants can be accepted thus all pending applicants are rejected
+            applicants.stream()
+                    .filter(applicant -> applicant.getStatus() == ApplicantStatus.PENDING)
+                    .forEach(applicant -> applicant.setStatus(ApplicantStatus.REJECTED));
+        }
+
+//        Save the updated applicants
+        applicantRepository.saveAll(applicants);
+
+//        Set the status of the job post to IN_PROGRESS
+        jobPost.setStatus(JobStatus.IN_PROGRESS);
+        jobPostRepository.save(jobPost);
+
+//        TODO: Send notification to all accepted applicants
+
+        log.info("Job post started successfully");
+        return HttpStatus.NO_CONTENT;
+    }
+
+    @Transactional
+    @Override
+    public HttpStatus cancelJobPost(UUID userId, Long jobPostId) {
+
+        JobPost jobPost = jobPostRepository.findById(jobPostId)
+                .orElseThrow( () -> {
+                    log.warn("Could not cancel job post: Job post not found with id {}", jobPostId);
+                    return new ResourceNotFoundException("Job post not found with id " + jobPostId);
+                });
+
+//        Check if the user is the job poster
+        checkIfUserIsJobPoster(userId, jobPost);
+
+//        Check if the job post status is OPEN
+        if (jobPost.getStatus() != JobStatus.OPEN) {
+            log.warn("Could not cancel job post: Job post status is not OPEN");
+            throw new ForbiddenException("Job post status is not OPEN.");
+        }
+
+//        Set the status of all applicants to REJECTED
+        Set<Applicant> applicants = jobPost.getApplicants();
+        applicants.forEach(applicant -> applicant.setStatus(ApplicantStatus.REJECTED));
+
+//        Save the updated applicants
+        applicantRepository.saveAll(applicants);
+
+//        Set the status of the job post to CANCELLED
+        jobPost.setStatus(JobStatus.CANCELLED);
+        jobPostRepository.save(jobPost);
+
+        log.info("Job post cancelled successfully");
+        return HttpStatus.NO_CONTENT;
+    }
+
+    @Override
+    public HttpStatus finishJobPost(UUID userId, Long id) {
+
+        JobPost jobPost = jobPostRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Could not finish job post: Job post not found with id {}", id);
+                    return new ResourceNotFoundException("Job post not found with id " + id);
+                });
+
+        checkIfUserIsJobPoster(userId, jobPost);
+
+        if (jobPost.getStatus() != JobStatus.IN_PROGRESS) {
+            log.warn("Could not finish job post: Job post status is not IN_PROGRESS");
+            throw new ForbiddenException("Job post status is not IN_PROGRESS.");
+        }
+
+        jobPost.setStatus(JobStatus.COMPLETED);
+
+        jobPostRepository.save(jobPost);
+
+//       TODO: Send notifications to all participating applicants
+
+        return HttpStatus.NO_CONTENT;
+    }
+
+    /**
+     * Get a job post by its ID
+     * @param id The ID of the job post
+     * @return The job post with the given ID
+     */
+    @Override
+    public JobPostResponse getJobPostById( Long id) {
+
+//        Fetch the job post from the repository
+        JobPost jobPost = jobPostRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + id));
+
+//        Map the applicants to ApplicantResponse
+        Set<ApplicantResponse> applicantResponses = jobPost.getApplicants().stream()
+                .map(applicant -> ApplicantResponse.builder()
+                        .userId(applicant.getUserId())
+                        .status(applicant.getStatus())
+                        .build())
+                .collect(Collectors.toSet());
+
+//        Create the JobPostResponse object
+        JobPostResponse jobPostResponse = JobPostResponse.builder()
+                .jobPostId(jobPost.getJobPostId())
+                .jobPosterId(jobPost.getJobPosterId())
+                .tags(jobPost.getTags())
+                .applicants(applicantResponses)
+                .title(jobPost.getTitle())
+                .description(jobPost.getDescription())
+                .address(jobPost.getAddress())
+                .longitude(jobPost.getLongitude())
+                .latitude(jobPost.getLatitude())
+                .datePosted(jobPost.getDatePosted())
+                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                .maxApplicants(jobPost.getMaxApplicants())
+                .status(jobPost.getStatus())
+                .build();
+
+        return jobPostResponse;
+
+    }
+
+    @Override
+    public Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title) {
+
+        // Define allowed sorting fields
+        Set<String> allowedSortFields = Set.of("datePosted", "lastUpdatedAt", "title", "status");
+
+        // Validate the sortBy parameter
+        if (!allowedSortFields.contains(sortBy)) {
+            throw new InvalidRequestException("Invalid sortBy parameter: " + sortBy);
+        }
+
+        // Create a Specification with dynamic filters
+        Specification<JobPost> spec = JobPostSpecification.filterByParams(status, title, userId);
+
+//
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        // Paginate and sort
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        // Fetch the filtered and paginated results
+        Page<JobPost> jobPosts = jobPostSpecificationRepository.findAll(spec, pageable);
+
+        return jobPosts.map(this::convertToResponse);
+
+    }
+
+
+//    ----------------------------------------- Helper methods -----------------------------------------
+
+    // Helper method to map JobPost to MyJobPostResponse
+    private JobPostsUserWorkedOnResponse convertToResponse(JobPost jobPost) {
+        return JobPostsUserWorkedOnResponse.builder()
+                .jobPostId(jobPost.getJobPostId())
+                .tags(jobPost.getTags())
+                .applicantsCount(jobPost.getApplicants().size()) // Assuming applicants is a collection
+                .title(jobPost.getTitle())
+                .description(jobPost.getDescription())
+                .address(jobPost.getAddress())
+                .datePosted(jobPost.getDatePosted())
+                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                .maxApplicants(jobPost.getMaxApplicants())
+                .status(jobPost.getStatus())
+                .build();
+    }
+
+    private void checkIfUserIsJobPoster(UUID userId, JobPost jobPost) {
+        if (!jobPost.getJobPosterId().equals(userId)) {
+            log.warn("Could not process applicants: User is not the job poster");
+            throw new UnauthorizedException("You are not authorized to take actions on this job post.");
+        }
+    }
+
     private static void logAddressClientException(FeignClientException e) {
         log.error("(job-posts): Error getting address from user-service: {}, {}", e.getMessage(), e.status());
     }
@@ -420,7 +595,6 @@ public class JobPostImpl implements JobPostService {
             return "An unknown error occurred while parsing the error response.";
         }
     }
-
 
 }
 

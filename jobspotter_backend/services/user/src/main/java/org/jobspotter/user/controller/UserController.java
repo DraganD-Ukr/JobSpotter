@@ -161,7 +161,7 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<UserResponse> myProfile(
             @RequestHeader("Authorization") String accessToken
-    ) {
+    ) throws Exception {
         log.info("Getting user details");
         return userService.getUserById(accessToken);
     }

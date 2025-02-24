@@ -24,7 +24,19 @@ public enum JobTagEnum {
     PERSONAL_SERVICES(17L, "Personal Services"),
     TUTORING_LANGUAGES(18L, "Tutoring Languages"),
     MUSIC_INSTRUCTION(19L, "Music Instruction"),
-    OTHER(20L, "Other");
+    HOME_MAINTENANCE(20L, "Home Maintenance"),
+    TRANSPORTATION_ASSISTANCE(21L, "Transportation Assistance"),
+    ERRANDS_SHOPPING(22L, "Errands/Shopping"),
+    VOLUNTEER_WORK(23L, "Volunteer Work"),  // Could be paid or unpaid
+    COMMUNITY_EVENTS(24L, "Community Events"),
+    FUNDRAISING(25L, "Fundraising"),
+    ANIMAL_WELFARE(26L, "Animal Welfare"),
+    MENTORING(27L, "Mentoring (Community)"), // Differentiate from Tutoring/Mentoring which might be more academic
+    HEALTH_SUPPORT(28L, "Health Support"), // Non-medical, like companionship or post-op care
+    COUNSELING_SUPPORT(29L, "Counseling Support"), // Non-clinical, like peer support
+    DISASTER_RELIEF(30L, "Disaster Relief"),
+    ENVIRONMENTAL_CONSERVATION(31L, "Environmental Conservation"),
+    OTHER(32L, "Other");
 
     private final Long id;
     private final String displayName;

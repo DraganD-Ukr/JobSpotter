@@ -33,6 +33,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<HttpStatus> registerUser(UserRegisterRequest userRegisterRequest) {
         if (userRepository.existsByUsernameAndEmail(userRegisterRequest.getUsername(), userRegisterRequest.getEmail())) {
+            log.warn("Could not register user: user with same email or username already exists");
             throw new ResourceAlreadyExistsException("User already exists");
         }
 
@@ -92,14 +93,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<UserResponse> getUserById(String accessToken) {
+    public ResponseEntity<UserResponse> getUserById(String accessToken) throws Exception {
         User user;
-        try {
-            user = userRepository.findByUserId(JWTUtils.getUserIdFromToken(accessToken));
-        } catch (Exception e) {
-            log.error("Failed to get user details", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+        user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
+
+
 
         return new ResponseEntity<>(UserResponse.builder()
                 .userId(user.getUserId())

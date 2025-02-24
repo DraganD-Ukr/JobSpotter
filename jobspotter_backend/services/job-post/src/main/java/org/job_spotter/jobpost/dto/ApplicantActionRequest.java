@@ -1,6 +1,7 @@
 package org.job_spotter.jobpost.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Min;
@@ -21,10 +22,12 @@ import java.util.UUID;
 @Builder
 public class ApplicantActionRequest {
 
+    @Schema(description = "The id of the applicant", example = "1")
     @NotNull
     @Min(1)
     private int applicantId;
 
+    @Schema(description = "The status of the applicant", example = "CONFIRMED", allowableValues = {"CONFIRMED", "REJECTED"})
     @NotNull
     @Enumerated(EnumType.STRING)
     @JsonDeserialize(using = ApplicantStatusDeserializer.class)

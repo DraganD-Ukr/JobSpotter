@@ -30,10 +30,15 @@ public class SecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
-                        .pathMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-                                "/webjars/**", "/api/v1/users/v3/api-docs", "/api/v1/job-posts/v3/api-docs").permitAll()
+                        .pathMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/webjars/**",
+
+                                "/api/v1/users/v3/api-docs", // Service specific documentation paths
+                                "/api/v1/job-posts/v3/api-docs",
+                                "/api/v1/reviews/v3/api-docs").permitAll()
+
                         .pathMatchers("/api/v1/users/auth/**").permitAll()
                         .pathMatchers("/eureka/**").permitAll()
+                        .pathMatchers(HttpMethod.GET,"/api/v1/job-posts/search").permitAll()
                         .pathMatchers(HttpMethod.GET, "/api/v1/job-posts").permitAll()
                         .anyExchange().authenticated()
                 )
