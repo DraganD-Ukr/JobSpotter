@@ -1,18 +1,17 @@
 package org.jobspotter.review.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Getter
-@Setter
+@Setter(AccessLevel.NONE)
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReviewEditRequest {
@@ -20,9 +19,22 @@ public class ReviewEditRequest {
     @Size(min=5, max = 450)
     private String comment;
 
-    @DecimalMin(value = "1.0", inclusive = true, message = "Rating must be at least 1.0") // Minimum value
-    @DecimalMax(value = "5.0", inclusive = true, message = "Rating must be at most 5.0") // Maximum value
-    @Digits(integer = 1, fraction = 1, message = "Rating can have at most one decimal place and one integer digit (1-5)") // Max 1 integer digit and 1 fraction digit
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    @DecimalMin(value = "1.0", inclusive = true, message = "Rating must be at least 1.0")
+    @DecimalMax(value = "5.0", inclusive = true, message = "Rating must be at most 5.0")
+    @Digits(integer = 1, fraction = 1, message = "Rating must have at most one decimal place")
     private BigDecimal rating;
+
+    public void setRating(BigDecimal rating) {
+        if (rating != null) {
+            // Check manually if the rating is within the allowed range
+            if (rating.compareTo(BigDecimal.valueOf(1.0)) < 0 || rating.compareTo(BigDecimal.valueOf(5.0)) > 0) {
+                throw new IllegalArgumentException("Rating must be between 1.0 and 5.0");
+            }
+
+            // Round the rating to 1 decimal place
+            this.rating = rating.setScale(1, RoundingMode.HALF_UP);
+        }
+    }
 
 }

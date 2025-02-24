@@ -9,7 +9,6 @@ import org.jobspotter.review.dto.*;
 import org.jobspotter.review.exception.*;
 import org.jobspotter.review.model.Rating;
 import org.jobspotter.review.model.Review;
-import org.jobspotter.review.model.ReviewedUserRole;
 import org.jobspotter.review.model.ReviewerRole;
 import org.jobspotter.review.model.specification.ReviewSpecification;
 import org.jobspotter.review.repository.RatingRepository;
@@ -72,7 +71,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .reviewedUserId(reviewRequest.getReviewedUserId())
                 .reviewerRole(reviewRequest.getReviewerRole())
                 .jobPostId(reviewRequest.getJobPostId())
-                .rating(reviewRequest.getRating())
+                .rating(Double.parseDouble(String.valueOf(reviewRequest.getRating())))
                 .comment(reviewRequest.getComment())
                 .build();
         reviewRepository.save(review);
@@ -232,11 +231,11 @@ public class ReviewServiceImpl implements ReviewService {
 // Update the rating based on the reviewer role
         if (request.getReviewerRole().equals(ReviewerRole.SEEKER)) {
             updatedRating.setProviderRatingCount(updatedRating.getProviderRatingCount() + 1);
-            updatedRating.setProviderRatingSum(updatedRating.getProviderRatingSum() + request.getRating());
+            updatedRating.setProviderRatingSum(updatedRating.getProviderRatingSum() + Double.parseDouble(String.valueOf(request.getRating())));
 
         } else {
             updatedRating.setSeekerRatingCount(updatedRating.getSeekerRatingCount() + 1);
-            updatedRating.setSeekerRatingSum(updatedRating.getSeekerRatingSum() + request.getRating());
+            updatedRating.setSeekerRatingSum(updatedRating.getSeekerRatingSum() + Double.parseDouble(String.valueOf(request.getRating())));
         }
 
         return updatedRating;
