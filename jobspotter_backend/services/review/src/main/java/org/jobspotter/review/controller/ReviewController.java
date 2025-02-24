@@ -156,6 +156,19 @@ public class ReviewController {
 
 
 
+    @GetMapping("/job-post/{jobPostId}")
+    public ResponseEntity<Page<ReviewResponse>> getReviewsOfJobPost(
+            @PathVariable Long jobPostId,
+            @RequestParam(required = false, defaultValue = "0") int pageNum,
+            @RequestParam(required = false, defaultValue = "10") int pageSize
+    ) {
+        Page<ReviewResponse> result = reviewService.getReviewsByJobPostId(jobPostId, pageNum, pageSize);
+
+        return ResponseEntity.ok(result);
+    }
+
+
+
 
 
 

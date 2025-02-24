@@ -210,6 +210,25 @@ public class ReviewServiceImpl implements ReviewService {
         ratingRepository.save(userRatings);
     }
 
+    @Override
+    public Page<ReviewResponse> getReviewsByJobPostId(Long jobPostId, int pageNum, int pageSize) {
+
+        return reviewRepository.findAllByJobPostId(jobPostId, PageRequest.of(pageNum, pageSize))
+                .map(review -> ReviewResponse.builder()
+                        .reviewId(review.getReviewId())
+                        .reviewerId(review.getReviewerId())
+                        .reviewedUserId(review.getReviewedUserId())
+                        .jobPostId(review.getJobPostId())
+                        .reviewerRole(review.getReviewerRole())
+                        .rating(review.getRating())
+                        .comment(review.getComment())
+                        .dateCreated(review.getDateCreated())
+                        .dateUpdated(review.getDateUpdated())
+                        .build()
+                );
+
+    }
+
 
 
 
