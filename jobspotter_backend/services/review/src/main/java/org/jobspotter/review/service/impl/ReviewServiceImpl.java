@@ -9,7 +9,6 @@ import org.jobspotter.review.dto.*;
 import org.jobspotter.review.exception.*;
 import org.jobspotter.review.model.Rating;
 import org.jobspotter.review.model.Review;
-import org.jobspotter.review.model.ReviewedUserRole;
 import org.jobspotter.review.model.ReviewerRole;
 import org.jobspotter.review.model.specification.ReviewSpecification;
 import org.jobspotter.review.repository.RatingRepository;
@@ -22,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -71,7 +71,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .reviewedUserId(reviewRequest.getReviewedUserId())
                 .reviewerRole(reviewRequest.getReviewerRole())
                 .jobPostId(reviewRequest.getJobPostId())
-                .rating(reviewRequest.getRating())
+                .rating(Double.parseDouble(String.valueOf(reviewRequest.getRating())))
                 .comment(reviewRequest.getComment())
                 .build();
         reviewRepository.save(review);
@@ -81,7 +81,7 @@ public class ReviewServiceImpl implements ReviewService {
 //        Get the ratings of the user being reviewed
         Rating rating = ratingRepository.findByUserId(reviewRequest.getReviewedUserId());
 
-        Rating updated = updateRating(reviewRequest, rating);
+        Rating updated = updateRatingFromPostRequest(reviewRequest, rating);
 
 //        Save the updated rating
         ratingRepository.save(updated);
@@ -159,17 +159,61 @@ public class ReviewServiceImpl implements ReviewService {
         );
     }
 
+    @Transactional
+    @Override
+    public Long updateReview(UUID userId, ReviewEditRequest reviewRequest, Long reviewId) {
+
+
+        log.info("Updating review with id: {} for user with id: {}", reviewId, userId);
+
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + reviewId));
+
+        if (!review.getReviewerId().equals(userId)) {
+            log.warn("User with id: {} is not authorized to update review with id: {}", userId, reviewId);
+            throw new UnauthorizedException("Could not update review: You are not authorized to update this review");
+        }
+
+        Rating userRatings = ratingRepository.findByUserId(review.getReviewedUserId());
+        updateReviewFromDto(review, reviewRequest, userRatings);
+
+        reviewRepository.save(review);
+        ratingRepository.save(userRatings);
+
+        return review.getReviewId();
+    }
+
+
 
 
     /* -------------------------------------------Helper Methods-------------------------------------------------------*/
 
+    private void updateReviewFromDto(Review review, ReviewEditRequest reviewRequest, Rating rating) {
+
+        if (StringUtils.hasText(reviewRequest.getComment())) {
+            review.setComment(reviewRequest.getComment());
+        }
+
+        if (reviewRequest.getRating() != null) {
+
+
+//            Update the rating of the user being reviewed based on the role of the reviewer
+            if (review.getReviewerRole().equals(ReviewerRole.SEEKER)) {
+                rating.setProviderRatingSum(rating.getProviderRatingSum() - review.getRating() + Double.parseDouble(reviewRequest.getRating().toString()));
+            } else {
+                rating.setSeekerRatingSum(rating.getSeekerRatingSum() - review.getRating() + Double.parseDouble(reviewRequest.getRating().toString()));
+            }
+//            Update the rating of review only after updating the rating of the user being reviewed
+            review.setRating(Double.parseDouble(reviewRequest.getRating().toString()));
+        }
+    }
 
     /**
      * Update the rating of the user being reviewed based on provided request and existing ratings
      * @param request Review request
      * @param toUpdate Rating to update
      */
-    private Rating updateRating(ReviewPostRequest request, Rating toUpdate) {
+    private Rating updateRatingFromPostRequest(ReviewPostRequest request, Rating toUpdate) {
 
 //        If the user being reviewed does not have a rating, create a new rating Object
         Rating updatedRating = toUpdate;
@@ -178,20 +222,20 @@ public class ReviewServiceImpl implements ReviewService {
             updatedRating = Rating.builder()
                     .userId(request.getReviewedUserId())
                     .seekerRatingCount(0)
-                    .seekerRatingSum(0)
+                    .seekerRatingSum((0.0))
                     .providerRatingCount(0)
-                    .providerRatingSum(0)
+                    .providerRatingSum((0.0))
                     .build();
         }
 
 // Update the rating based on the reviewer role
         if (request.getReviewerRole().equals(ReviewerRole.SEEKER)) {
             updatedRating.setProviderRatingCount(updatedRating.getProviderRatingCount() + 1);
-            updatedRating.setProviderRatingSum(updatedRating.getProviderRatingSum() + request.getRating());
+            updatedRating.setProviderRatingSum(updatedRating.getProviderRatingSum() + Double.parseDouble(String.valueOf(request.getRating())));
 
         } else {
             updatedRating.setSeekerRatingCount(updatedRating.getSeekerRatingCount() + 1);
-            updatedRating.setSeekerRatingSum(updatedRating.getSeekerRatingSum() + request.getRating());
+            updatedRating.setSeekerRatingSum(updatedRating.getSeekerRatingSum() + Double.parseDouble(String.valueOf(request.getRating())));
         }
 
         return updatedRating;

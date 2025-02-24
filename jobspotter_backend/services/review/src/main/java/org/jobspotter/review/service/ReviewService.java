@@ -1,6 +1,7 @@
 package org.jobspotter.review.service;
 
 import org.jobspotter.review.dto.RatingsResponse;
+import org.jobspotter.review.dto.ReviewEditRequest;
 import org.jobspotter.review.dto.ReviewPostRequest;
 import org.jobspotter.review.dto.ReviewResponse;
 import org.jobspotter.review.model.ReviewedUserRole;
@@ -16,4 +17,6 @@ public interface ReviewService {
     RatingsResponse getRatingsByUserId(UUID userId);
 
     Page<ReviewResponse> getReviewsByUserId(UUID reviewedUserId, ReviewerRole reviewerRole, Double minRating, Double maxRating, String dateCreatedMin, String dateCreatedMax, String searchQuery, int pageNum, int pageSize);
+
+    Long updateReview(UUID userId, ReviewEditRequest reviewRequest, Long reviewId);
 }

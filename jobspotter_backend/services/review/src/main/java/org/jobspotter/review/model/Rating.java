@@ -27,16 +27,16 @@ public class Rating {
 
 //Setting the default value of the rating sums and counts to 0.0
     @Min(0)
-    private double seekerRatingSum = 0.0;
+    private Double seekerRatingSum = 0.0;
 
     @Min(0)
-    private int seekerRatingCount = 0;
+    private Integer seekerRatingCount = 0;
 
     @Min(0)
-    private double providerRatingSum = 0.0;
+    private Double providerRatingSum = 0.0;
 
     @Min(0)
-    private int providerRatingCount = 0;
+    private Integer providerRatingCount = 0;
 
 
 }
