@@ -55,7 +55,7 @@ public class ReviewServiceImpl implements ReviewService {
                 throw new ResourceNotFoundException("Job post not found with id: " + reviewRequest.getJobPostId());
 
             } else{
-                log.error("Job Post Service responded with 500: {}. {}", e.getMessage(), e.toString());
+                log.error("Job Post Service responded with {}: {}. {}", e.status(), e.getMessage(), e.toString());
                 throw new ServerException("Something went wrong, please try again later");
             }
 
@@ -334,6 +334,7 @@ public class ReviewServiceImpl implements ReviewService {
                 log.warn("User with id: {} was not accepted to the job post with id: {}", reviewRequest.getReviewedUserId(), reviewRequest.getJobPostId());
                 throw new ForbiddenException("Could not create rating: Applicant was not accepted to the job post");
             }
+//            Check if the user id match the job poster id
             else if (!userId.equals(jobPost.getJobPosterId())) {
                 log.warn("User with id: {} is not authorized to review user with id: {} under job post with id: {}", userId, reviewRequest.getReviewedUserId(), reviewRequest.getJobPostId());
                 throw new UnauthorizedException("Could not create rating: You are not authorized to review this user");

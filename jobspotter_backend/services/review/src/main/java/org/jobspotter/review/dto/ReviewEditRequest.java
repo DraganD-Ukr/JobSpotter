@@ -15,6 +15,7 @@ import java.math.RoundingMode;
 @Setter(AccessLevel.NONE)
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class ReviewEditRequest {
 
     @Schema(description = "Comment of the review. Must be between 5 and 450 characters")
