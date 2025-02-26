@@ -25,9 +25,7 @@ export function Address() {
     fetchAddresses();
   }, []);
 
-  // -------------------------------------------
   // Fetch All Addresses
-  // -------------------------------------------
   const fetchAddresses = async () => {
     console.log("Fetching addresses...");
     try {
@@ -42,7 +40,7 @@ export function Address() {
         throw new Error(`Failed to fetch addresses. Status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = await response.json(); 
       console.log("Received addresses:", JSON.stringify(data, null, 2));
       setAddresses(data);
     } catch (err) {
@@ -53,9 +51,7 @@ export function Address() {
     }
   };
 
-  // -------------------------------------------
   // Handle Form Input Changes
-  // -------------------------------------------
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormValues((prev) => ({
@@ -64,9 +60,7 @@ export function Address() {
     }));
   };
 
-  // -------------------------------------------
   // Submit New Address
-  // -------------------------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -112,7 +106,7 @@ export function Address() {
         addressType: "OTHER",
         default: false,
       });
-      setShowAddForm(false); // Hide form after successful add
+      setShowAddForm(false); 
     } catch (err) {
       console.error("Error creating address:", err);
       setError(err.message || "An error occurred. Please try again.");
@@ -121,9 +115,7 @@ export function Address() {
     }
   };
 
-  // -------------------------------------------
   // Remove an Address
-  // -------------------------------------------
   const handleRemove = async (addressId) => {
     setError(null);
     setSuccessMessage(null);
@@ -159,18 +151,14 @@ export function Address() {
     }
   };
 
-  // -------------------------------------------
   // Begin Editing an Address
-  // -------------------------------------------
   const handleEdit = (address) => {
     setSuccessMessage(null);
     setError(null);
     setEditingAddress(address);
   };
 
-  // -------------------------------------------
   // Submit Updated Address
-  // -------------------------------------------
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);

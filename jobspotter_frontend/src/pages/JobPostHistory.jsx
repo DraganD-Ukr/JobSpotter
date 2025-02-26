@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-// Example: enumValue -> friendly label
 const tagMapping = new Map([
   ["General Help", "GENERAL_HELP"],
   ["Handyman Services", "HANDYMAN_SERVICES"],
@@ -40,50 +39,37 @@ export function JobPostHistory() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [expandedJobId, setExpandedJobId] = useState(null); // Only one job expands
+  const [expandedJobId, setExpandedJobId] = useState(null);
+  const [viewType, setViewType] = useState("card"); // "card" or "list"
 
   useEffect(() => {
     fetchJobPostHistory();
   }, []);
 
-  // Fetch job post history from /api/v1/job-posts/history
   function fetchJobPostHistory() {
     setLoading(true);
-
     fetch("/api/v1/job-posts/history", {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
     })
       .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to fetch job post history");
-        }
+        if (!res.ok) throw new Error("Failed to fetch job post history");
         return res.json();
       })
       .then((data) => {
         const content = data.content || [];
-
-        // Convert enum objects -> friendly labels
-        // Use jobId or fallback to index
         const jobsWithFriendlyTags = content.map((job, index) => {
           const jobId = job.jobId || job.id || index;
-
           let friendlyTags = [];
           if (Array.isArray(job.tags)) {
             friendlyTags = job.tags.map((tagObj) => {
-              const enumValue = tagObj.tagName || tagObj.name || tagObj.value;
-              return tagMapping.get(enumValue) || enumValue;
+              const enumVal = tagObj.tagName || tagObj.name || tagObj.value;
+              return tagMapping.get(enumVal) || enumVal;
             });
           }
-
-          return {
-            ...job,
-            jobId,
-            tags: friendlyTags,
-          };
+          return { ...job, jobId, tags: friendlyTags };
         });
-
         setJobs(jobsWithFriendlyTags);
       })
       .catch((err) => {
@@ -93,89 +79,184 @@ export function JobPostHistory() {
       .finally(() => setLoading(false));
   }
 
-  // Toggle details for only one job at a time
   function handleToggleDetails(jobId) {
-    setExpandedJobId(jobId === expandedJobId ? null : jobId);
+    setExpandedJobId((prev) => (prev === jobId ? null : jobId));
+  }
+
+  function toggleView() {
+    setViewType((prev) => (prev === "card" ? "list" : "card"));
   }
 
   if (loading) {
     return (
-      <div className="main-content flex items-center justify-center min-h-screen">
+      <div className="main-content min-h-screen flex items-center justify-center">
         <p>Loading job post history...</p>
       </div>
     );
   }
 
   return (
-    <div className="main-content min-h-screen p-6 text-black">
-      <h1 className="text-2xl font-bold mb-4 text-center">Job Post History</h1>
+    <div className="main-content min-h-screen p-6">
+      <h1 className="text-3xl font-bold mb-8 text-center">
+        Job Post History
+      </h1>
 
       {errorMessage && (
-        <div className="max-w-3xl mx-auto text-red-500 mb-4">{errorMessage}</div>
+        <div className="text-red-500 mb-4 text-center">{errorMessage}</div>
       )}
 
       {jobs.length === 0 ? (
-        <div className="max-w-3xl mx-auto">
-          <p>No job history found.</p>
-        </div>
+        <p className="text-center">No job history found.</p>
       ) : (
-        // GRID LAYOUT for cards
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto place-items-center">
-          {jobs.map((job) => {
-            const jobId = job.jobId;
-            const isExpanded = expandedJobId === jobId;
+        <>
+          {/* Toggle View Button */}
+          <div className="max-w-6xl mx-auto mb-4">
+            <button
+              onClick={toggleView}
+              className="px-4 py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400"
+            >
+              {viewType === "card"
+                ? "Switch to List View"
+                : "Switch to Card View"}
+            </button>
+          </div>
 
-            return (
-              <div
-                key={jobId}
-                // White card, light border, forced black text
-                className="bg-white border border-gray-300 rounded-xl p-4 shadow flex flex-col justify-between w-full max-w-sm text-black"
-              >
-                {/* Card Header */}
-                <div>
-                  <h3 className="font-semibold text-lg">{job.title}</h3>
-                  <p className="text-sm text-gray-700 mt-1">{job.description}</p>
-                </div>
-
-                {/* "View More Details" Button */}
-                <div className="mt-4">
-                  <button
-                    onClick={() => handleToggleDetails(jobId)}
-                    className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
+          {viewType === "card" ? (
+            /* ====== CARD VIEW ====== */
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+              {jobs.map((job) => {
+                const jobId = job.jobId;
+                const isExpanded = expandedJobId === jobId;
+                return (
+                  <div
+                    key={jobId}
+                    className="
+                      card
+                      border border-gray-300
+                      hover:shadow-md
+                      hover:border-green-500
+                      transition
+                      w-full
+                      max-w-sm
+                      flex
+                      flex-col
+                    "
                   >
-                    {isExpanded ? "Hide Details" : "View More Details"}
-                  </button>
-                </div>
-
-                {/* Expanded Details */}
-                {isExpanded && (
-                  <div className="mt-4 bg-gray-100 text-black rounded-lg p-3 shadow-inner">
-                    <p>
-                      <strong>Job ID:</strong> {jobId}
-                    </p>
-                    <p>
-                      <strong>Address ID:</strong> {job.addressId || "N/A"}
-                    </p>
-                    <p>
-                      <strong>Max Applicants:</strong>{" "}
-                      {job.maxApplicants || "N/A"}
-                    </p>
+                    <h3 className="text-xl font-semibold">{job.title}</h3>
+                    <p className="mt-2">{job.description}</p>
                     {job.tags && job.tags.length > 0 && (
-                      <p>
+                      <p className="mt-2 text-sm">
                         <strong>Tags:</strong> {job.tags.join(", ")}
                       </p>
                     )}
-                    {job.status && (
-                      <p>
-                        <strong>Status:</strong> {job.status}
-                      </p>
+
+                    <div className="mt-4">
+                      <button
+                        onClick={() => handleToggleDetails(jobId)}
+                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 w-full"
+                      >
+                        {isExpanded ? "Hide Details" : "View More Details"}
+                      </button>
+                    </div>
+
+                    {isExpanded && (
+                      <div className="mt-4 bg-gray-100 dark:bg-gray-800 rounded-lg p-3 shadow-inner">
+                        <p>
+                          <strong>Job ID:</strong> {jobId}
+                        </p>
+                        <p>
+                          <strong>Address ID:</strong>{" "}
+                          {job.addressId || "N/A"}
+                        </p>
+                        <p>
+                          <strong>Max Applicants:</strong>{" "}
+                          {job.maxApplicants || "N/A"}
+                        </p>
+                        {job.tags && job.tags.length > 0 && (
+                          <p>
+                            <strong>Tags:</strong> {job.tags.join(", ")}
+                          </p>
+                        )}
+                        {job.status && (
+                          <p>
+                            <strong>Status:</strong> {job.status}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* ====== LIST VIEW ====== */
+            <div className="max-w-6xl mx-auto space-y-4">
+              {jobs.map((job) => {
+                const jobId = job.jobId;
+                const isExpanded = expandedJobId === jobId;
+                return (
+                  <div
+                    key={jobId}
+                    className="
+                      card
+                      border border-gray-300
+                      rounded-lg p-4
+                      shadow
+                      flex
+                      flex-col
+                      sm:flex-row
+                      justify-between
+                    "
+                  >
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold">{job.title}</h3>
+                      <p className="mt-2">{job.description}</p>
+                      {job.tags && job.tags.length > 0 && (
+                        <p className="mt-2 text-sm">
+                          <strong>Tags:</strong> {job.tags.join(", ")}
+                        </p>
+                      )}
+                    </div>
+                    <div className="mt-4 sm:mt-0 flex flex-col items-start sm:items-end justify-between">
+                      <button
+                        onClick={() => handleToggleDetails(jobId)}
+                        className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
+                      >
+                        {isExpanded ? "Hide Details" : "View More Details"}
+                      </button>
+
+                      {isExpanded && (
+                        <div className="mt-4 bg-gray-100 dark:bg-gray-800 rounded-lg p-3 shadow-inner">
+                          <p>
+                            <strong>Job ID:</strong> {jobId}
+                          </p>
+                          <p>
+                            <strong>Address ID:</strong>{" "}
+                            {job.addressId || "N/A"}
+                          </p>
+                          <p>
+                            <strong>Max Applicants:</strong>{" "}
+                            {job.maxApplicants || "N/A"}
+                          </p>
+                          {job.tags && job.tags.length > 0 && (
+                            <p>
+                              <strong>Tags:</strong> {job.tags.join(", ")}
+                            </p>
+                          )}
+                          {job.status && (
+                            <p>
+                              <strong>Status:</strong> {job.status}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

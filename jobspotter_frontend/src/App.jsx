@@ -1,7 +1,8 @@
-
+import { ThemeProvider } from "./components/ThemeContext";
 import Navbar from "./components/Navbar";
-import Footer from "./components/Footer"; 
+import Footer from "./components/Footer";
 import { Routes, Route } from "react-router-dom";
+
 import { Home } from "./pages/Home";
 import { About } from "./pages/About";
 import { Contact } from "./pages/Contact";
@@ -13,15 +14,15 @@ import { JobPost } from "./pages/JobPost";
 import { Address } from "./pages/Address";
 import { CreateJobPost } from "./pages/CreateJobPost";
 import { MyJobs } from "./pages/MyJobs";
-import { AllJobs } from "./pages/AllJobs";
 import { Settings } from "./pages/Settings";
 import { JobPostHistory } from "./pages/JobPostHistory";
+import { SearchJobPost } from "./pages/SearchJobPost";
 import Data from "./pages/Data";
 import Profile from "./pages/Profile";
 
 export default function App() {
   return (
-    <>
+    <ThemeProvider>
       <Navbar />
       <div className="container mx-auto p-4 min-h-screen">
         <Routes>
@@ -38,12 +39,12 @@ export default function App() {
           <Route path="/address" element={<Address />} />
           <Route path="/createjobpost" element={<CreateJobPost />} />
           <Route path="/myjobs" element={<MyJobs />} />
-          <Route path="/alljobs" element={<AllJobs />} />
+          <Route path="/searchjobpost" element={<SearchJobPost />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/jobposthistory" element={<JobPostHistory />} />
         </Routes>
       </div>
       <Footer />
-    </>
+    </ThemeProvider>
   );
 }

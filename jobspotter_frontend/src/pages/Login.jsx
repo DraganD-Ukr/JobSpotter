@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Cookies from "js-cookie";
 
 export function Login() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -62,7 +61,6 @@ export function Login() {
         });
 
         if (response.ok) {
-          // Cookies set automatically by the server
           setLoggedIn(true);
         } else {
           // If login fails, extract error messages from the response.
@@ -88,8 +86,8 @@ export function Login() {
   // If login is successful, remove the form and display a success message with two buttons.
   if (loggedIn) {
     return (
-      <div className="main-content flex items-center justify-center min-h-screen">
-        <div className="card w-3/5 max-w-4xl text-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white w-3/5 max-w-4xl rounded-lg shadow-lg p-6 text-center">
           <h2 className="text-3xl font-bold mb-6">Login Successful!</h2>
           <p className="mb-4">
             You have successfully logged in. Click one of the buttons below to proceed.
@@ -115,10 +113,22 @@ export function Login() {
 
   // Render the login form when not logged in.
   return (
-    <div className="main-content flex items-center justify-center min-h-screen">
-      {/* Outer card container */}
-      <div className="card overflow-hidden w-3/5 max-w-4xl grid grid-cols-1 md:grid-cols-2 p-0">
-        {/* Left Section */}
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      {/* Outer container with two columns */}
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 bg-white rounded-lg shadow-lg overflow-hidden">
+        {/* Left Section (Green Gradient) */}
+        <div className="hidden md:flex flex-col justify-center items-center p-10 bg-gradient-to-br from-green-400 to-lime-500 text-white">
+          <h2 className="text-3xl font-bold mb-2">Welcome Back!</h2>
+          <p>Don't have an account?</p>
+          <a
+            href="/register"
+            className="mt-4 px-6 py-2 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-200"
+          >
+            Sign Up
+          </a>
+        </div>
+
+        {/* Right Section (Form) */}
         <div className="p-10">
           <h2 className="text-3xl font-bold mb-6">Sign In</h2>
           {errors.general && (
@@ -136,8 +146,10 @@ export function Login() {
                 value={formValues.username}
                 onChange={handleChange}
                 placeholder="Username or Email"
-                className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400
-                           text-black dark:text-white dark:bg-gray-700"
+                className="
+                  mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none
+                  focus:ring-2 focus:ring-green-400
+                "
               />
               {errors.username && (
                 <p className="text-red-500 text-sm">{errors.username}</p>
@@ -155,8 +167,10 @@ export function Login() {
                 value={formValues.password}
                 onChange={handleChange}
                 placeholder="Password"
-                className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400
-                           text-black dark:text-white dark:bg-gray-700"
+                className="
+                  mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none
+                  focus:ring-2 focus:ring-green-400
+                "
               />
               {errors.password && (
                 <p className="text-red-500 text-sm">{errors.password}</p>
@@ -167,11 +181,14 @@ export function Login() {
             <button
               type="submit"
               disabled={isButtonDisabled}
-              className={`w-full text-white font-bold py-2 rounded-lg transition mt-2 ${
-                isButtonDisabled
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-green-500 to-lime-500 hover:opacity-90"
-              }`}
+              className={`
+                w-full text-white font-bold py-2 rounded-lg transition mt-2
+                ${
+                  isButtonDisabled
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-green-500 to-lime-500 hover:opacity-90"
+                }
+              `}
             >
               Sign In
             </button>
@@ -187,18 +204,6 @@ export function Login() {
               </a>
             </div>
           </form>
-        </div>
-
-        {/* Right Section */}
-        <div className="hidden md:flex flex-col justify-center items-center p-10 lava-lamp-background">
-          <h2 className="text-3xl font-bold">Welcome Back!</h2>
-          <p className="mt-2">Don't have an account?</p>
-          <a
-            href="/register"
-            className="mt-4 px-6 py-2 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-200"
-          >
-            Sign Up
-          </a>
         </div>
       </div>
     </div>
