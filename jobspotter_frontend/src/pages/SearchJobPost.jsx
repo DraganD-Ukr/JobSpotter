@@ -1,5 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useSearchParams } from "react-router-dom";
+import { FaList, FaTh, FaTag } from "react-icons/fa"; // Import icons for the toggle button and tags
+import { ThemeContext } from "../components/ThemeContext"; // Import ThemeContext for dark mode
+import { FaMapMarkerAlt, FaUsers, FaRoute } from "react-icons/fa";
+import { MdDateRange } from "react-icons/md";
 
 const reversedTagMapping = new Map([
   ["General Help", "GENERAL_HELP"],
@@ -41,23 +45,59 @@ export function SearchJobPost() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [viewType, setViewType] = useState("card"); // "card" or "list"
-  
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
+  const [filters, setFilters] = useState({
+    title: "",
+    tags: [],
+    latitude: "",
+    longitude: "",
+    radius: 50,
+  });
+
+
+
+
+
   // Read "title" from URL query parameters (if provided)
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("title") || "";
   const [localQuery, setLocalQuery] = useState(initialQuery);
 
+  const { darkMode } = useContext(ThemeContext); // Use dark mode context
+
+  const [tagColors, setTagColors] = useState({});
+
+  // UseState for added tags colors to prevent change on re-render
+  const getTagColor = (tag) => {
+    if (tagColors[tag]) {
+      return tagColors[tag]; // Return already assigned color
+    } else {
+      const newColor = getRandomColor(); // Generate new color
+      setTagColors((prevColors) => ({
+        ...prevColors,
+        [tag]: newColor, // Assign the new color to the tag
+      }));
+      return newColor; // Return the new color
+    }
+  };
+
   useEffect(() => {
     fetchJobs();
-  }, [searchParams]);
+  }, [searchParams, page]);
 
   function fetchJobs() {
     setLoading(true);
     // Use search API if title parameter exists; otherwise fetch all jobs.
     const query = searchParams.get("title") || "";
-    const endpoint = query
-      ? `/api/v1/job-posts/search?title=${encodeURIComponent(query)}`
-      : `/api/v1/job-posts`;
+    const tags = searchParams.get("tags") || "";
+    const latitude = searchParams.get("latitude") || "";
+    const longitude = searchParams.get("longitude") || "";
+    const radius = searchParams.get("radius") || "";
+    const size = 10;
+
+    const endpoint = `/api/v1/job-posts/search?title=${encodeURIComponent(query)}&tags=${encodeURIComponent(tags)}&latitude=${latitude}&longitude=${longitude}&radius=${radius}&pageNumber=${page}&size=${size}`;
 
     fetch(endpoint, {
       method: "GET",
@@ -69,9 +109,13 @@ export function SearchJobPost() {
         return res.json();
       })
       .then((data) => {
-        // If data isn't an array, assume it's paginated with a "content" property.
-        const jobsArray = Array.isArray(data) ? data : data.content || [];
+        const jobsArray = data.content || [];
         setJobPostsData(processJobs(jobsArray));
+        // When fetching jobs, update totalElements
+
+        setTotalElements(data.totalElements);
+
+        setTotalPages(data.totalPages);
       })
       .catch((err) => {
         console.error("Error fetching jobs:", err);
@@ -107,7 +151,148 @@ export function SearchJobPost() {
   // On search submit, update URL query parameter; triggers refetch via useEffect
   function handleSearchSubmit(e) {
     e.preventDefault();
-    setSearchParams({ title: localQuery });
+    setSearchParams({ ...filters, title: localQuery });
+  }
+
+  // Handle filter changes
+  function handleFilterChange(e) {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  }
+
+  // Handle tag addition
+  function handleAddTag(tag) {
+    if (!filters.tags.includes(tag)) {
+      setFilters((prev) => ({
+        ...prev,
+        tags: [...prev.tags, tag],
+      }));
+    }
+  }
+
+  // Handle tag removal
+  function handleRemoveTag(tag) {
+    setFilters((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((t) => t !== tag),
+    }));
+  }
+
+  // Handle pagination
+  function handlePageChange(newPage) {
+    setPage(newPage);
+  }
+
+  // Generate pagination buttons
+  function renderPaginationButtons() {
+    const maxButtons = 5;
+    const buttons = [];
+
+    if (totalPages <= maxButtons) {
+      for (let i = 0; i < totalPages; i++) {
+        buttons.push(
+          <button
+            key={i}
+            onClick={() => handlePageChange(i)}
+            id={page === i ? "active-page" : "page-button"}// Correctly apply the ID conditionally
+            className={`px-4 py-2 mx-1 rounded-full ${page === i
+              ? "bg-green-500 text-white"
+              : "bg-gray-300 text-black hover:bg-gray-400"
+              }`}
+          >
+            {console.log(`Page: ${page}, i: ${i}, Active ID: ${page === i ? "active-page" : "none"}`)}
+            {i + 1}
+          </button>
+        );
+
+      }
+    } else {
+      let startPage = Math.max(0, page - Math.floor(maxButtons / 2));
+      let endPage = Math.min(totalPages, startPage + maxButtons);
+
+      if (endPage - startPage < maxButtons) {
+        startPage = Math.max(0, endPage - maxButtons);
+      }
+
+      for (let i = startPage; i < endPage; i++) {
+        buttons.push(
+          <button
+            key={i}
+            onClick={() => handlePageChange(i)}
+            id={page === i ? "active-page" : "page-button"}// Correctly apply the ID conditionally
+            className={`px-4 py-2 mx-1 rounded-full ${page === i
+              ? "bg-green-500 light:bg-amber-400 text-white"
+              : "bg-gray-300 text-black hover:bg-gray-400"
+              }`}
+          >
+            {i + 1}
+          </button>
+        );
+      }
+
+      if (startPage > 0) {
+        buttons.unshift(
+          <button
+            key="start-ellipsis"
+            onClick={() => handlePageChange(startPage - 1)}
+            className="px-4 py-2 mx-1 bg-gray-300 text-black rounded-full hover:bg-gray-400"
+            id="other-pages"
+          >
+            ...
+          </button>
+        );
+      }
+
+      if (endPage < totalPages) {
+        buttons.push(
+          <button
+            key="end-ellipsis"
+            onClick={() => handlePageChange(endPage)}
+            className="px-4 py-2 mx-1 bg-gray-300 text-black rounded-full hover:bg-gray-400"
+            id="other-pages"
+          >
+            ...
+          </button>
+        );
+      }
+    }
+
+    return buttons;
+  }
+
+  // Handle location search
+  function handleLocationSearch() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        setFilters((prev) => ({
+          ...prev,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        }));
+      });
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  }
+
+  function getRandomColor() {
+    const colors = [
+      "bg-red-400", "bg-red-500",
+      "bg-yellow-400", "bg-yellow-500",
+      "bg-green-400", "bg-green-500",
+      "bg-blue-400", "bg-blue-500",
+      "bg-purple-400", "bg-purple-500",
+      "bg-pink-400", "bg-pink-500",
+      "bg-indigo-400", "bg-indigo-500",
+      "bg-teal-400", "bg-teal-500",
+      "bg-cyan-400", "bg-cyan-500",
+      "bg-orange-400", "bg-orange-500",
+      "bg-lime-400", "bg-lime-500",
+    ];
+
+
+
+    return colors[Math.floor(Math.random() * colors.length)];
   }
 
   if (loading) {
@@ -118,109 +303,271 @@ export function SearchJobPost() {
     );
   }
 
+
+
   return (
-    <div className="main-content min-h-screen p-4">
-      {/* Header & Controls */}
-      <div className="flex flex-col items-center mb-8">
-        <h2 className="text-3xl font-bold text-center mb-4">
-          {searchParams.get("title")
-            ? `Results for "${searchParams.get("title")}"` 
-            : "Showing All Jobs"}
-        </h2>
-        {/* Row with search bar & view toggle side-by-side */}
-        <div className="flex gap-4">
-          <form onSubmit={handleSearchSubmit} className="flex">
-            <input
-              type="text"
-              value={localQuery}
-              onChange={(e) => setLocalQuery(e.target.value)}
-              placeholder="Search jobs..."
-              className="px-4 py-2 border rounded-l-md focus:outline-none"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-green-500 text-white rounded-r-md hover:bg-green-600"
-            >
-              Search
-            </button>
-          </form>
+    <div className={`main-content min-h-screen p-4 ${darkMode ? "bg-gray-900 text-white" : "bg-white text-black"}`}>
+      {/* Search Bar */}
+      <div className="flex justify-center mb-8">
+        <form onSubmit={handleSearchSubmit} className="flex">
+          <input
+            type="text"
+            value={localQuery}
+            onChange={(e) => setLocalQuery(e.target.value)}
+            placeholder="Search jobs by title..."
+            className="px-4 py-2 border rounded-l-md focus:outline-none"
+          />
           <button
-            onClick={toggleView}
-            className="px-4 py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400"
+            type="submit"
+            className="px-4 py-2 bg-green-500 text-white rounded-r-md hover:bg-green-600"
           >
-            {viewType === "card"
-              ? "Switch to List View"
-              : "Switch to Card View"}
+            Search
           </button>
-        </div>
+        </form>
+        <button
+          onClick={toggleView}
+          className="px-4 py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400 flex items-center ml-4"
+          id="toggle-view"
+        >
+          {viewType === "card" ? (
+            <>
+              <FaList className="mr-2" />
+              List View
+            </>
+          ) : (
+            <>
+              <FaTh className="mr-2" />
+              Card View
+            </>
+          )}
+        </button>
       </div>
 
-      {errorMessage && (
-        <div className="text-red-500 mb-4 text-center">{errorMessage}</div>
-      )}
-
-      {jobPostsData.length === 0 ? (
-        <p className="text-center">No jobs found.</p>
-      ) : (
-        <>
-          {viewType === "card" ? (
-            // CARD VIEW: Grid layout using global .card styling
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
-              {jobPostsData.map((job) => (
-                <div
-                  key={job.jobPostId}
-                  className="card border border-gray-300 hover:shadow-md hover:border-green-500 transition w-full max-w-sm flex flex-col"
-                >
-                  <h3 className="text-xl font-semibold">{job.title}</h3>
-                  <p className="mt-2">{job.description}</p>
-                  {job.tags && job.tags.length > 0 && (
-                    <p className="mt-2 text-sm">
-                      <strong>Tags:</strong> {job.tags.join(", ")}
-                    </p>
-                  )}
-
-                  <div className="mt-4">
+      <div className="flex">
+        {/* Filters */}
+        <div className="w-1/5 pr-12 border-r ml-42 mr-4">
+          <h3 className="text-xl font-bold mb-4">Filters</h3>
+          <form onSubmit={handleSearchSubmit}>
+            <div className="mb-4 p-4 border rounded-md">
+              <label className="block mb-2">Tags</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {filters.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className={`px-2 py-1 rounded-full flex items-center ${getTagColor(tag)}`}
+                  >
+                    <FaTag className="mr-2" />
+                    <span className="mr-2">{Array.from(reversedTagMapping.entries()).find(([key, value]) => value === tag)?.[0]}</span>
                     <button
-                      onClick={() => handleApply(job.jobPostId)}
-                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 w-full"
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="text-red-500 hover:text-red-700"
                     >
-                      Apply Now
+                      &times;
                     </button>
-                  </div>
-                </div>
-              ))}
+                  </span>
+                ))}
+              </div>
+              <select
+                name="tags"
+                value=""
+                onChange={(e) => handleAddTag(e.target.value)}
+                className="w-full px-4 py-2 border rounded-md"
+              >
+                <option value="">Select a tag</option>
+                {Array.from(reversedTagMapping.keys()).map((tag) => (
+                  <option key={tag} value={reversedTagMapping.get(tag)}>
+                    {tag}
+                  </option>
+                ))}
+              </select>
             </div>
+            <div className="mb-4 p-4 border rounded-md">
+              <label className="block mb-2">Location</label>
+              <input
+                type="text"
+                name="address"
+                placeholder="Enter address"
+                className="w-full px-4 py-2 border rounded-md mb-2"
+                onChange={(e) => {
+                  const [latitude, longitude] = e.target.value.split(",");
+                  setFilters((prev) => ({
+                    ...prev,
+                    latitude: parseFloat(latitude),
+                    longitude: parseFloat(longitude),
+                  }));
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleLocationSearch}
+                className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+              >
+                Use Current Location
+              </button>
+              {filters.latitude && filters.longitude && (
+                <p className="text-sm text-green-500 mt-2 text-center">
+                  Using your current location
+                </p>
+              )}
+            </div>
+
+            <div id="distance-range-input" className="mb-4 p-4 border rounded-md">
+              <label
+                id="distance-range-input"
+                htmlFor="distance-range-slider"
+                className="block mb-2 font-medium text-gray-700"
+              >
+                Radius (km)
+              </label>
+
+              {/* Range Input Wrapper */}
+              <div id="distance-range-input" className="relative w-full">
+                <input
+                  id="distance-range-slider"
+                  type="range"
+                  name="radius"
+                  min="0"
+                  max="500"
+                  value={filters.radius}
+                  onChange={handleFilterChange}
+                  className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #3b82f6 ${filters.radius / 5}%, #d1d5db ${filters.radius / 5}%)`,
+                  }}
+                />
+
+                {/* Tick Marks */}
+                <div id="distance-range-input-ticks" className="absolute w-full top-4 flex justify-between">
+                  {[0, 100, 200, 300, 400, 500].map((value) => (
+                    <div key={value} className="relative">
+                      <div className="w-0.5 h-3 bg-gray-500 mx-auto"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Labels for Distances */}
+              <div id="distance-range-input" className="flex justify-between text-xs text-gray-600 mt-1">
+                {[0, 100, 200, 300, 400, 500].map((value) => (
+                  <span key={value} className="w-8 text-center">{value}</span>
+                ))}
+              </div>
+
+              {/* Current Selected Value */}
+              <p id="distance-range-input" className="text-sm mt-2 text-gray-600">
+                Radius: {filters.radius} km
+              </p>
+            </div>
+
+
+
+
+            <button
+              type="submit"
+              className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+            >
+              Apply Filters
+            </button>
+          </form>
+        </div>
+
+        {/* Job Posts */}
+        <div className="w-4/5 p-4 ml-4 mr-30">
+          <div className="flex flex-col items-start mb-8">
+            <h2 className="text-2xl font-bold text-center mb-4">
+              {searchParams.get("title")
+                ? `Search returned ${totalElements} job posts`
+                : "Showing All Jobs"}
+            </h2>
+          </div>
+
+          {errorMessage && (
+            <div className="text-red-500 mb-4 text-center">{errorMessage}</div>
+          )}
+
+
+
+          {jobPostsData.length === 0 ? (
+            <p className="text-center">No jobs found.</p>
           ) : (
-            // LIST VIEW: Vertical list layout
-            <div className="max-w-6xl mx-auto space-y-4">
-              {jobPostsData.map((job) => (
-                <div
-                  key={job.jobPostId}
-                  className="card border border-gray-300 rounded-lg p-4 shadow flex flex-col sm:flex-row justify-between"
-                >
-                  <div className="flex-1">
+            <>
+              <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto" : "max-w-6xl mx-auto space-y-4"}>
+                {jobPostsData.map((job) => (
+                  <div
+                    key={job.jobPostId}
+                    className={`card border border-gray-300 ${viewType === "card" ? "hover:shadow-md hover:border-green-500 transition" : "rounded-lg shadow"} w-full ${viewType === "card" ? "max-w-sm" : ""} flex flex-col p-4 rounded-lg`}
+                  >
                     <h3 className="text-xl font-semibold">{job.title}</h3>
-                    <p className="mt-2">{job.description}</p>
+                    <p className="flex items-center gap-1">
+                      <FaMapMarkerAlt className="text-red-500" /> {job.address}
+                    </p>
+                    <p className="flex items-center gap-1">
+                      <MdDateRange className="text-blue-500" /> Posted: {new Date(job.datePosted).toLocaleDateString()}
+                    </p>
+                    <p className="flex items-center gap-1">
+                      <FaUsers className="text-purple-500" /> Max Applicants: {job.maxApplicants}
+                    </p>
+                    <p className="flex items-center gap-1">
+                      <FaRoute className="text-green-500" /> Distance: {parseFloat(job.relevantDistance).toFixed(2)} km
+                    </p>
+                    <p className="mt-2">
+                      <strong>Description:</strong>  {job.description.length > 100 ? job.description.slice(0, 100) + "..." : job.description}
+                    </p>
                     {job.tags && job.tags.length > 0 && (
-                      <p className="mt-2 text-sm">
-                        <strong>Tags:</strong> {job.tags.join(", ")}
+                      <p className="my-3 text-sm">
+                      
+                        {job.tags
+                          .map((tag) => Array.from(reversedTagMapping.entries()).find(([key, value]) => value === tag)?.[0])
+                          .join(", ")}
                       </p>
                     )}
+                    <input type="hidden" value={job.jobPostId} />
+                    <div className={`mt-4 ${viewType === "card" ? "" : "sm:mt-0 flex items-start sm:items-end"}`}>
+                      <button
+                        onClick={() => handleApply(job.jobPostId)}
+                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 flex items-center gap-2"
+                      >
+                        Apply Now
+                      </button>
+                    </div>
                   </div>
-                  <div className="mt-4 sm:mt-0 flex items-start sm:items-end">
-                    <button
-                      onClick={() => handleApply(job.jobPostId)}
-                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-                    >
-                      Apply Now
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
-        </>
-      )}
+
+
+          {/* Pagination */}
+          <div className="flex justify-center mt-8">
+            {/* Previous Button - Left arrow */}
+            <button
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 0}
+              className="w-32 px-4 py-2 mr-6 mx-1 bg-gray-300 text-black rounded-l-full rounded-r-md hover:bg-gray-400 disabled:opacity-50 flex justify-center"
+              id="navigate-page"
+              style={{ clipPath: "polygon(100% 0%, 85% 50%, 100% 100%, 0% 100%, 0% 0%)" }}
+            >
+              Previous
+            </button>
+
+            {renderPaginationButtons()}
+
+            {/* Next Button - Right arrow */}
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page === totalPages - 1 || (jobPostsData.length === 0)}
+              className="w-26 px-4 py-2 ml-6 mx-1 bg-gray-300 text-black rounded-r-full rounded-l-md hover:bg-gray-400 disabled:opacity-50 flex justify-center"
+              id="navigate-page"
+              style={{ clipPath: "polygon(0% 0%, 15% 50%, 0% 100%, 100% 100%, 100% 0%)" }}
+            >
+              Next
+            </button>
+          </div>
+
+
+        </div>
+      </div>
     </div>
   );
 }
