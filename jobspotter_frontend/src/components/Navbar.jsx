@@ -161,7 +161,7 @@ export default function Navbar() {
             </span>
             <div className="absolute hidden group-hover:block top-full right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg">
               <a
-                href="/MyJobs"
+                href="/myJobs"
                 className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 View My Jobs

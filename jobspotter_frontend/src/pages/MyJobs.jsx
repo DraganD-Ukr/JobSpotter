@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const tagMapping = new Map([
   ["GENERAL_HELP", "General Help"],
@@ -22,12 +23,12 @@ const tagMapping = new Map([
   ["MUSIC_INSTRUCTION", "Music Instruction"],
   ["HOME_MAINTENANCE", "Home Maintenance"],
   ["TRANSPORTATION_ASSISTANCE", "Transportation Assistance"],
-  ["ERRANDS/SHOPPING", "ERRANDS/SHOPPING"],
+  ["ERRANDS/SHOPPING", "ERRANDS_SHOPPING"],
   ["VOLUNTEER_WORK", "Volunteer Work"],
   ["COMMUNITY_EVENTS", "Community Events"],
   ["FUNDRAISING", "Fundraising"],
   ["ANIMAL_WELFARE", "Animal Welfare"],
-  ["Mentoring (Community)", "MENTORING"],
+  ["Mentoring (Community)", "Mentoring (Community)"],
   ["HEALTH_SUPPORT", "Health Support"],
   ["COUNSELING_SUPPORT", "Counseling Support"],
   ["DISASTER_RELIEF", "Disaster Relief"],
@@ -39,8 +40,8 @@ export function MyJobs() {
   const [myJobs, setMyJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [expandedJobId, setExpandedJobId] = useState(null);
-  const [viewType, setViewType] = useState("card");
+  const [viewType, setViewType] = useState("card"); // "card" or "list"
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchMyJobs();
@@ -57,11 +58,11 @@ export function MyJobs() {
         if (!res.ok) throw new Error("Failed to fetch my jobs");
         return res.json();
       })
-      .then((jobs) => {
-        const jobsWithFriendlyTags = jobs.map((job, index) => {
+      .then((data) => {
+        // Handle both paginated and non-paginated responses
+        const jobsArray = Array.isArray(data) ? data : data.content || [];
+        const jobsWithFriendlyTags = jobsArray.map((job, index) => {
           const finalJobId = String(job.jobPostId || job.jobId || job.id || index);
-
-          // Convert enum tags to friendly labels
           let friendlyTags = [];
           if (Array.isArray(job.tags)) {
             friendlyTags = job.tags.map((tagObj) => {
@@ -83,19 +84,13 @@ export function MyJobs() {
       .finally(() => setLoading(false));
   }
 
-  // Expand/collapse job details
-  function handleToggleDetails(jobId) {
-    setExpandedJobId((prev) => (prev === jobId ? null : jobId));
-  }
-
-  // Switch between "card" and "list" view
   function toggleView() {
     setViewType((prev) => (prev === "card" ? "list" : "card"));
   }
 
-  // Handle "Apply Now" 
-  function handleApply(jobId) {
-    alert(`Applying for job: ${jobId}`);
+  // Navigate to the slug page with jobId in the URL
+  function handleViewDetails(jobId) {
+    navigate(`/job/${jobId}`);
   }
 
   if (loading) {
@@ -118,49 +113,24 @@ export function MyJobs() {
         <p className="text-center">No jobs found.</p>
       ) : (
         <>
-          {/* Toggle View Button */}
           <div className="max-w-6xl mx-auto mb-4">
             <button
               onClick={toggleView}
               className="px-4 py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400"
             >
-              {viewType === "card"
-                ? "Switch to List View"
-                : "Switch to Card View"}
+              {viewType === "card" ? "Switch to List View" : "Switch to Card View"}
             </button>
           </div>
 
           {viewType === "card" ? (
-            /* ========== CARD VIEW ========== */
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
               {myJobs.map((job) => {
-                const {
-                  jobId,
-                  title,
-                  description,
-                  addressId,
-                  maxApplicants,
-                  tags,
-                  status,
-                } = job;
-                const isExpanded = expandedJobId === jobId;
-
+                const { jobId, title, description, tags } = job;
                 return (
                   <div
                     key={jobId}
-                    className="
-                      card
-                      border border-gray-300
-                      hover:shadow-md
-                      hover:border-green-500
-                      transition
-                      w-full
-                      max-w-sm
-                      flex
-                      flex-col
-                    "
+                    className="card border border-gray-300 hover:shadow-md hover:border-green-500 transition w-full max-w-sm flex flex-col p-4 rounded-md bg-white"
                   >
-                    {/* Title/Description */}
                     <h3 className="text-xl font-semibold">{title}</h3>
                     <p className="mt-2">{description}</p>
                     {tags && tags.length > 0 && (
@@ -168,75 +138,26 @@ export function MyJobs() {
                         <strong>Tags:</strong> {tags.join(", ")}
                       </p>
                     )}
-
-                    {/* Toggle details button */}
                     <div className="mt-4">
                       <button
-                        onClick={() => handleToggleDetails(jobId)}
+                        onClick={() => handleViewDetails(jobId)}
                         className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 w-full"
                       >
-                        {isExpanded ? "Hide Details" : "View More Details"}
+                        View More Details
                       </button>
                     </div>
-
-                    {/* Expanded Details */}
-                    {isExpanded && (
-                      <div className="mt-4 bg-gray-100 dark:bg-gray-800 rounded-lg p-3 shadow-inner">
-                        <p>
-                          <strong>Job ID:</strong> {jobId}
-                        </p>
-                        <p>
-                          <strong>Address ID:</strong> {addressId || "N/A"}
-                        </p>
-                        <p>
-                          <strong>Max Applicants:</strong> {maxApplicants || "N/A"}
-                        </p>
-                        {status && (
-                          <p>
-                            <strong>Status:</strong> {status}
-                          </p>
-                        )}
-                        {/* "Apply Now" or other actions if */}
-                        <button
-                          onClick={() => handleApply(jobId)}
-                          className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mt-3"
-                        >
-                          Apply Now
-                        </button>
-                      </div>
-                    )}
                   </div>
                 );
               })}
             </div>
           ) : (
-            /*List View*/
             <div className="max-w-6xl mx-auto space-y-4">
               {myJobs.map((job) => {
-                const {
-                  jobId,
-                  title,
-                  description,
-                  addressId,
-                  maxApplicants,
-                  tags,
-                  status,
-                } = job;
-                const isExpanded = expandedJobId === jobId;
-
+                const { jobId, title, description, tags } = job;
                 return (
                   <div
                     key={jobId}
-                    className="
-                      card
-                      border border-gray-300
-                      rounded-lg p-4
-                      shadow
-                      flex
-                      flex-col
-                      sm:flex-row
-                      justify-between
-                    "
+                    className="card border border-gray-300 rounded-lg p-4 shadow flex flex-col sm:flex-row justify-between bg-white"
                   >
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold">{title}</h3>
@@ -247,40 +168,13 @@ export function MyJobs() {
                         </p>
                       )}
                     </div>
-
                     <div className="mt-4 sm:mt-0 flex flex-col items-start sm:items-end justify-between">
                       <button
-                        onClick={() => handleToggleDetails(jobId)}
+                        onClick={() => handleViewDetails(jobId)}
                         className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
                       >
-                        {isExpanded ? "Hide Details" : "View More Details"}
+                        View More Details
                       </button>
-
-                      {isExpanded && (
-                        <div className="mt-4 bg-gray-100 dark:bg-gray-800 rounded-lg p-3 shadow-inner">
-                          <p>
-                            <strong>Job ID:</strong> {jobId}
-                          </p>
-                          <p>
-                            <strong>Address ID:</strong> {addressId || "N/A"}
-                          </p>
-                          <p>
-                            <strong>Max Applicants:</strong> {maxApplicants || "N/A"}
-                          </p>
-                          {status && (
-                            <p>
-                              <strong>Status:</strong> {status}
-                            </p>
-                          )}
-                          {/*"Apply Now"*/}
-                          <button
-                            onClick={() => handleApply(jobId)}
-                            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mt-3"
-                          >
-                            Apply Now
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
                 );

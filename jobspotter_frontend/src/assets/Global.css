@@ -24,9 +24,15 @@ body.darkMode {
   animation: lavaLampAnimation 10s ease infinite;
 }
 @keyframes lavaLampAnimation {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .sidebar {
@@ -47,15 +53,13 @@ body.darkMode {
   color: #ffffff;
 }
 
-/* Update card styles: */
 .card {
-  background-color: #ffffff;
+  background-color: #ffffff; 
   color: #000000;
   @apply p-6 shadow-md rounded-lg;
 }
-/* Change the dark mode card background to a gray tone (adjust as needed) */
 .darkMode .card {
-  background-color: #4a4a4a;
+  background-color: #4a4a4a; 
   color: #ffffff;
   box-shadow: none;
 }
@@ -87,5 +91,14 @@ body.darkMode {
   color: #ffffff;
 }
 .darkMode .nav-username {
+  color: #ffffff;
+}
+
+.details-panel {
+  background-color: #f8f8f8; 
+  color: #000000;
+}
+.darkMode .details-panel {
+  background-color: #4a4a4a; 
   color: #ffffff;
 }

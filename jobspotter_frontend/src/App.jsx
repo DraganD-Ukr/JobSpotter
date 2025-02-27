@@ -17,6 +17,7 @@ import { MyJobs } from "./pages/MyJobs";
 import { Settings } from "./pages/Settings";
 import { JobPostHistory } from "./pages/JobPostHistory";
 import { SearchJobPost } from "./pages/SearchJobPost";
+import { ViewMoreDetails } from "./pages/ViewMoreDetails";
 import Data from "./pages/Data";
 import Profile from "./pages/Profile";
 
@@ -38,10 +39,12 @@ export default function App() {
           <Route path="/data" element={<Data />} />
           <Route path="/address" element={<Address />} />
           <Route path="/createjobpost" element={<CreateJobPost />} />
-          <Route path="/myjobs" element={<MyJobs />} />
+          <Route path="/myJobs" element={<MyJobs />} />
           <Route path="/searchjobpost" element={<SearchJobPost />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/jobposthistory" element={<JobPostHistory />} />
+          <Route path="/ViewMoreDetails" element={<ViewMoreDetails />} />
+              <Route path="/job/:jobId" element={<ViewMoreDetails />} />
         </Routes>
       </div>
       <Footer />
