@@ -91,8 +91,18 @@ public class JobPostImpl implements JobPostService {
     public Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize) {
         // Split the tags string into a list of tag names
         List<String> tagList = (tags != null && !tags.isEmpty())
-                ? Arrays.stream(tags.split(",")).map(String::trim).toList()
-                : null;
+                ? Arrays.stream(tags.split(","))
+                .map(String::trim)  // Trim spaces to avoid errors
+                .map(tag -> {
+                    try {
+                        return JobTagEnum.valueOf(tag).getDisplayName();  // Convert to Enum and get display name
+                    } catch (IllegalArgumentException e) {
+                        return null;  // Handle invalid enum values (optional: log or throw exception)
+                    }
+                })
+                .filter(Objects::nonNull)  // Remove null values from invalid tags
+                .collect(Collectors.toList())
+                : new ArrayList<>();
         log.info("Tag list: {}", tagList);
         log.info("Title: {}", title);
 

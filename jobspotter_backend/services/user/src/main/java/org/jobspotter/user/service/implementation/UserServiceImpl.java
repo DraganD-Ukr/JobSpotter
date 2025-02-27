@@ -93,11 +93,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<UserResponse> getUserById(String accessToken) throws Exception {
+    public ResponseEntity<UserResponse> getUserById(UUID userId) throws Exception {
         User user;
 
 
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
         user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
 
