@@ -90,7 +90,7 @@ export function MyJobs() {
 
   // Navigate to the slug page with jobId in the URL
   function handleViewDetails(jobId) {
-    navigate(`/job/${jobId}`);
+    navigate(`/myJob/${jobId}`);
   }
 
   if (loading) {

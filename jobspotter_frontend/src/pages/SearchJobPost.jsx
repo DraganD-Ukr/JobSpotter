@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { FaList, FaTh, FaTag, FaChevronDown, FaChevronUp, FaMapMarkerAlt, FaUsers, FaRoute } from "react-icons/fa"; // Import icons for the toggle button and tags
 import { ThemeContext } from "../components/ThemeContext"; // Import ThemeContext for dark mode
 import { MdDateRange } from "react-icons/md";
@@ -535,48 +535,54 @@ export function SearchJobPost() {
             <p className="text-center">No jobs found.</p>
           ) : (
             <>
-              <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto" : "max-w-6xl mx-auto space-y-4"}>
-                {jobPostsData.map((job) => (
-                  <div
-                    key={job.jobPostId}
-                    className={`card border border-gray-300 ${viewType === "card" ? "hover:shadow-md hover:border-green-500 transition" : "rounded-lg shadow"} w-full ${viewType === "card" ? "max-w-sm" : ""} flex flex-col p-4 rounded-lg`}
-                  >
-                    <h3 className="text-xl font-semibold">{job.title}</h3>
-                    <p className="flex items-center gap-1">
-                      <FaMapMarkerAlt className="text-red-500" /> {job.address}
-                    </p>
-                    <p className="flex items-center gap-1">
-                      <MdDateRange className="text-blue-500" /> Posted: {new Date(job.datePosted).toLocaleDateString()}
-                    </p>
-                    <p className="flex items-center gap-1">
-                      <FaUsers className="text-purple-500" /> Max Applicants: {job.maxApplicants}
-                    </p>
-                    <p className="flex items-center gap-1">
-                      <FaRoute className="text-green-500" /> Distance: {parseFloat(job.relevantDistance).toFixed(2)} km
-                    </p>
-                    <p className="mt-2">
-                      <strong>Description:</strong>  {job.description.length > 100 ? job.description.slice(0, 100) + "..." : job.description}
-                    </p>
-                    {job.tags && job.tags.length > 0 && (
-                      <p className="my-3 text-sm">
-
-                        {job.tags
-                          .map((tag) => Array.from(reversedTagMapping.entries()).find(([key, value]) => value === tag)?.[0])
-                          .join(", ")}
+              
+                <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto" : "max-w-6xl mx-auto space-y-4"}>
+                  {jobPostsData.map((job) => (
+                    <Link to={`/job/${job.jobPostId}`}
+                key={job.jobPostId}
+              >
+                    <div
+                      key={job.jobPostId}
+                      className={`card border border-gray-300 ${viewType === "card" ? "hover:shadow-md hover:border-green-500 transition" : "rounded-lg shadow"} w-full ${viewType === "card" ? "max-w-sm" : ""} flex flex-col p-4 rounded-lg`}
+                    >
+                      <h3 className="text-xl font-semibold">{job.title}</h3>
+                      <p className="flex items-center gap-1">
+                        <FaMapMarkerAlt className="text-red-500" /> {job.address}
                       </p>
-                    )}
-                    <input type="hidden" value={job.jobPostId} />
-                    <div className={`mt-4 ${viewType === "card" ? "" : "sm:mt-0 flex items-start sm:items-end"}`}>
-                      <button
-                        onClick={() => handleApply(job.jobPostId)}
-                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 flex items-center gap-2"
-                      >
-                        Apply Now
-                      </button>
+                      <p className="flex items-center gap-1">
+                        <MdDateRange className="text-blue-500" /> Posted: {new Date(job.datePosted).toLocaleDateString()}
+                      </p>
+                      <p className="flex items-center gap-1">
+                        <FaUsers className="text-purple-500" /> Max Applicants: {job.maxApplicants}
+                      </p>
+                      <p className="flex items-center gap-1">
+                        <FaRoute className="text-green-500" /> Distance: {parseFloat(job.relevantDistance).toFixed(2)} km
+                      </p>
+                      <p className="mt-2">
+                        <strong>Description:</strong>  {job.description.length > 100 ? job.description.slice(0, 100) + "..." : job.description}
+                      </p>
+                      {job.tags && job.tags.length > 0 && (
+                        <p className="my-3 text-sm">
+
+                          {job.tags
+                            .map((tag) => Array.from(reversedTagMapping.entries()).find(([key, value]) => value === tag)?.[0])
+                            .join(", ")}
+                        </p>
+                      )}
+                      <input type="hidden" value={job.jobPostId} />
+                      <div className={`mt-4 ${viewType === "card" ? "" : "sm:mt-0 flex items-start sm:items-end"}`}>
+                        <button
+                          onClick={() => handleApply(job.jobPostId)}
+                          className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 flex items-center gap-2"
+                        >
+                          Apply Now
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                    </Link>
+                  ))}
+                </div>
+              
             </>
           )}
 
