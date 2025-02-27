@@ -19,12 +19,17 @@ import { JobPostHistory } from "./pages/JobPostHistory";
 import { SearchJobPost } from "./pages/SearchJobPost";
 import Data from "./pages/Data";
 import Profile from "./pages/Profile";
+import { useLocation } from "react-router-dom";
+
 
 export default function App() {
+  const location = useLocation();
+  const isJobPostPage = location.pathname === "/SearchJobPost";
+
   return (
     <ThemeProvider>
       <Navbar />
-      <div className="container mx-auto p-4 min-h-screen">
+      <div className={`p-4 min-h-screen ${isJobPostPage ? "mx-20" : "container mx-auto"}`}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />

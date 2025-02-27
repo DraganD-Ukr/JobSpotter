@@ -55,17 +55,194 @@ body.darkMode {
 }
 /* Change the dark mode card background to a gray tone (adjust as needed) */
 .darkMode .card {
-  background-color: #4a4a4a;
+  background-color: #292c26;
   color: #ffffff;
   box-shadow: none;
+}
+
+.darkMode .textbox {
+  background-color: #2f2f2f;
+  color: #ffffff;
 }
 
 .darkMode button,
 .darkMode input[type="button"],
 .darkMode input[type="submit"] {
-  background-color: #444444;
+  background-color: #28e85c70;
   color: #ffffff;
 }
+
+.darkMode button:hover,
+.darkMode input[type="button"]:hover,
+.darkMode input[type="submit"]:hover {
+  background-color: #28e85b3e;
+}
+
+/* transition of color on hover for dark mode */
+.darkMode button,
+.darkMode input[type="button"],
+.darkMode input[type="submit"] {
+  transition: background-color 0.3s ease;
+}
+
+button,
+input[type="button"],
+input[type="submit"] {
+  transition: background-color 0.3s ease;
+}
+
+
+/* Dark mode styling for select */
+.darkMode select {
+  background-color: #2f2f2f; /* Dark background */
+  color: #ffffff; /* White text */
+  border-color: #444444; /* Dark border color */
+}
+
+/* Dark mode styling for options */
+.darkMode option {
+  background-color: #2f2f2f; /* Dark background for options */
+  color: #ffffff; /* White text for options */
+}
+
+/* Color for placeholder in text input for dark mode */
+.darkMode input[type="text"]::placeholder {
+  color: #b4b0b093; /* White placeholder text */
+}
+
+.darkMode button:active,
+.darkMode input[type="button"]:active,
+.darkMode input[type="submit"]:active {
+  background-color: #333333;
+}
+
+
+
+
+
+
+
+
+
+/* Dark mode properties for certain elements */
+
+/* Page button in pagination */
+.darkMode #page-button {
+  background-color: #4a4d4b; /* Neutral gray */
+  color: #ffffff;
+}
+
+.darkMode #page-button:hover {
+  background-color: #3a3c3b; /* Slightly darker on hover */
+  color: #ffffff;
+}
+
+/* Active page button in pagination */
+.darkMode #active-page {
+  background-color: #2f6b38; /* Dark green */
+  color: #ffffff;
+}
+
+.darkMode #active-page:hover {
+  background-color: #24552a;
+  color: #ffffff;
+}
+
+/* Next & Previous buttons */
+.darkMode #navigate-page {
+  background-color: #606463; /* Darker gray for a distinct look */
+  color: #ffffff;
+}
+
+.darkMode #navigate-page:hover {
+  background-color: #424443; /* A bit darker on hover */
+  color: #ffffff;
+}
+
+/* '...' button on pagination */
+.darkMode #other-pages {
+  background-color: #3c3f3e; /* Different from Next/Previous, slightly lighter */
+  color: #bfbfbf; /* Light gray text for subtle contrast */
+}
+
+.darkMode #other-pages:hover {
+  background-color: #2b2c2b; /* Darker but not too harsh */
+  color: #ffffff;
+}
+
+.darkMode #toggle-view{
+  background-color: #4a4d4b; /* Neutral gray */
+  color: #ffffff;
+}
+
+.darkMode #toggle-view:hover {
+  background-color: #3a3c3b; /* Slightly darker on hover */
+  color: #ffffff;
+}
+
+.darkMode #distance-range-input{
+  color: #ffffff; /* White text */
+  border-color: #444444; /* Dark border color */
+}
+
+.darkMode #distance-range-input-ticks {
+  color: #545151; /* Green thumb */
+}
+
+
+
+/* Job Post Search Range Slider */
+
+/* Custom range slider */
+.range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right, #3b82f6 0%, #3b82f6 50%, #d1d5db 50%, #d1d5db 100%);
+  border-radius: 8px;
+  outline: none;
+  transition: background 0.15s ease-in-out;
+}
+
+/* Remove default appearance */
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.range-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.range-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+}
+
+
+
+
+
+
+
+
+
+
 
 .footer {
   background-color: #ffffff;
