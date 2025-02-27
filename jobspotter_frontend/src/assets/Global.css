@@ -114,6 +114,10 @@ input[type="submit"] {
   color: #b4b0b093; /* White placeholder text */
 }
 
+input[type="text"]::placeholder {
+  color: #3d3939ad; /* White placeholder text */
+}
+
 .darkMode button:active,
 .darkMode input[type="button"]:active,
 .darkMode input[type="submit"]:active {

@@ -94,15 +94,25 @@ export function SearchJobPost() {
 
   function fetchJobs() {
     setLoading(true);
-    // Use search API if title parameter exists; otherwise fetch all jobs.
+
+    // Read query parameters
     const query = searchParams.get("title") || "";
-    const tags = searchParams.get("tags") || "";
+    let tags = searchParams.get("tags") || "";  // This will be a comma-separated string
     const latitude = searchParams.get("latitude") || "";
     const longitude = searchParams.get("longitude") || "";
     const radius = searchParams.get("radius") || "";
     const size = 10;
 
-    const endpoint = `/api/v1/job-posts/search?title=${encodeURIComponent(query)}&tags=${encodeURIComponent(tags)}&latitude=${latitude}&longitude=${longitude}&radius=${radius}&pageNumber=${page}&size=${size}`;
+
+    // Ensure tagArray is an array and join the tags into a string
+    const tagArray = filters.tags || []; // Default to an empty array if filters.tags is undefined or null
+    const tagsParam = tagArray.length > 0 ? (tagArray.join(",")) : ""; // Only join if tags are present
+
+    // Construct the API endpoint
+    const endpoint = `/api/v1/job-posts/search?title=${encodeURIComponent(query)}&tags=${encodeURIComponent(tagsParam)}&latitude=${latitude}&longitude=${longitude}&radius=${radius}&pageNumber=${page}&size=${size}`;
+
+    // Log the endpoint for debugging
+    console.log(endpoint);
 
     fetch(endpoint, {
       method: "GET",
@@ -116,10 +126,9 @@ export function SearchJobPost() {
       .then((data) => {
         const jobsArray = data.content || [];
         setJobPostsData(processJobs(jobsArray));
-        // When fetching jobs, update totalElements
 
+        // Update total elements and total pages
         setTotalElements(data.totalElements);
-
         setTotalPages(data.totalPages);
       })
       .catch((err) => {
@@ -128,6 +137,7 @@ export function SearchJobPost() {
       })
       .finally(() => setLoading(false));
   }
+
 
   // Convert tag enums to friendly names
   function processJobs(jobs) {
@@ -156,8 +166,15 @@ export function SearchJobPost() {
   // On search submit, update URL query parameter; triggers refetch via useEffect
   function handleSearchSubmit(e) {
     e.preventDefault();
-    setSearchParams({ ...filters, title: localQuery });
+
+    // Join the tags array into a comma-separated string
+    const tagsParam = filters.tags.join(",");
+
+    // Update the search parameters
+    setSearchParams({ ...filters, title: localQuery, tags: tagsParam });
   }
+
+
 
   // Handle filter changes
   function handleFilterChange(e) {
@@ -351,151 +368,151 @@ export function SearchJobPost() {
       <div className="flex">
         {/* Filters */}
         <div className="w-1/5 pr-12 border-r ml-42 mr-4">
-      <h3 className="text-xl font-bold mb-4">Filters</h3>
-      <form onSubmit={handleSearchSubmit}>
-        {/* Tags Section */}
-        <div className="mb-4 p-4 border rounded-md">
-          <div className="flex justify-between items-center cursor-pointer" onClick={toggleTagsCollapse}>
-            <h4 className="text-lg font-semibold">Tags</h4>
-            {isTagsCollapsed ? (
-              <FaChevronUp className="text-gray-500" />
-            ) : (
-              <FaChevronDown className="text-gray-500" />
-            )}
-          </div>
-          <div
-            className={`transition-all ease-in-out duration-500 overflow-hidden ${isTagsCollapsed ? "max-h-screen opacity-100" : "max-h-0 opacity-0"}`}
-          >
-            <div className="flex flex-wrap gap-2 mb-2">
-              {filters.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className={`px-2 py-1 rounded-full flex items-center ${getTagColor(tag)}`}
+          <h3 className="text-xl font-bold mb-4">Filters</h3>
+          <form onSubmit={handleSearchSubmit}>
+            {/* Tags Section */}
+            <div className="mb-4 p-4 border rounded-md">
+              <div className="flex justify-between items-center cursor-pointer" onClick={toggleTagsCollapse}>
+                <h4 className="text-lg font-semibold">Tags</h4>
+                {isTagsCollapsed ? (
+                  <FaChevronUp className="text-gray-500" />
+                ) : (
+                  <FaChevronDown className="text-gray-500" />
+                )}
+              </div>
+              <div
+                className={`transition-all ease-in-out duration-500 overflow-hidden ${isTagsCollapsed ? "max-h-screen opacity-100" : "max-h-0 opacity-0"}`}
+              >
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {filters.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className={`px-2 py-1 rounded-full flex items-center ${getTagColor(tag)}`}
+                    >
+                      <FaTag className="mr-2" />
+                      <span className="mr-2">
+                        {Array.from(reversedTagMapping.entries()).find(([key, value]) => value === tag)?.[0]}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <select
+                  name="tags"
+                  value=""
+                  onChange={(e) => handleAddTag(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-md"
                 >
-                  <FaTag className="mr-2" />
-                  <span className="mr-2">
-                    {Array.from(reversedTagMapping.entries()).find(([key, value]) => value === tag)?.[0]}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    &times;
-                  </button>
-                </span>
-              ))}
-            </div>
-            <select
-              name="tags"
-              value=""
-              onChange={(e) => handleAddTag(e.target.value)}
-              className="w-full px-4 py-2 border rounded-md"
-            >
-              <option value="">Select a tag</option>
-              {Array.from(reversedTagMapping.keys()).map((tag) => (
-                <option key={tag} value={reversedTagMapping.get(tag)}>
-                  {tag}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Location Section */}
-        <div className="mb-4 p-4 border rounded-md">
-          <div className="flex justify-between items-center cursor-pointer" onClick={toggleLocationCollapse}>
-            <h4 className="text-lg font-semibold">Location</h4>
-            {isLocationCollapsed ? (
-              <FaChevronUp className="text-gray-500" />
-            ) : (
-              <FaChevronDown className="text-gray-500" />
-            )}
-          </div>
-          <div
-            className={`transition-all ease-in-out duration-500 overflow-hidden ${isLocationCollapsed ? "max-h-screen opacity-100" : "max-h-0 opacity-0"}`}
-          >
-            <input
-              type="text"
-              name="address"
-              placeholder="Enter address"
-              className="w-full px-4 py-2 border rounded-md mb-2"
-              onChange={(e) => {
-                const [latitude, longitude] = e.target.value.split(",");
-                setFilters((prev) => ({
-                  ...prev,
-                  latitude: parseFloat(latitude),
-                  longitude: parseFloat(longitude),
-                }));
-              }}
-            />
-            <button
-              type="button"
-              onClick={handleLocationSearch}
-              className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-            >
-              Use Current Location
-            </button>
-            {filters.latitude && filters.longitude && (
-              <p className="text-sm text-green-500 mt-2 text-center">
-                Using your current location
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Radius Section */}
-        <div className="mb-4 p-4 border rounded-md">
-          <div className="flex justify-between items-center cursor-pointer" onClick={toggleRadiusCollapse}>
-            <h4 className="text-lg font-semibold">Radius (km)</h4>
-            {isRadiusCollapsed ? (
-              <FaChevronUp className="text-gray-500" />
-            ) : (
-              <FaChevronDown className="text-gray-500" />
-            )}
-          </div>
-          <div
-            className={`transition-all ease-in-out duration-500 overflow-hidden ${isRadiusCollapsed ? "max-h-screen opacity-100" : "max-h-0 opacity-0"}`}
-          >
-            <div className="relative w-full">
-              <input
-                id="distance-range-slider"
-                type="range"
-                name="radius"
-                min="0"
-                max="500"
-                value={filters.radius}
-                onChange={handleFilterChange}
-                className="w-full h-2 rounded-lg appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, #3b82f6 ${filters.radius / 5}%, #d1d5db ${filters.radius / 5}%)`,
-                }}
-              />
-              <div className="absolute w-full top-4 flex justify-between">
-                {[0, 100, 200, 300, 400, 500].map((value) => (
-                  <div key={value} className="relative">
-                    <div className="w-0.5 h-3 bg-gray-500 mx-auto"></div>
-                  </div>
-                ))}
+                  <option value="">Select a tag</option>
+                  {Array.from(reversedTagMapping.keys()).map((tag) => (
+                    <option key={tag} value={reversedTagMapping.get(tag)}>
+                      {tag}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
-            <div className="flex justify-between text-xs text-gray-600 mt-1">
-              {[0, 100, 200, 300, 400, 500].map((value) => (
-                <span key={value} className="w-8 text-center">{value}</span>
-              ))}
-            </div>
-            <p className="text-sm mt-2 text-gray-600">Radius: {filters.radius} km</p>
-          </div>
-        </div>
 
-        <button
-          type="submit"
-          className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-        >
-          Apply Filters
-        </button>
-      </form>
-    </div>
+            {/* Location Section */}
+            <div className="mb-4 p-4 border rounded-md">
+              <div className="flex justify-between items-center cursor-pointer" onClick={toggleLocationCollapse}>
+                <h4 className="text-lg font-semibold">Location</h4>
+                {isLocationCollapsed ? (
+                  <FaChevronUp className="text-gray-500" />
+                ) : (
+                  <FaChevronDown className="text-gray-500" />
+                )}
+              </div>
+              <div
+                className={`transition-all ease-in-out duration-500 overflow-hidden ${isLocationCollapsed ? "max-h-screen opacity-100" : "max-h-0 opacity-0"}`}
+              >
+                <input
+                  type="text"
+                  name="address"
+                  placeholder="Enter address"
+                  className="w-full px-4 py-2 border rounded-md mb-2"
+                  onChange={(e) => {
+                    const [latitude, longitude] = e.target.value.split(",");
+                    setFilters((prev) => ({
+                      ...prev,
+                      latitude: parseFloat(latitude),
+                      longitude: parseFloat(longitude),
+                    }));
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleLocationSearch}
+                  className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                >
+                  Use Current Location
+                </button>
+                {filters.latitude && filters.longitude && (
+                  <p className="text-sm text-green-500 mt-2 text-center">
+                    Using your current location
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Radius Section */}
+            <div className="mb-4 p-4 border rounded-md">
+              <div className="flex justify-between items-center cursor-pointer" onClick={toggleRadiusCollapse}>
+                <h4 className="text-lg font-semibold">Radius (km)</h4>
+                {isRadiusCollapsed ? (
+                  <FaChevronUp className="text-gray-500" />
+                ) : (
+                  <FaChevronDown className="text-gray-500" />
+                )}
+              </div>
+              <div
+                className={`transition-all ease-in-out duration-500 overflow-hidden ${isRadiusCollapsed ? "max-h-screen opacity-100" : "max-h-0 opacity-0"}`}
+              >
+                <div className="relative w-full">
+                  <input
+                    id="distance-range-slider"
+                    type="range"
+                    name="radius"
+                    min="0"
+                    max="500"
+                    value={filters.radius}
+                    onChange={handleFilterChange}
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, #3b82f6 ${filters.radius / 5}%, #d1d5db ${filters.radius / 5}%)`,
+                    }}
+                  />
+                  <div className="absolute w-full top-4 flex justify-between">
+                    {[0, 100, 200, 300, 400, 500].map((value) => (
+                      <div key={value} className="relative">
+                        <div className={`w-0.5 h-3 bg-gray-500 mx-auto`}></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  {[0, 100, 200, 300, 400, 500].map((value) => (
+                    <span key={value} className="w-8 text-center">{value}</span>
+                  ))}
+                </div>
+                <p className="text-sm mt-2 text-gray-600">Radius: {filters.radius} km</p>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+            >
+              Apply Filters
+            </button>
+          </form>
+        </div>
 
 
         {/* Job Posts */}
@@ -542,7 +559,7 @@ export function SearchJobPost() {
                     </p>
                     {job.tags && job.tags.length > 0 && (
                       <p className="my-3 text-sm">
-                      
+
                         {job.tags
                           .map((tag) => Array.from(reversedTagMapping.entries()).find(([key, value]) => value === tag)?.[0])
                           .join(", ")}
