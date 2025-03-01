@@ -83,11 +83,17 @@ public class JobPostController {
     //Get job post with detailed information
     @GetMapping("/my-job-post/{id}")
     public ResponseEntity<MyJobPostDetailedResponse> getMyJobPostDetails(
+
+            @RequestHeader("Authorization") String accessToken,
+
             @Parameter(description = "Job post id")
             @PathVariable Long id
             ) throws Exception {
+
         log.info("Getting my job post details");
-        return ResponseEntity.ok(jobPostService.getMyJobPostDetails(id));
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+        return ResponseEntity.ok(jobPostService.getMyJobPostDetails(userId, id));
     }
 
     //Search job posts using query parameters 'title', 'tag' , 'latitude' , 'longitude' , 'radius' and 'page' and 'size'
@@ -315,6 +321,7 @@ public class JobPostController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
+
     @PutMapping ("/my-job-posts/{id}/start")
     public ResponseEntity<HttpStatus> startJobPost(
             @RequestHeader("Authorization") String accessToken,

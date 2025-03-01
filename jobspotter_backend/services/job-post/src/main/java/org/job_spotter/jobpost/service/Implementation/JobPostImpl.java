@@ -43,9 +43,13 @@ public class JobPostImpl implements JobPostService {
 
 
     @Override
-    public MyJobPostDetailedResponse getMyJobPostDetails(Long jobPostId) {
+    public MyJobPostDetailedResponse getMyJobPostDetails(UUID userId, Long jobPostId) {
         JobPost jobPost = jobPostRepository.findById(jobPostId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + jobPostId));
+
+        if(!jobPost.getJobPosterId().equals(userId)){
+            throw new UnauthorizedException("You are not authorized to view this job post.");
+        }
 
         return MyJobPostDetailedResponse.builder()
                 .jobPostId(jobPost.getJobPostId())

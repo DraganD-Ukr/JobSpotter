@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface JobPostService {
 
-    MyJobPostDetailedResponse getMyJobPostDetails(Long jobPostId);
+    MyJobPostDetailedResponse getMyJobPostDetails(UUID userId, Long jobPostId);
 
     Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize);
 
