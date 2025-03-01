@@ -14,7 +14,7 @@ public interface UserService {
 
     ResponseEntity<HttpStatus> logoutUser(String accessToken) throws Exception;
 
-    ResponseEntity<UserResponse> getUserById(String accessToken) throws Exception;
+    ResponseEntity<UserResponse> getUserById(UUID userId) throws Exception;
 
     ResponseEntity<UserResponse> updateUser(UUID userId, UserPatchRequest userPatchRequest);
 

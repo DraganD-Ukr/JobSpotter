@@ -151,7 +151,7 @@ public class UserServiceImplUnitTests {
                 jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
                 when(userRepository.findById(userId)).thenReturn(Optional.ofNullable(user));
 
-                ResponseEntity<UserResponse> response = userService.getUserById(accessToken);
+                ResponseEntity<UserResponse> response = userService.getUserById(userId);
 
                 assertEquals(HttpStatus.OK, response.getStatusCode());
                 assertEquals(user.getUserId(), response.getBody().getUserId());
@@ -165,12 +165,13 @@ public class UserServiceImplUnitTests {
         void getUserById_NotFound() {
 
             String accessToken = "testToken";
+            UUID userId = UUID.randomUUID();
             try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class)) {
 
                 jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(UUID.randomUUID());
                 when(userRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
-                assertThrows(ResourceNotFoundException.class, () -> userService.getUserById(accessToken));
+                assertThrows(ResourceNotFoundException.class, () -> userService.getUserById(userId));
 
                 verify(userRepository).findById(any(UUID.class));
 

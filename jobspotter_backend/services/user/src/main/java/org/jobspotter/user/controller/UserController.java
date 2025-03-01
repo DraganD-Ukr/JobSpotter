@@ -163,7 +163,17 @@ public class UserController {
             @RequestHeader("Authorization") String accessToken
     ) throws Exception {
         log.info("Getting user details");
-        return userService.getUserById(accessToken);
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+        return userService.getUserById(userId);
+    }
+
+//    Get user by id
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserResponse> getUserById(
+            @PathVariable UUID userId
+    ) throws Exception {
+        log.info("Getting user details");
+        return userService.getUserById(userId);
     }
 
 

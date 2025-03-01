@@ -2,6 +2,7 @@ package org.job_spotter.jobpost.repository.specification;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.job_spotter.jobpost.model.JobPost;
 import org.job_spotter.jobpost.model.Tag;
@@ -32,25 +33,26 @@ public class JobPostSpecification {
      * @return Specification
      */
     //This has tags method returns if the either of the tags are present in the job post
+// Create the specification to filter by tags
     public static Specification<JobPost> hasTags(List<String> tagNames) {
         return (root, query, criteriaBuilder) -> {
             if (tagNames == null || tagNames.isEmpty()) {
-                return criteriaBuilder.conjunction(); // Always true condition
+                return criteriaBuilder.conjunction(); // Always true if no tags are provided
             }
-
-            // Ensure distinct job posts
-            query.distinct(true);
 
             // Join JobPost with Tag table
             Join<JobPost, Tag> tags = root.join("tags");
 
-            // Create a predicate for each tag name and combine them with OR
-            return tagNames.stream()
-                    .map(tagName -> criteriaBuilder.equal(criteriaBuilder.lower(tags.get("name")), tagName.toLowerCase()))
-                    .reduce(criteriaBuilder::or)
-                    .orElse(criteriaBuilder.conjunction());
+            // Return a predicate to check if the job has at least one of the specified tags
+            return tags.get("name").in(tagNames);
         };
     }
+
+
+
+
+
+
 
     /**
      * Filter job posts by similar title or weather phrase is present in the job post title
@@ -107,8 +109,14 @@ public class JobPostSpecification {
                     )
             );
 
-            // To reflect ORDER BY distance ASC in SQL (optional, for sorting results if needed)
+            // Ensure the computed distance appears in SELECT list
             assert query != null;
+            query.multiselect(root, distanceExpr);
+
+            // Remove DISTINCT to allow ORDER BY to work
+            query.distinct(false);
+
+            // Order by distance
             query.orderBy(criteriaBuilder.asc(distanceExpr));
 
             return criteriaBuilder.lessThanOrEqualTo(distanceExpr, radiusKm);
