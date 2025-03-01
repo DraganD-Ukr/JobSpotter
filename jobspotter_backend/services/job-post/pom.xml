@@ -104,6 +104,28 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.hibernate.search/hibernate-search-mapper-orm -->
+		<dependency>
+			<groupId>org.hibernate.search</groupId>
+			<artifactId>hibernate-search-mapper-orm</artifactId>
+			<version>7.2.2.Final</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.hibernate.search/hibernate-search-backend-lucene -->
+		<dependency>
+			<groupId>org.hibernate.search</groupId>
+			<artifactId>hibernate-search-backend-lucene</artifactId>
+			<version>7.2.2.Final</version>
+		</dependency>
+
+		<!--Logger (compatible For Hibernate)-->
+		<dependency>
+			<groupId>org.jboss.logging</groupId>
+			<artifactId>jboss-logging</artifactId>
+			<version>3.6.1.Final</version>
+		</dependency>
+
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

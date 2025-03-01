@@ -1,19 +1,35 @@
 package org.job_spotter.jobpost.repository.specification;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Session;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.job_spotter.jobpost.model.JobPost;
 import org.job_spotter.jobpost.model.Tag;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.UUID;
 
 @Slf4j
-public class JobPostSpecification {
+@Component
+public class JobPostSpecification implements ApplicationContextAware {
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        JobPostSpecification.applicationContext = applicationContext;
+    }
+    private static ApplicationContext applicationContext;
+
 
     //This has status method returns if the status is present in the job post
     public static Specification<JobPost> hasStatus(String status) {
@@ -50,22 +66,64 @@ public class JobPostSpecification {
 
 
 
-
-
-
-
     /**
-     * Filter job posts by similar title or weather phrase is present in the job post title
+     * Filter job posts by title present in the job post
+     * uses the title to filter the job posts
+     * if the title is present in the job post then it returns the job post
+     * Contains full text search
      *
-     * @param title Title from which the job post is to be filtered
+     * @param title Title to filter the job posts
      * @return Specification
      */
     //This has title method returns if the title is present in the job post
     public static Specification<JobPost> hasTitle(String title) {
-        return (root, query, criteriaBuilder) ->
-                StringUtils.hasText(title) ?
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), "%" + title.toLowerCase() + "%") :
-                        criteriaBuilder.conjunction(); // Match all if title is null
+        return (root, query, criteriaBuilder) -> {
+
+            //annul the condition if the title is not present (Like just sating if(True))
+            if(!StringUtils.hasText(title)) {
+                criteriaBuilder.conjunction(); // Always true condition
+            }
+
+            //Gets entity manager from the application context
+            EntityManager entityManager = applicationContext.getBean(EntityManager.class);
+
+            //Create a search session from the entity manager
+            SearchSession searchSession = Search.session(unwrapEntityManager(entityManager));
+
+            List<Long> jobPostIds = searchSession.search(JobPost.class)
+
+                    //Search for the title in the job post
+                    .where(f -> f.match()
+                            .field("title")
+                            .matching(title)
+                            .fuzzy(1)
+                    )
+
+                    //Fetch hits returns list of How many Likely Results
+                    .fetchHits(100)
+
+                    //Map the job post id to a list.Using stream to work with the Collection
+                    .stream()
+                    .map(JobPost::getJobPostId)
+
+                    //Collect the results to a list
+                    .toList();
+
+            //Return a disjunction if the job post ids are empty
+            if(jobPostIds.isEmpty()) {
+                return criteriaBuilder.disjunction(); // Always true condition
+            }
+
+            //Return the job post id if the title is present in the job post
+            return root.get("jobPostId").in(jobPostIds);
+        };
+
+
+    }
+
+    //Helper method to has title
+    private static Session unwrapEntityManager(EntityManager entityManager) {
+        return entityManager.unwrap(Session.class);
     }
 
     /**
@@ -198,8 +256,8 @@ public class JobPostSpecification {
     // Searching Job Posts By User Id
     public static Specification<JobPost> filterByParamsJobWorkedOn(String status, String title, UUID userId) {
         return Specification.where(wasWorkedOnBy(userId)) // Always filter by userId
-                .and(hasStatus(status))
-                .and(hasTitle(title));
+                .and(hasTitle(title))
+                .and(hasStatus(status));
     }
 
 }

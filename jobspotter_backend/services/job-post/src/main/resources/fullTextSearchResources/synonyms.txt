@@ -1,0 +1,2 @@
+ needed,need,requirement,necessity,demand,desire,want,must,urgency,craving,prerequisite,essential
+ home,accommodation,house,apartment,flat,property,real estate,building,place,location,habitat

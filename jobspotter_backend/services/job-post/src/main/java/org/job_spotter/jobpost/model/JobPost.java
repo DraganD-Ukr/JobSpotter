@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Min;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -20,6 +22,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
+@Indexed
 @Table(name = "job_post")
 public class JobPost {
 
@@ -54,6 +57,7 @@ public class JobPost {
     private Set<Applicant> applicants = new HashSet<>();
 
     //Title of the job
+    @FullTextField(analyzer = "job_post_analyzer")
     @Column(nullable = false, length = 255)
     private String title;
 
