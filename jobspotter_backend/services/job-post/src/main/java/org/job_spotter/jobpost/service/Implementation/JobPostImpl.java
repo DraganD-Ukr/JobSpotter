@@ -510,6 +510,9 @@ public class JobPostImpl implements JobPostService {
 
     }
 
+
+//This Function returns Job post based on job p[ost worked on response DTO which incudes job post details and applicant details from
+//applicant model
     @Override
     public Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title) {
 
@@ -522,38 +525,49 @@ public class JobPostImpl implements JobPostService {
         }
 
         // Create a Specification with dynamic filters
-        Specification<JobPost> spec = JobPostSpecification.filterByParams(status, title, userId);
+        Specification<JobPost> spec = JobPostSpecification.filterByParamsJobWorkedOn(status, title, userId);
 
-//
+        // Define the sort direction
         Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         // Paginate and sort
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
         // Fetch the filtered and paginated results
         Page<JobPost> jobPosts = jobPostSpecificationRepository.findAll(spec, pageable);
-
-        return jobPosts.map(this::convertToResponse);
+        return jobPosts.map(jobPost -> JobPostsUserWorkedOnResponse.builder()
+                .jobPostId(jobPost.getJobPostId())
+                .tags(jobPost.getTags())
+                .title(jobPost.getTitle())
+                .description(jobPost.getDescription())
+                .address(jobPost.getAddress())
+                .datePosted(jobPost.getDatePosted())
+                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                .applicantsCount(jobPost.getApplicants().size())
+                .maxApplicants(jobPost.getMaxApplicants())
+                .applicantStatus(jobPost.getApplicants().stream()
+                        .filter(applicant -> applicant.getUserId().equals(userId))
+                        .findFirst()
+                        .map(Applicant::getStatus)
+                        .orElse(null))
+                .dateApplied(jobPost.getApplicants().stream()
+                        .filter(applicant -> applicant.getUserId().equals(userId))
+                        .findFirst()
+                        .map(Applicant::getDateApplied)
+                        .orElse(null))
+                .lastApplicantStatusChange(jobPost.getApplicants().stream()
+                        .filter(applicant -> applicant.getUserId().equals(userId))
+                        .findFirst()
+                        .map(Applicant::getDateUpdated)
+                        .orElse(null))
+                .status(jobPost.getStatus())
+                .build()
+        );
 
     }
 
 
 //    ----------------------------------------- Helper methods -----------------------------------------
 
-    // Helper method to map JobPost to MyJobPostResponse
-    private JobPostsUserWorkedOnResponse convertToResponse(JobPost jobPost) {
-        return JobPostsUserWorkedOnResponse.builder()
-                .jobPostId(jobPost.getJobPostId())
-                .tags(jobPost.getTags())
-                .applicantsCount(jobPost.getApplicants().size()) // Assuming applicants is a collection
-                .title(jobPost.getTitle())
-                .description(jobPost.getDescription())
-                .address(jobPost.getAddress())
-                .datePosted(jobPost.getDatePosted())
-                .lastUpdatedAt(jobPost.getLastUpdatedAt())
-                .maxApplicants(jobPost.getMaxApplicants())
-                .status(jobPost.getStatus())
-                .build();
-    }
 
     private void checkIfUserIsJobPoster(UUID userId, JobPost jobPost) {
         if (!jobPost.getJobPosterId().equals(userId)) {

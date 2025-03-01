@@ -188,7 +188,7 @@ public class JobPostSpecification {
      */
     // Combine multiple filters into a single specification
     // Searching Job Posts By User Id
-    public static Specification<JobPost> filterByParams(String status, String title, UUID userId) {
+    public static Specification<JobPost> filterByParamsJobWorkedOn(String status, String title, UUID userId) {
         return Specification.where(wasWorkedOnBy(userId)) // Always filter by userId
                 .and(hasStatus(status))
                 .and(hasTitle(title));
