@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.job_spotter.jobpost.authUtils.JWTUtils;
 import org.job_spotter.jobpost.dto.*;
-import org.job_spotter.jobpost.model.JobPost;
 import org.job_spotter.jobpost.service.JobPostService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -31,13 +30,38 @@ public class JobPostController {
 
     private final JobPostService jobPostService;
 
-    //View all job posts
-    @GetMapping()
-    public ResponseEntity<List<JobPost>> viewAllJobPosts() {
-        log.info("Viewing all job posts");
-        return ResponseEntity.ok(jobPostService.getAllJobPosts());
-    }
+    //Get Detailed job post by id
+    @Operation(
+            summary = "Get Detailed job post by id from perspective of Applicants.",
+            description = "Gets job post by provided id in path. "
+                    + "This method returns detailed job post information."
+                    + "This method is used by applicants to view job post details."
+                    + "Therefore does not contain information about other applicants."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully got job post by id",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobPostDetailedResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
 
+    //TODO: Return response based on the perspective of the applicant
+    @GetMapping("/{id}")
+    public ResponseEntity<JobPostDetailedResponse> getJobPostById(
+            @PathVariable Long id
+    ) {
+        log.info("Getting job post by id: {}", id);
+
+        return ResponseEntity.ok(jobPostService.getJobPostById(id));
+    }
 
     //Get job post details with JobPostId
     @Operation(
@@ -57,13 +81,19 @@ public class JobPostController {
             )
     })
     //Get job post with detailed information
-    @GetMapping("/{id}/job-post-details")
-    public ResponseEntity<JobPostDetailedResponse> getMyJobPostDetails(
+    @GetMapping("/my-job-post/{id}")
+    public ResponseEntity<MyJobPostDetailedResponse> getMyJobPostDetails(
+
+            @RequestHeader("Authorization") String accessToken,
+
             @Parameter(description = "Job post id")
             @PathVariable Long id
             ) throws Exception {
+
         log.info("Getting my job post details");
-        return ResponseEntity.ok(jobPostService.getMyJobPostDetails(id));
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+        return ResponseEntity.ok(jobPostService.getMyJobPostDetails(userId, id));
     }
 
     //Search job posts using query parameters 'title', 'tag' , 'latitude' , 'longitude' , 'radius' and 'page' and 'size'
@@ -180,6 +210,13 @@ public class JobPostController {
             summary = "Get job posts created by user",
             description = "Retrieves all job posts created by the authenticated user. Job posts also contain basic info of applicants. "
                     + "This method depends on the user-service."
+                    + "This method returns a paginated list of job posts created by the user."
+                    + " - If title is provided, the search will be based on the title."
+                    + " - If tags are provided, the search will be based on the tags."
+                    + " - If status is provided, the search will be based on the status."
+                    + " - If page and size are provided, the search will be paginated. Default page is 0 and size is 10."
+                    + "All parameters are optional. Combining multiple parameters will narrow down the search."
+
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully got job posts created by user",
@@ -193,13 +230,18 @@ public class JobPostController {
             )
     })
     @GetMapping("/my-job-posts")
-    public ResponseEntity<List<MyJobPostResponse>> getMyJobPosts(
-            @RequestHeader("Authorization") String accessToken
+    public ResponseEntity<Page<MyJobPostResponse>> getMyJobPosts(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "tags", required = false) String tags,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int size
     ) throws Exception {
         log.info("Getting my job posts");
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
-        return ResponseEntity.ok(jobPostService.getMyJobPosts(userId));
+        return ResponseEntity.ok(jobPostService.getMyJobPosts(userId, title, tags, status, pageNumber, size));
     }
 
 
@@ -279,6 +321,7 @@ public class JobPostController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
+
     @PutMapping ("/my-job-posts/{id}/start")
     public ResponseEntity<HttpStatus> startJobPost(
             @RequestHeader("Authorization") String accessToken,
@@ -373,52 +416,6 @@ public class JobPostController {
     }
 
 
-    @Operation(
-            summary = "Get job post by id.",
-            description = "Gets job post by provided id"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully got job post by id",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobPostResponse.class))
-            ),
-            @ApiResponse(responseCode = "400", description = "Bad request",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
-            )
-    })
-    @GetMapping("/{id}")
-    public ResponseEntity<JobPostResponse> getJobPostById(
-            @PathVariable Long id
-    ) {
-        log.info("Getting job post by id: {}", id);
 
-        return ResponseEntity.ok(jobPostService.getJobPostById(id));
-    }
-
-//Depticated
-//    //Create job post with dummy data
-//    @PostMapping("/dummy")
-//    public ResponseEntity<HttpStatus> createJobPostWithDummyData() {
-//        log.info("Populating job post with dummy data");
-//        jobPostService.createJobPostDomainDummyData();
-//        return ResponseEntity.ok(HttpStatus.CREATED);
-//    }
-
-//Deptricated
-//    // Get job post by tag using query parameter 'tag'
-//    @GetMapping("/by-tag")
-//    public ResponseEntity<List<JobPost>> getJobPostByTag(@RequestParam("tag") String tag) {
-//        log.info("Getting job posts by tag: {}", tag);
-//        List<JobPost> jobPosts = jobPostService.getJobPostByTag(tag);
-//        if (jobPosts.isEmpty()) {
-//            log.info("No jobs found for tag: {}", tag);
-//        }
-//        return ResponseEntity.ok(jobPosts);
-//    }
 
 }

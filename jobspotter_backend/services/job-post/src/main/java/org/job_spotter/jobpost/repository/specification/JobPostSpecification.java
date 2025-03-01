@@ -124,9 +124,6 @@ public class JobPostSpecification {
     }
 
 
-
-
-
     public static Specification<JobPost> isOpen() {
         return (root, query, criteriaBuilder) -> {
             // Join with applications table (assuming the relationship exists)
@@ -141,7 +138,46 @@ public class JobPostSpecification {
         };
     }
 
+    // Returns a specification that filters job posts by the job poster id
+    public static Specification<JobPost> wasPostedBy(UUID userId) {
+        return (root, query, criteriaBuilder) -> {
+            // Join with applications table (assuming the relationship exists)
+            return criteriaBuilder.equal(root.get("jobPosterId"), userId);
+        };
+    }
 
+    /**
+     * Filter job posts by the job poster id, title, tags, and status
+     * Made for searching Job posts Created by a specific user
+     *
+     * @param userId    The job poster id
+     * @param title    The title of the job post
+     * @param tagNames The tags associated with the job post
+     * @param status  The status of the job post
+     * @return Specification
+     */
+    // Combine multiple filters into a single specification
+    // Searching Job Posts By Job Poster id
+    public static Specification<JobPost> filterByParams(UUID userId, String title,List<String> tagNames, String status) {
+        return Specification.where(wasPostedBy(userId))
+                .and(hasTitle(title))
+                .and(hasTags(tagNames))
+                .and(hasStatus(status));
+    }
+
+    /**
+     * Filter job posts by the title, tags, and distance from the user
+     * Made for searching Job posts by the user location
+     *
+     * @param title    The title of the job post
+     * @param tagNames The tags associated with the job post
+     * @param userLat  Latitude of the user
+     * @param userLon  Longitude of the user
+     * @param radiusKm Radius in km from which Job posts can be
+     * @return Specification
+     */
+    // Combine multiple filters into a single specification
+    // Searching Job Posts By User Location
     public static Specification<JobPost> filterByParams(String title, List<String> tagNames, Double userLat, Double userLon, Double radiusKm) {
         return Specification.where(isOpen())
                 .and(hasTitle(title))
@@ -149,8 +185,18 @@ public class JobPostSpecification {
                 .and(filterByDistance(userLat, userLon, radiusKm));
     }
 
+    /**
+     * Filter job posts by the status, title, and user id
+     * Made for searching Job posts the user worked on
+     *
+     * @param status The status of the job post
+     * @param title  The title of the job post
+     * @param userId The user id
+     * @return Specification
+     */
     // Combine multiple filters into a single specification
-    public static Specification<JobPost> filterByParams(String status, String title, UUID userId) {
+    // Searching Job Posts By User Id
+    public static Specification<JobPost> filterByParamsJobWorkedOn(String status, String title, UUID userId) {
         return Specification.where(wasWorkedOnBy(userId)) // Always filter by userId
                 .and(hasStatus(status))
                 .and(hasTitle(title));

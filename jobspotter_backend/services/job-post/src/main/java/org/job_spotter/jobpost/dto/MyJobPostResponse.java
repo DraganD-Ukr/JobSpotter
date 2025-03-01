@@ -17,12 +17,12 @@ public class MyJobPostResponse {
 
     private Long jobPostId;
     private Set<Tag> tags;
-    private List<ApplicantResponse> applicants;
     private String title;
     private String description;
     private String address;
     private LocalDateTime datePosted;
     private LocalDateTime lastUpdatedAt;
+    private int ApplicantsCount;
     private int maxApplicants;
     private JobStatus status;
 }
