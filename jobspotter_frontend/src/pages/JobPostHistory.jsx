@@ -5,6 +5,7 @@ import { ThemeContext } from "../components/ThemeContext"; // Import ThemeContex
 import { MdDateRange } from "react-icons/md";
 import { use } from "react";
 
+
 const reversedTagMapping = new Map([
   ["General Help", "GENERAL_HELP"],
   ["Handyman Services", "HANDYMAN_SERVICES"],
@@ -66,7 +67,7 @@ export function JobPostHistory() {
 
   useEffect(() => {
     fetchJobPostHistory();
-  }, []);
+  }, [page]); 
 
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -77,11 +78,16 @@ export function JobPostHistory() {
     fetchJobPostHistory();
   }, [searchParams, page, pageSize]);
 
+
+
+  useEffect(() => {
+    fetchJobPostHistory();
+  }, []);
+
   function fetchJobPostHistory() {
     setLoading(true);
 
     // Read query parameters
-    const title = searchParams.get("title") || "";
     const query = searchParams.get("title") || "";
     const applicantStatus = filters.applicantStatus || null;
 

@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 export function Register() {
-  // New state to track if registration was successful
   const [registrationSuccessful, setRegistrationSuccessful] = useState(false);
 
   const [formValues, setFormValues] = useState({

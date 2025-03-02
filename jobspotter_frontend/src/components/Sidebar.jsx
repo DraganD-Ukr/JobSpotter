@@ -34,7 +34,6 @@ export default function Sidebar() {
       </div>
 
       <nav className="space-y-3">
-        {/* Remove text-gray-700 or other forced color classes */}
         <a href="/Profile" className="block text-sm hover:text-green-400">
           Profile
         </a>

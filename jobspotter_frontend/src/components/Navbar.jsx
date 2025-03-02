@@ -146,12 +146,7 @@ export default function Navbar() {
                 View Job Post History
               </a>
               <div className="h-px w-full bg-gray-300 dark:bg-gray-600" />
-              <a
-                href="/CreateJobPost"
-                className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Create Job Post
-              </a>
+             
             </div>
           </div>
 
@@ -165,6 +160,12 @@ export default function Navbar() {
                 className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 View My Jobs
+              </a>
+              <a
+                href="/CreateJobPost"
+                className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                Create Job Post
               </a>
             </div>
           </div>

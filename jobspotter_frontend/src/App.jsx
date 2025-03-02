@@ -10,7 +10,6 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import { TermsOfService } from "./pages/TermsOfService";
-import { JobPost } from "./pages/JobPost";
 import { Address } from "./pages/Address";
 import { CreateJobPost } from "./pages/CreateJobPost";
 import { MyJobs } from "./pages/MyJobs";
@@ -41,7 +40,6 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/privacypolicy" element={<PrivacyPolicy />} />
           <Route path="/termsofservice" element={<TermsOfService />} />
-          <Route path="/jobpost" element={<JobPost />} />
           <Route path="/data" element={<Data />} />
           <Route path="/address" element={<Address />} />
           <Route path="/createjobpost" element={<CreateJobPost />} />
