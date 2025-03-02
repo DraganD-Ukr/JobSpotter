@@ -12,6 +12,8 @@ import {
     FaRegHeart,
     FaClock,
     FaUser, // Icon for job poster
+    FaExclamationTriangle,
+    FaTrophy
 } from "react-icons/fa";
 import { ThemeContext } from "../components/ThemeContext";
 
@@ -27,61 +29,86 @@ export function JobPostDetails() {
     const [jobPoster, setJobPoster] = useState(null); // State for the job jobPoster
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
+    const [applicationSuccess, setApplicationSuccess] = useState("");
     const { darkMode } = useContext(ThemeContext);
     const [isSaved, setIsSaved] = useState(false); // State to track if the job is saved
     const [isApplyModalOpen, setIsApplyModalOpen] = useState(false); // State to control apply modal visibility
     const [applicationMessage, setApplicationMessage] = useState(""); // State for the application message
 
-const [tagMapping, setTagMapping] = useState(new Map()); // State for dynamic tag map
+     // New opacity state for animations
+     const [errorBoxOpacity, setErrorBoxOpacity] = useState(0);
+     const [successBoxOpacity, setSuccessBoxOpacity] = useState(0);
+ 
+     // ... other state and functions ...
+ 
+     // useEffect for Error Message Animation
+     useEffect(() => {
+         if (errorMessage) {
+             setErrorBoxOpacity(1); // Set opacity to 1 to trigger fade-in
+         } else {
+             setErrorBoxOpacity(0); // Optionally reset opacity when errorMessage clears (for fade-out if needed later)
+         }
+     }, [errorMessage]); // Run when errorMessage changes
+ 
+     // useEffect for Success Message Animation
+     useEffect(() => {
+         if (applicationSuccess) {
+             setSuccessBoxOpacity(1); // Set opacity to 1 to trigger fade-in
+         } else {
+             setSuccessBoxOpacity(0); // Optionally reset opacity when applicationSuccess clears
+         }
+     }, [applicationSuccess]); // Run when applicationSuccess changes
 
-  useEffect(() => {
-    const fetchTags = async () => {
-        if (tagMappingCache) {
-            console.log("Using cached tag data.");
-            setTagMapping(tagMappingCache);
-            return;
-        }
+    const [tagMapping, setTagMapping] = useState(new Map()); // State for dynamic tag map
 
-        try {
-            const res = await fetch('/api/v1/job-posts/tags', {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-            });
-            if (!res.ok) {
-                throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
-            }
-            const tagsData = await res.json();
-            console.log("Fetched tags data from API:", tagsData);
-
-            if (!tagsData || typeof tagsData !== 'object' || Array.isArray(tagsData)) { // **Improved type checking**
-                console.warn("API response did not return a valid tags object.");
-                setTagMapping(new Map());
+    useEffect(() => {
+        const fetchTags = async () => {
+            if (tagMappingCache) {
+                console.log("Using cached tag data.");
+                setTagMapping(tagMappingCache);
                 return;
             }
 
-
-            const newTagMap = new Map();
-            Object.keys(tagsData).forEach(enumValue => { // **Iterate over object keys**
-                const friendlyName = tagsData[enumValue]; // **Get friendly name using enumValue as key**
-                if (friendlyName) { // Check if friendlyName exists
-                    newTagMap.set(friendlyName, enumValue); // **Correctly set the map - friendlyName as key, enumValue as value (reversed mapping)**
-                } else {
-                    console.warn(`Tag object missing friendlyName for enumValue: ${enumValue}`);
+            try {
+                const res = await fetch('/api/v1/job-posts/tags', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                });
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
                 }
-            });
+                const tagsData = await res.json();
+                console.log("Fetched tags data from API:", tagsData);
 
-            tagMappingCache = newTagMap;
-            setTagMapping(newTagMap);
+                if (!tagsData || typeof tagsData !== 'object' || Array.isArray(tagsData)) { // **Improved type checking**
+                    console.warn("API response did not return a valid tags object.");
+                    setTagMapping(new Map());
+                    return;
+                }
 
-        } catch (error) {
-            console.error("Error fetching tags:", error);
-            setErrorMessage("Failed to load job tags.");
-        }
-    };
 
-    fetchTags();
-}, []);
+                const newTagMap = new Map();
+                Object.keys(tagsData).forEach(enumValue => { // **Iterate over object keys**
+                    const friendlyName = tagsData[enumValue]; // **Get friendly name using enumValue as key**
+                    if (friendlyName) { // Check if friendlyName exists
+                        newTagMap.set(friendlyName, enumValue); // **Correctly set the map - friendlyName as key, enumValue as value (reversed mapping)**
+                    } else {
+                        console.warn(`Tag object missing friendlyName for enumValue: ${enumValue}`);
+                    }
+                });
+
+                tagMappingCache = newTagMap;
+                setTagMapping(newTagMap);
+
+            } catch (error) {
+                console.error("Error fetching tags:", error);
+                setErrorMessage("Failed to load job tags.");
+            }
+        };
+
+        fetchTags();
+    }, []);
 
     const toggleSave = () => {
         setIsSaved(!isSaved);
@@ -115,31 +142,21 @@ const [tagMapping, setTagMapping] = useState(new Map()); // State for dynamic ta
             .then(res => { // **MODIFIED: Removed parseNoContent here and handle status check**
                 if (!res.ok) { // Check if the response status is NOT in the success range (2xx)
                     // Handle different error status codes
-                    if (res.status === 400) {
-                        throw new Error("Bad request. The application data might be invalid."); // Specific 400 error
-                    } else if (res.status === 401) {
-                        throw new Error("Unauthorized. You might not be logged in."); // Specific 401 error
-                    } else if (res.status === 403) {
-                        throw new Error("Forbidden. You don't have permission to apply for this job."); // Specific 403 error
-                    } else if (res.status === 404) {
-                        throw new Error("Job post not found."); // Specific 404 error
-                    } else if (res.status === 409) {
-                        throw new Error("You have already applied to this job post!"); // Conflict 409 error
-                    } else if (res.status >= 500 && res.status < 600) {
-                        throw new Error("Server error. Please try again later."); // General 5xx server error
-                    } else {
-                        throw new Error(`Request failed with status code ${res.status}`); // Generic error for other statuses
-                    }
+
+
+                    setApplicationSuccess("");  // Clear any previous error message
+                    setErrorMessage("Application submitted successfully!");
+
+                    throw new Error("Failed to apply to job post", res.status); // Throw an error to trigger the catch block
                 }
 
-                // If res.ok is true (status in 2xx range), proceed to parseNoContent
-                return parseNoContent(res); // Call parseNoContent only for successful responses
+
             })
             .then(() => {
                 setErrorMessage(""); // Clear any previous error message
                 console.log("Application submitted successfully");
-                // Here you can show a success message to the user, e.g., using a state variable and conditional rendering
-                // Example: setSuccessMessage("Application submitted successfully!");
+                // Show a success message to the user
+                setApplicationSuccess("Application submitted successfully!"); // Set the success message
             })
             .catch((err) => {
                 console.error("Error applying to job post:", err);
@@ -149,14 +166,7 @@ const [tagMapping, setTagMapping] = useState(new Map()); // State for dynamic ta
     }
 
 
-    // Helper to parse responses with no content (204)
-    function parseNoContent(res) {
-        if (!res.ok) throw new Error("Request failed");
-        if (res.status === 204 || !res.headers.get("content-length")) {
-            return null;
-        }
-        return res.json();
-    }
+
 
 
     useEffect(() => {
@@ -252,11 +262,33 @@ const [tagMapping, setTagMapping] = useState(new Map()); // State for dynamic ta
             className={`main-content min-h-screen p-6 ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
                 }`}
         >
-            {/* Error Display (Conditional) */}
-            {errorMessage && ( // Render this block only if errorMessage is truthy (not empty)
-                <div className="mb-8 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md" role="alert">
-                    <h3 className="font-bold">Error</h3>
-                    <p>{errorMessage}</p>
+             {/* Error Display (Conditional) */}
+            {errorMessage && (
+                <div
+                    className="mb-8 p-4 bg-red-100 mx-auto max-w-100 border border-red-400 text-red-700 rounded-md flex items-center transition-opacity duration-300 ease-out" // Removed opacity-100 from classes
+                    role="alert"
+                    style={{ opacity: errorBoxOpacity }} // Control opacity with state
+                >
+                    <FaExclamationTriangle className="mr-2 text-red-500 h-6 w-6" />
+                    <div>
+                        <h3 className="font-bold">Error</h3>
+                        <p>{errorMessage}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Success display (Conditional) */}
+            {applicationSuccess && (
+                <div
+                    className="mb-8 justify-center mx-auto max-w-100 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md flex items-center transition-opacity duration-300 ease-in" // Removed opacity-100 from classes
+                    role="alert"
+                    style={{ opacity: successBoxOpacity }} // Control opacity with state
+                >
+                    <FaTrophy className="mr-2 text-green-500 h-6 w-6" />
+                    <div>
+                        <h3 className="font-bold">Congrats</h3>
+                        <p>{applicationSuccess}</p>
+                    </div>
                 </div>
             )}
 
