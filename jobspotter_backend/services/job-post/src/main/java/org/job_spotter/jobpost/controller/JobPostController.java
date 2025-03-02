@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.job_spotter.jobpost.authUtils.JWTUtils;
 import org.job_spotter.jobpost.dto.*;
+import org.job_spotter.jobpost.model.JobTagEnum;
 import org.job_spotter.jobpost.service.JobPostService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -19,8 +20,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/job-posts")
@@ -29,6 +33,24 @@ import java.util.UUID;
 public class JobPostController {
 
     private final JobPostService jobPostService;
+
+
+    //Get Job Post tag enums
+    @Operation(
+            summary = "Get all job tag enums",
+            description = "Returns a map of all job tag enum constants and their display names."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved job tag enums",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+    })
+    @GetMapping("/job-tags")
+    public ResponseEntity<Map<String, String>> getAllJobTags() {
+        return ResponseEntity.ok(JobTagEnum.getAllEnumValues());
+    }
+
 
     //Get Detailed job post by id
     @Operation(
@@ -52,7 +74,6 @@ public class JobPostController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-
     //TODO: Return response based on the perspective of the applicant
     @GetMapping("/{id}")
     public ResponseEntity<JobPostDetailedResponse> getJobPostById(
