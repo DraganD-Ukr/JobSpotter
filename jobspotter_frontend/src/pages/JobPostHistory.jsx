@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
-import { FaList, FaTh, FaTag, FaChevronDown, FaChevronUp, FaMapMarkerAlt, FaUsers, FaRoute } from "react-icons/fa"; // Import icons for the toggle button and tags
+import { useSearchParams, Link, data } from "react-router-dom";
+import { FaList, FaTh, FaTag, FaChevronDown, FaChevronUp, FaMapMarkerAlt, FaCheckCircle, FaClock, FaTimesCircle, FaUsers, FaCircle } from "react-icons/fa"; // Import icons for the toggle button and tags
 import { ThemeContext } from "../components/ThemeContext"; // Import ThemeContext for dark mode
 import { MdDateRange } from "react-icons/md";
-import { use } from "react";
+
+
 
 
 const reversedTagMapping = new Map([
@@ -50,6 +51,7 @@ export function JobPostHistory() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState("datePosted"); // Default sort by option
 
   const [filters, setFilters] = useState({
     title: "",
@@ -67,7 +69,7 @@ export function JobPostHistory() {
 
   useEffect(() => {
     fetchJobPostHistory();
-  }, [page]); 
+  }, [page]);
 
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -76,7 +78,7 @@ export function JobPostHistory() {
 
   useEffect(() => {
     fetchJobPostHistory();
-  }, [searchParams, page, pageSize]);
+  }, [searchParams, page, pageSize, sortBy]);
 
 
 
@@ -95,7 +97,7 @@ export function JobPostHistory() {
     const tagArray = filters.tags || []; // Default to an empty array if filters.tags is undefined or null
     const tagsParam = tagArray.length > 0 ? (tagArray.join(",")) : ""; // Only join if tags are present
     // Construct the API endpoint
-    const endpoint = `/api/v1/job-posts/history?title=${encodeURIComponent(query)}&tags=${encodeURIComponent(tagsParam)}&applicantStatus=${applicantStatus}&page=${page}&size=${pageSize}`;
+    const endpoint = `/api/v1/job-posts/history?title=${encodeURIComponent(query)}&tags=${encodeURIComponent(tagsParam)}&applicantStatus=${applicantStatus}&page=${page}&size=${pageSize}&sortBy=${sortBy}`;
 
     fetch(endpoint, {
       method: "GET",
@@ -120,7 +122,7 @@ export function JobPostHistory() {
           }
           setTotalElements(data.totalElements);
           setTotalPages(data.totalPages);
-          return { ...job, jobId, tags: friendlyTags, status: job.applicantStatus || "N/A", };
+          return { ...job, jobId, tags: friendlyTags, jobStatus: job.status, applicantStatus: job.applicantStatus };
         });
         setJobPostsData(jobsWithFriendlyTags);
       })
@@ -161,7 +163,7 @@ export function JobPostHistory() {
     const tagsParam = filters.tags.join(",");
 
     // Update the search parameters
-    setSearchParams({ ...filters, title: localQuery, tags: tagsParam });
+    setSearchParams({ ...filters, title: localQuery, tags: tagsParam, sortBy: sortBy });
   }
 
 
@@ -170,7 +172,14 @@ export function JobPostHistory() {
   function handleFilterChange(e) {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
+
   }
+  // ---------------------------------------SORT BY----------------------------------------
+  const handleSortByChange = (event) => {
+    setSortBy(event.target.value);
+    setPage(0); // Reset to the first page when sort by changes
+  };
+
 
   // ---------------------------------------TAGS----------------------------------------
 
@@ -211,6 +220,17 @@ export function JobPostHistory() {
 
     return colors[Math.floor(Math.random() * colors.length)];
   }
+
+  // ---------------------------------------JOB STATUS INDICATORS----------------------------------------
+
+  const statusVisualMapping = {
+    OPEN: { text: "Open", color: "text-green-500", icon: FaCircle },
+    ASSIGNED: { text: "Assigned", color: "text-blue-500", icon: FaCircle },
+    IN_PROGRESS: { text: "In Progress", color: "text-yellow-500", icon: FaCircle },
+    COMPLETED: { text: "Completed", color: "text-gray-500", icon: FaCircle },
+    CANCELLED: { text: "Cancelled", color: "text-red-500", icon: FaCircle },
+    "N/A": { text: "N/A", color: "text-gray-400", icon: FaCircle }, // Default or N/A status
+  };
 
   // ---------------------------------------PAGE SIZE----------------------------------------
   const handlePageSizeChange = (event) => {
@@ -326,9 +346,9 @@ export function JobPostHistory() {
 
 
   return (
-    <div className="main-content min-h-screen p-4">
-      <h1 className="text-3xl font-bold mb-8 text-center">
-        Job Post History
+    <div className="my-10 main-content min-h-screen p-4  border-1 rounded-4xl">
+      <h1 className="text-3xl font-bold mb-12 text-center">
+        Search  Your Job Post History
       </h1>
 
       {errorMessage && (
@@ -338,7 +358,7 @@ export function JobPostHistory() {
 
 
       {/* Search Bar */}
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center lg:text-md sm:text-sm mb-8 sm:ml-4 md:ml-6 lg:ml-30 xl:ml-100">
         <form onSubmit={handleSearchSubmit} className="flex">
           <input
             type="text"
@@ -375,8 +395,24 @@ export function JobPostHistory() {
           )}
         </button>
 
+        {/* Sort By Dropdown */}
+        <div className="justify-center ml-10 flex items-center">
+          <label htmlFor="sortBy" className="mr-2">Sort by:</label>
+          <select
+            id="sortBy"
+            value={sortBy}
+            onChange={handleSortByChange}
+            className="px-2 py-1 border rounded"
+          >
+            <option value="datePosted">Date Posted</option>
+            <option value="lastUpdatedAt">Last Updated</option>
+            <option value="title">Title</option>
+            <option value="status">Status</option>
+          </select>
+        </div>
+
         {/* Show Results Dropdown */}
-        <div className=" justify-center ml-10 flex items-center">
+        <div className="justify-center ml-10 flex items-center">
           <label htmlFor="pageSize" className="mr-2">Show Results:</label>
           <select
             id="pageSize"
@@ -397,7 +433,7 @@ export function JobPostHistory() {
         {/* Filters */}
         {/* Tags for history og jobs not implemented yet on back end */}
         <div className="w-1/5 pr-12 border-r ml-42 mr-4">
-          <h3 className="text-xl font-bold mb-4">Filters</h3>
+          <h3 className="text-lg font-bold mb-4">Filters</h3>
           <form onSubmit={handleSearchSubmit}>
 
             {/* Tags Section */}
@@ -450,9 +486,9 @@ export function JobPostHistory() {
               </div>
             </div>
 
-             {/* Status Section */}
-             <div className="mb-4 p-4 border rounded-md">
-             <div className="flex justify-between items-center cursor-pointer" onClick={toggleStatusCollapse}>
+            {/* Status Section */}
+            <div className="mb-4 p-4 border rounded-md">
+              <div className="flex justify-between items-center cursor-pointer" onClick={toggleStatusCollapse}>
                 <h4 className="text-lg font-semibold mb-1">Application status</h4>
                 {isStatusCollapsed ? (
                   <FaChevronUp className="text-gray-500" />
@@ -461,28 +497,28 @@ export function JobPostHistory() {
                 )}
               </div>
 
-                
+
               <div
                 className={`transition-all ease-in-out duration-500 overflow-hidden ${isStatusCollapsed ? "max-h-screen opacity-100" : "max-h-0 opacity-0"}`}
               >
-             <div className="mb-3 p-3 ">
-              <div className="flex justify-between items-center cursor-pointer ">
-                
-                  <select
-                    name="applicantStatus"
-                    value={filters.applicantStatus}
-                    onChange={handleFilterChange}
-                    className="w-full px-4 py-2 border rounded-md"
-                  >
-                    <option value="PENDING">Pending</option>
-                    <option value="ACCEPTED">Accepted</option>
-                    <option value="REJECTED">Rejected</option>
-                  </select>
+                <div className="mb-3 p-3 ">
+                  <div className="flex justify-between items-center cursor-pointer ">
+
+                    <select
+                      name="applicantStatus"
+                      value={filters.applicantStatus}
+                      onChange={handleFilterChange}
+                      className="w-full px-4 py-2 border rounded-md"
+                    >
+                      <option value="PENDING">Pending</option>
+                      <option value="ACCEPTED">Accepted</option>
+                      <option value="REJECTED">Rejected</option>
+                    </select>
                   </div>
-                  
+
                 </div>
               </div>
-</div>
+            </div>
 
             <button
               type="submit"
@@ -499,9 +535,9 @@ export function JobPostHistory() {
         <div className="w-4/5 p-4 ml-4 mr-30">
           <div className="flex flex-col items-start mb-8">
             <h2 className="text-2xl font-bold text-center mb-4">
-              {searchParams.get("title")
+              {totalElements>=1
                 ? `Search returned ${totalElements} job posts`
-                : "Showing All Jobs"}
+                : "No job posts found"}
             </h2>
           </div>
 
@@ -517,45 +553,107 @@ export function JobPostHistory() {
             <>
 
               <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto" : "max-w-6xl mx-auto space-y-4"}>
-                {jobPostsData.map((job) => (
+                {jobPostsData.map((job) => {
+                  let statusColor = "text-gray-400"; // Default color
+                  let statusText = "N/A"; // Default status text
+                  let StatusIcon = FaCircle; // Default Icon
+
+                  switch (job.status) {
+                    case "OPEN":
+                      statusColor = "text-green-500";
+                      statusText = "Open";
+                      break;
+                    case "ASSIGNED":
+                      statusColor = "text-blue-500";
+                      statusText = "Assigned";
+                      break;
+                    case "IN_PROGRESS":
+                      statusColor = "text-yellow-500";
+                      statusText = "In Progress";
+                      break;
+                    case "COMPLETED":
+                      statusColor = "text-gray-500";
+                      statusText = "Completed";
+                      break;
+                    case "CANCELLED":
+                      statusColor = "text-red-500";
+                      statusText = "Cancelled";
+                      break;
+                    default:
+                      statusColor = "text-gray-400";
+                      statusText = "N/A";
+                  }
 
 
-                  <div
-                    key={job.jobPostId}
-                    className={`card border border-gray-300 ${viewType === "card" ? "hover:shadow-md hover:border-green-500 transition" : "rounded-lg shadow"} w-full ${viewType === "card" ? "max-w-sm" : ""} flex flex-col p-4 rounded-lg`}
-                  >
-                    <h3 className="text-xl font-semibold">{job.title}</h3>
-                    <p className="flex items-center gap-1">
-                      <FaMapMarkerAlt className="text-red-500" /> {job.address}
-                    </p>
-                    <p className="flex items-center gap-1">
-                      <MdDateRange className="text-blue-500" /> Posted: {new Date(job.datePosted).toLocaleDateString()}
-                    </p>
-                    <p className="flex items-center gap-1">
-                      <FaUsers className="text-purple-500" /> Max Applicants: {job.maxApplicants}
-                    </p>
-                    <p className="flex items-center gap-1">
-                      <FaRoute className="text-green-500" /> Distance: {parseFloat(job.relevantDistance).toFixed(2)} km
-                    </p>
-                    <p className="mt-2">
-                      <strong>Description:</strong>  {job.description.length > 100 ? job.description.slice(0, 100) + "..." : job.description}
-                    </p>
-                    {job.tags && job.tags.length > 0 && (
-                      <p className="my-3 text-sm">
+                  let applicantStatusColor = "text-gray-400";
+                  let applicantStatusText = job.applicantStatus || "N/A";
 
-                        {job.tags
-                          .map((tag) => Array.from(reversedTagMapping.entries()).find(([key, value]) => value === tag)?.[0])
-                          .join(", ")}
+                  switch (job.applicantStatus) {
+                    case "PENDING":
+                
+                      applicantStatusColor = "text-yellow-500";
+                      break;
+                    case "ACCEPTED":
+                      
+                      applicantStatusColor = "text-green-500";
+                      break;
+                    case "REJECTED":
+                     
+                      applicantStatusColor = "text-red-500";
+                      break;
+                    default:
+                      
+                      applicantStatusColor = "text-gray-400";
+                  }
+
+
+                  return (
+                    <div
+                      key={job.jobPostId}
+                      className={`card border border-gray-300 ${viewType === "card" ? "hover:shadow-md hover:border-green-500 transition" : "rounded-lg shadow"} w-full ${viewType === "card" ? "max-w-sm" : ""} flex flex-col p-4 rounded-lg`}
+                    >
+                      <h3 className="text-xl font-semibold">{job.title}</h3>
+                      <p className="flex items-center gap-1">
+                        <FaMapMarkerAlt className="text-red-500" /> {job.address}
                       </p>
-                    )}
-                    <input type="hidden" value={job.jobPostId} />
+                      <p className="flex items-center gap-1">
+                        <MdDateRange className="text-blue-500" /> Posted: {new Date(job.datePosted).toLocaleDateString()}
+                      </p>
+                      <p className="flex items-center gap-1">
+                        <FaUsers className="text-purple-500" /> Max Applicants: {job.maxApplicants}
+                      </p>
 
-                  </div>
+                      <p className="mt-2">
+                        <strong>Description:</strong>  {job.description.length > 100 ? job.description.slice(0, 100) + "..." : job.description}
+                      </p>
+                      {job.tags && job.tags.length > 0 && (
+                        <p className="my-3 text-sm">
 
-                ))}
+                          {job.tags
+                            .map((tag) => Array.from(reversedTagMapping.entries()).find(([key, value]) => value === tag)?.[0])
+                            .join(", ")}
+                        </p>
+                      )}
+                      <p className="flex items-center mt-2 gap-1">
+                        <StatusIcon className={`${statusColor} mr-1`} /> {/* Use dynamically determined Icon and color */}
+                        <strong className="mr-2" >Job Status: </strong> <span className={`${statusColor}`}>{statusText}</span> {/* Use dynamically determined color and text */}
+                      </p>
+
+                      <p className="flex items-center mt-2 gap-1">
+                        {job.applicantStatus === "PENDING" && <FaClock className={`${applicantStatusColor} mr-1`} />}
+                        {job.applicantStatus === "ACCEPTED" && <FaCheckCircle className={`${applicantStatusColor} mr-1`} />}
+                        {job.applicantStatus === "REJECTED" && <FaTimesCircle className={`${applicantStatusColor} mr-1`} />}
+                        {job.applicantStatus !== "PENDING" && job.applicantStatus !== "ACCEPTED" && job.applicantStatus !== "REJECTED" && <FaCircle className={`${applicantStatusColor} mr-1`} />}
+                        <strong>Applicant Status:</strong> <span className={`${applicantStatusColor}`}>{applicantStatusText}</span>
+                      </p>
+
+                      <input type="hidden" value={job.jobPostId} />
+                    </div>
+                  );
+                })}
               </div>
-
             </>
+
           )}
           {/* Pagination */}
           <div className="flex justify-center mt-8">

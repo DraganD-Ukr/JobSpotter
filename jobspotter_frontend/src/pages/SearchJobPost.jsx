@@ -326,7 +326,7 @@ export function SearchJobPost() {
   return (
     
     <div className={`main-content min-h-screen p-4 ${darkMode ? "bg-gray-900 text-white" : "bg-white text-black"}`}>
-      
+
       {/* Search Bar */}
       <div className="flex justify-center mb-8">
         <form onSubmit={handleSearchSubmit} className="flex">
@@ -521,9 +521,9 @@ export function SearchJobPost() {
         <div className="w-4/5 p-4 ml-4 mr-30">
           <div className="flex flex-col items-start mb-8">
             <h2 className="text-2xl font-bold text-center mb-4">
-              {searchParams.get("title")
+              {totalElements>=1
                 ? `Search returned ${totalElements} job posts`
-                : "Showing All Jobs"}
+                : "No job posts found"}
             </h2>
           </div>
 
