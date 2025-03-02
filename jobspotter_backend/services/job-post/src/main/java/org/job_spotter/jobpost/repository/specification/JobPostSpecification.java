@@ -81,7 +81,8 @@ public class JobPostSpecification implements ApplicationContextAware {
 
             //annul the condition if the title is not present (Like just sating if(True))
             if(!StringUtils.hasText(title)) {
-                criteriaBuilder.conjunction(); // Always true condition
+                return criteriaBuilder.conjunction(); // Always true condition
+
             }
 
             //Gets entity manager from the application context
