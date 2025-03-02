@@ -197,6 +197,14 @@ input[type="text"]::placeholder {
   color: #545151; /* Green thumb */
 }
 
+.darkMode #cancel-apply {
+  background-color: #80817dac; /* Green thumb */
+}
+
+.darkMode #cancel-apply:hover {
+  background-color: #60605dac; /* Green thumb */
+}
+
 
 
 /* Job Post Search Range Slider */

@@ -570,14 +570,7 @@ export function SearchJobPost() {
                         </p>
                       )}
                       <input type="hidden" value={job.jobPostId} />
-                      <div className={`mt-4 ${viewType === "card" ? "" : "sm:mt-0 flex items-start sm:items-end"}`}>
-                        <button
-                          onClick={() => handleApply(job.jobPostId)}
-                          className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 flex items-center gap-2"
-                        >
-                          Apply Now
-                        </button>
-                      </div>
+                      
                     </div>
                     </Link>
                   ))}
