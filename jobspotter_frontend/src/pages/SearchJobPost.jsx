@@ -153,10 +153,6 @@ export function SearchJobPost() {
     });
   }
 
-  // Example "Apply Now" action
-  function handleApply(jobPostId) {
-    alert(`Applying to job: ${jobPostId}`);
-  }
 
   // Toggle between "card" and "list" view
   function toggleView() {
@@ -328,7 +324,9 @@ export function SearchJobPost() {
 
 
   return (
+    
     <div className={`main-content min-h-screen p-4 ${darkMode ? "bg-gray-900 text-white" : "bg-white text-black"}`}>
+      
       {/* Search Bar */}
       <div className="flex justify-center mb-8">
         <form onSubmit={handleSearchSubmit} className="flex">
@@ -365,7 +363,11 @@ export function SearchJobPost() {
         </button>
       </div>
 
+
+
       <div className="flex">
+
+
         {/* Filters */}
         <div className="w-1/5 pr-12 border-r ml-42 mr-4">
           <h3 className="text-xl font-bold mb-4">Filters</h3>

@@ -62,6 +62,22 @@ export function JobPostDetails() {
     const [applicationMessage, setApplicationMessage] = useState(""); // State for the application message
 
 
+        // Read query parameters
+        const query = searchParams.get("title") || "";
+        const applicationStatus = searchParams.get("status") || "";
+        const sortBy = searchParams.get("sortBy") || "datePosted";
+        const size = 10;
+    
+    
+        // Ensure tagArray is an array and join the tags into a string
+        const tagArray = filters.tags || []; // Default to an empty array if filters.tags is undefined or null
+        const tagsParam = tagArray.length > 0 ? (tagArray.join(",")) : ""; // Only join if tags are present
+    
+        // Construct the API endpoint
+        const endpoint = `/api/v1/job-posts/search?title=${encodeURIComponent(query)}status=${applicationStatus}&pageNumber=${page}&size=${size}&sortBy=${sortBy}`;
+    
+        // Log the endpoint for debugging
+        console.log(endpoint);
 
     const toggleSave = () => {
         setIsSaved(!isSaved);
