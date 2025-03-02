@@ -5,13 +5,49 @@ body {
 }
 
 body.lightMode {
-  background-color: #ffffff;
   color: #000000;
+  position: relative; 
+  margin: 0;
 }
+body.lightMode::before {
+  content: "";
+  position: fixed;     
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;         
+  pointer-events: none; 
+  
+  background: #ffffff url("/src/assets/lightmode.jpg") repeat;
+  background-size: repeat;
+  
+  filter: blur(8px);
+  -webkit-filter: blur(8px);
+}
+
 body.darkMode {
-  background-color: #1a1a1a;
   color: #ffffff;
+  position: relative;
+  margin: 0;
 }
+body.darkMode::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  
+  background: #1a1a1a url("/src/assets/darkmode.png") repeat;
+  background-size: repeat;
+  
+  filter: blur(8px);
+  -webkit-filter: blur(8px);
+}
+
 
 .lava-lamp-background {
   background: linear-gradient(120deg, #205b31, #13c100, #59c70f);
@@ -19,7 +55,7 @@ body.darkMode {
   animation: lavaLampAnimation 10s ease infinite;
 }
 .darkMode .lava-lamp-background {
-  background: linear-gradient(120deg, #886c7a, #aa3a72, #ff0256);
+  background: linear-gradient(120deg, #4a6551, #509452, #235f3a);
   background-size: 400% 400%;
   animation: lavaLampAnimation 10s ease infinite;
 }
@@ -36,32 +72,44 @@ body.darkMode {
 }
 
 .sidebar {
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.8);
   color: #000000;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 .darkMode .sidebar {
-  background-color: #2f2f2f;
+  background-color: rgba(47, 47, 47, 0.8);
   color: #ffffff;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
 .main-content {
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.8);
   color: #000000;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 .darkMode .main-content {
-  background-color: #1a1a1a;
+  background-color: rgba(26, 26, 26, 0.8);
   color: #ffffff;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
 .card {
-  background-color: #ffffff; 
+  background-color: rgba(255, 255, 255, 0.8);
   color: #000000;
   @apply p-6 shadow-md rounded-lg;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 .darkMode .card {
-  background-color: #292c26;
+  background-color: rgba(41, 44, 38, 0.8);
   color: #ffffff;
   box-shadow: none;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
 .darkMode .textbox {
@@ -75,129 +123,84 @@ body.darkMode {
   background-color: #28e85c70;
   color: #ffffff;
 }
-
 .darkMode button:hover,
 .darkMode input[type="button"]:hover,
 .darkMode input[type="submit"]:hover {
   background-color: #28e85b3e;
 }
-
-/* transition of color on hover for dark mode */
-.darkMode button,
-.darkMode input[type="button"],
-.darkMode input[type="submit"] {
-  transition: background-color 0.3s ease;
+.darkMode button:active,
+.darkMode input[type="button"]:active,
+.darkMode input[type="submit"]:active {
+  background-color: #333333;
 }
-
 button,
 input[type="button"],
 input[type="submit"] {
   transition: background-color 0.3s ease;
 }
 
-
-/* Dark mode styling for select */
 .darkMode select {
-  background-color: #2f2f2f; /* Dark background */
-  color: #ffffff; /* White text */
-  border-color: #444444; /* Dark border color */
+  background-color: #2f2f2f;
+  color: #ffffff;
+  border-color: #444444;
 }
-
-/* Dark mode styling for options */
 .darkMode option {
-  background-color: #2f2f2f; /* Dark background for options */
-  color: #ffffff; /* White text for options */
+  background-color: #2f2f2f;
+  color: #ffffff;
 }
 
-/* Color for placeholder in text input for dark mode */
 .darkMode input[type="text"]::placeholder {
-  color: #b4b0b093; /* White placeholder text */
+  color: #b4b0b093;
 }
 
-.darkMode button:active,
-.darkMode input[type="button"]:active,
-.darkMode input[type="submit"]:active {
-  background-color: #333333;
-}
-
-
-
-
-
-
-
-
-
-/* Dark mode properties for certain elements */
-
-/* Page button in pagination */
 .darkMode #page-button {
-  background-color: #4a4d4b; /* Neutral gray */
+  background-color: #4a4d4b;
   color: #ffffff;
 }
-
 .darkMode #page-button:hover {
-  background-color: #3a3c3b; /* Slightly darker on hover */
+  background-color: #3a3c3b;
   color: #ffffff;
 }
-
-/* Active page button in pagination */
 .darkMode #active-page {
-  background-color: #2f6b38; /* Dark green */
+  background-color: #2f6b38;
   color: #ffffff;
 }
-
 .darkMode #active-page:hover {
   background-color: #24552a;
   color: #ffffff;
 }
-
-/* Next & Previous buttons */
 .darkMode #navigate-page {
-  background-color: #606463; /* Darker gray for a distinct look */
+  background-color: #606463;
   color: #ffffff;
 }
-
 .darkMode #navigate-page:hover {
-  background-color: #424443; /* A bit darker on hover */
+  background-color: #424443;
   color: #ffffff;
 }
-
-/* '...' button on pagination */
 .darkMode #other-pages {
-  background-color: #3c3f3e; /* Different from Next/Previous, slightly lighter */
-  color: #bfbfbf; /* Light gray text for subtle contrast */
+  background-color: #3c3f3e;
+  color: #bfbfbf;
 }
-
 .darkMode #other-pages:hover {
-  background-color: #2b2c2b; /* Darker but not too harsh */
+  background-color: #2b2c2b;
   color: #ffffff;
 }
-
-.darkMode #toggle-view{
-  background-color: #4a4d4b; /* Neutral gray */
+.darkMode #toggle-view {
+  background-color: #4a4d4b;
   color: #ffffff;
 }
-
 .darkMode #toggle-view:hover {
-  background-color: #3a3c3b; /* Slightly darker on hover */
+  background-color: #3a3c3b;
   color: #ffffff;
 }
 
-.darkMode #distance-range-input{
-  color: #ffffff; /* White text */
-  border-color: #444444; /* Dark border color */
+.darkMode #distance-range-input {
+  color: #ffffff;
+  border-color: #444444;
 }
-
 .darkMode #distance-range-input-ticks {
-  color: #545151; /* Green thumb */
+  color: #545151;
 }
-
-
-
-/* Job Post Search Range Slider */
-
-/* Custom range slider */
 .range-slider {
   -webkit-appearance: none;
   appearance: none;
@@ -206,8 +209,6 @@ input[type="submit"] {
   outline: none;
   transition: background 0.15s ease-in-out;
 }
-
-/* Remove default appearance */
 .range-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -219,11 +220,9 @@ input[type="submit"] {
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s;
 }
-
 .range-slider::-webkit-slider-thumb:hover {
   transform: scale(1.2);
 }
-
 .range-slider::-moz-range-thumb {
   width: 20px;
   height: 20px;
@@ -233,20 +232,9 @@ input[type="submit"] {
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s;
 }
-
 .range-slider::-moz-range-thumb:hover {
   transform: scale(1.2);
 }
-
-
-
-
-
-
-
-
-
-
 
 .footer {
   background-color: #ffffff;
@@ -272,10 +260,22 @@ input[type="submit"] {
 }
 
 .details-panel {
-  background-color: #f8f8f8; 
+  background-color: #f8f8f8;
   color: #000000;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 .darkMode .details-panel {
-  background-color: #4a4a4a; 
+  background-color: #4a4a4a;
   color: #ffffff;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.toggle-switch {
+  background-color: #ffffff;
+  transition: background-color 0.3s ease;
+}
+.darkMode .toggle-switch {
+  background-color: #2f2f2f;
 }
