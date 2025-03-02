@@ -179,7 +179,7 @@ export function JobPostDetails() {
 
     return (
         <div
-            className={`main-content min-h-screen p-6 ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
+            className={`main-content min-h-screen p-6 ${darkMode ? "bg-gray-600 text-white" : "bg-gray-100 text-black"
                 }`}
         >
             <div
@@ -231,20 +231,20 @@ export function JobPostDetails() {
                         </div>
                         <div className="flex flex-wrap items-center text-sm text-neutral-500 ">
                             <span className="flex items-center mr-4 font-bold">
-                                <FaMapMarkerAlt className="mr-1" />
+                                <FaMapMarkerAlt className={`mr-1 ${darkMode ? 'text-red-500' : 'text-red-600'} `} />
                                 {job.address}
                             </span>
                             <span className="flex items-center mr-4 font-bold">
-                                <FaUsers className="mr-1" />
+                                <FaUsers className={`mr-1 ${darkMode ? 'text-yellow-400' : 'text-amber-700'} `} />
                                 {job.maxApplicants}
                             </span>
                             <span className="flex items-center mr-4 font-bold">
-                                <FaCalendarAlt className="mr-1" />
+                                <FaCalendarAlt className={`mr-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'} `} />
                                 Posted: {new Date(job.datePosted).toLocaleDateString()}
                             </span>
                             <br />
                             <span className="flex items-center mr-4 font-bold ">
-                                <FaUsers className="mr-1" />
+                                <FaUsers className={`mr-1 ${darkMode ? 'text-green-400' : 'text-green-600'} `} />
                                 Already applied: {job.applicantsCount}
                             </span>
                         </div>
