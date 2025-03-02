@@ -1,6 +1,7 @@
 package org.job_spotter.jobpost.model;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public enum JobTagEnum {
@@ -64,6 +65,12 @@ public enum JobTagEnum {
         return Arrays.stream(JobTagEnum.values())
                 .map(JobTagEnum::name) // Get the enum constant name (e.g., GENERAL_HELP)
                 .collect(Collectors.joining(", ")); // Join the enum names with commas
+    }
+
+    //Method to return the map of all enum values as Enum name and display name
+    public static Map<String, String> getAllEnumValues() {
+        return Arrays.stream(JobTagEnum.values())
+                .collect(Collectors.toMap(JobTagEnum::name, JobTagEnum::getDisplayName));
     }
 
 }

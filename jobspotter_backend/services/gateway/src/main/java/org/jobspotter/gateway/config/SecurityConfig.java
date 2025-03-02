@@ -38,6 +38,7 @@ public class SecurityConfig {
 
                         .pathMatchers("/api/v1/users/auth/**").permitAll()
                         .pathMatchers("/eureka/**").permitAll()
+                        .pathMatchers(HttpMethod.GET,"/api/v1/job-posts/job-tags").permitAll()
                         .pathMatchers(HttpMethod.GET,"/api/v1/job-posts/search").permitAll()
                         .pathMatchers(HttpMethod.GET, "/api/v1/job-posts").permitAll()
                         .anyExchange().authenticated()
