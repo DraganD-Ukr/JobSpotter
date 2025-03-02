@@ -34,7 +34,9 @@ public class JobPostController {
 
     private final JobPostService jobPostService;
 
-
+    //-----------------------------------------------------------------------------------------------------------------
+    //                                           Job Post Viewing Endpoints
+    //-----------------------------------------------------------------------------------------------------------------
     //Get Job Post tag enums
     @Operation(
             summary = "Get all job tag enums",
@@ -46,7 +48,7 @@ public class JobPostController {
             @ApiResponse(responseCode = "500", description = "Internal server error",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
     })
-    @GetMapping("/job-tags")
+    @GetMapping("/tags")
     public ResponseEntity<Map<String, String>> getAllJobTags() {
         return ResponseEntity.ok(JobTagEnum.getAllEnumValues());
     }
@@ -154,6 +156,70 @@ public class JobPostController {
         return ResponseEntity.ok(results);
     }
 
+
+    @Operation(
+            summary = "Get job posts created by user",
+            description = "Retrieves all job posts created by the authenticated user. Job posts also contain basic info of applicants. "
+                    + "This method depends on the user-service."
+                    + "This method returns a paginated list of job posts created by the user."
+                    + " - If title is provided, the search will be based on the title."
+                    + " - If tags are provided, the search will be based on the tags."
+                    + " - If status is provided, the search will be based on the status."
+                    + " - If page and size are provided, the search will be paginated. Default page is 0 and size is 10."
+                    + "All parameters are optional. Combining multiple parameters will narrow down the search."
+
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully got job posts created by user",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyJobPostResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/my-job-posts")
+    public ResponseEntity<Page<MyJobPostResponse>> getMyJobPosts(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "tags", required = false) String tags,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int size
+    ) throws Exception {
+        log.info("Getting my job posts");
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+        return ResponseEntity.ok(jobPostService.getMyJobPosts(userId, title, tags, status, pageNumber, size));
+    }
+
+
+
+    @GetMapping("/history")
+    public ResponseEntity<Page<JobPostsUserWorkedOnResponse>> getJobsUserWorkedOn(
+
+            @RequestHeader("Authorization") String accessToken,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "tags",required = false) String tags,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "sortBy", defaultValue = "datePosted") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+
+
+    ) throws Exception {
+        log.info("Getting my worked jobs");
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+        return ResponseEntity.ok(jobPostService.getJobsUserWorkedOn(userId, page, size, sortBy, sortDirection, status, title));
+    }
+
+    //-----------------------------------------------------------------------------------------------------------------
+    //                                           Job Post Management Endpoints
+    //-----------------------------------------------------------------------------------------------------------------
     @Operation(
             summary = "Create job post",
             description = "Create a job post. "
@@ -225,67 +291,6 @@ public class JobPostController {
 
         return ResponseEntity.noContent().build();
     }
-
-
-    @Operation(
-            summary = "Get job posts created by user",
-            description = "Retrieves all job posts created by the authenticated user. Job posts also contain basic info of applicants. "
-                    + "This method depends on the user-service."
-                    + "This method returns a paginated list of job posts created by the user."
-                    + " - If title is provided, the search will be based on the title."
-                    + " - If tags are provided, the search will be based on the tags."
-                    + " - If status is provided, the search will be based on the status."
-                    + " - If page and size are provided, the search will be paginated. Default page is 0 and size is 10."
-                    + "All parameters are optional. Combining multiple parameters will narrow down the search."
-
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully got job posts created by user",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyJobPostResponse.class))
-            ),
-            @ApiResponse(responseCode = "400", description = "Bad request",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
-            )
-    })
-    @GetMapping("/my-job-posts")
-    public ResponseEntity<Page<MyJobPostResponse>> getMyJobPosts(
-            @RequestHeader("Authorization") String accessToken,
-            @RequestParam(value = "title", required = false) String title,
-            @RequestParam(value = "tags", required = false) String tags,
-            @RequestParam(value = "status", required = false) String status,
-            @RequestParam(defaultValue = "0") int pageNumber,
-            @RequestParam(defaultValue = "10") int size
-    ) throws Exception {
-        log.info("Getting my job posts");
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
-
-        return ResponseEntity.ok(jobPostService.getMyJobPosts(userId, title, tags, status, pageNumber, size));
-    }
-
-
-
-    @GetMapping("/history")
-    public ResponseEntity<Page<JobPostsUserWorkedOnResponse>> getJobsUserWorkedOn(
-
-            @RequestHeader("Authorization") String accessToken,
-
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sortBy", defaultValue = "datePosted") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection,
-            @RequestParam(value = "status", required = false) String status,
-            @RequestParam(value = "title", required = false) String title
-
-    ) throws Exception {
-        log.info("Getting my worked jobs");
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
-
-        return ResponseEntity.ok(jobPostService.getJobsUserWorkedOn(userId, page, size, sortBy, sortDirection, status, title));
-    }
-
 
     @Operation(
             summary = "Manage applicants of user's job post",
