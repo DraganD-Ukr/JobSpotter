@@ -14,6 +14,7 @@ export function SearchJobPost() {
   const [errorMessage, setErrorMessage] = useState("");
   const [viewType, setViewType] = useState("card"); // "card" or "list"
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [filters, setFilters] = useState({
@@ -28,52 +29,52 @@ export function SearchJobPost() {
 
   useEffect(() => {
     const fetchTags = async () => {
-        if (tagMappingCache) {
-            console.log("Using cached tag data.");
-            setTagMapping(tagMappingCache);
-            return;
+      if (tagMappingCache) {
+        console.log("Using cached tag data.");
+        setTagMapping(tagMappingCache);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/v1/job-posts/tags', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
+        }
+        const tagsData = await res.json();
+        console.log("Fetched tags data from API:", tagsData);
+
+        if (!tagsData || typeof tagsData !== 'object' || Array.isArray(tagsData)) { // **Improved type checking**
+          console.warn("API response did not return a valid tags object.");
+          setTagMapping(new Map());
+          return;
         }
 
-        try {
-            const res = await fetch('/api/v1/job-posts/tags', {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-            });
-            if (!res.ok) {
-                throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
-            }
-            const tagsData = await res.json();
-            console.log("Fetched tags data from API:", tagsData);
 
-            if (!tagsData || typeof tagsData !== 'object' || Array.isArray(tagsData)) { // **Improved type checking**
-                console.warn("API response did not return a valid tags object.");
-                setTagMapping(new Map());
-                return;
-            }
+        const newTagMap = new Map();
+        Object.keys(tagsData).forEach(enumValue => { // **Iterate over object keys**
+          const friendlyName = tagsData[enumValue]; // **Get friendly name using enumValue as key**
+          if (friendlyName) { // Check if friendlyName exists
+            newTagMap.set(friendlyName, enumValue); // **Correctly set the map - friendlyName as key, enumValue as value (reversed mapping)**
+          } else {
+            console.warn(`Tag object missing friendlyName for enumValue: ${enumValue}`);
+          }
+        });
 
+        tagMappingCache = newTagMap;
+        setTagMapping(newTagMap);
 
-            const newTagMap = new Map();
-            Object.keys(tagsData).forEach(enumValue => { // **Iterate over object keys**
-                const friendlyName = tagsData[enumValue]; // **Get friendly name using enumValue as key**
-                if (friendlyName) { // Check if friendlyName exists
-                    newTagMap.set(friendlyName, enumValue); // **Correctly set the map - friendlyName as key, enumValue as value (reversed mapping)**
-                } else {
-                    console.warn(`Tag object missing friendlyName for enumValue: ${enumValue}`);
-                }
-            });
-
-            tagMappingCache = newTagMap;
-            setTagMapping(newTagMap);
-
-        } catch (error) {
-            console.error("Error fetching tags:", error);
-            setErrorMessage("Failed to load job tags.");
-        }
+      } catch (error) {
+        console.error("Error fetching tags:", error);
+        setErrorMessage("Failed to load job tags.");
+      }
     };
 
     fetchTags();
-}, []);
+  }, []);
 
 
   const [isTagsCollapsed, setIsTagsCollapsed] = useState(false);
@@ -110,7 +111,7 @@ export function SearchJobPost() {
 
   useEffect(() => {
     fetchJobs();
-  }, [searchParams, page]);
+  }, [searchParams, page, pageSize]);
 
   function fetchJobs() {
     setLoading(true);
@@ -121,7 +122,7 @@ export function SearchJobPost() {
     const latitude = searchParams.get("latitude") || "";
     const longitude = searchParams.get("longitude") || "";
     const radius = searchParams.get("radius") || "";
-    const size = 10;
+
 
 
     // Ensure tagArray is an array and join the tags into a string
@@ -129,7 +130,7 @@ export function SearchJobPost() {
     const tagsParam = tagArray.length > 0 ? (tagArray.join(",")) : ""; // Only join if tags are present
 
     // Construct the API endpoint
-    const endpoint = `/api/v1/job-posts/search?title=${encodeURIComponent(query)}&tags=${encodeURIComponent(tagsParam)}&latitude=${latitude}&longitude=${longitude}&radius=${radius}&pageNumber=${page}&size=${size}`;
+    const endpoint = `/api/v1/job-posts/search?title=${encodeURIComponent(query)}&tags=${encodeURIComponent(tagsParam)}&latitude=${latitude}&longitude=${longitude}&radius=${radius}&pageNumber=${page}&size=${pageSize}`;
 
     // Log the endpoint for debugging
     console.log(endpoint);
@@ -221,7 +222,15 @@ export function SearchJobPost() {
     setPage(newPage);
   }
 
-  // Generate pagination buttons
+
+
+  // ---------------------------------------PAGE SIZE----------------------------------------
+  const handlePageSizeChange = (event) => {
+    setPageSize(parseInt(event.target.value, 10));
+    setPage(0); // Reset to the first page when page size changes
+  };
+
+  // --------------------------------------------------------PAGINATION--------------------------------------------------------
   function renderPaginationButtons() {
     const maxButtons = 5;
     const buttons = [];
@@ -344,7 +353,7 @@ export function SearchJobPost() {
 
 
   return (
-    
+
     <div className={`main-content min-h-screen p-4 ${darkMode ? "bg-gray-900 text-white" : "bg-white text-black"}`}>
 
       {/* Search Bar */}
@@ -381,6 +390,24 @@ export function SearchJobPost() {
             </>
           )}
         </button>
+
+
+        {/* Show Results Dropdown */}
+        <div className="justify-center ml-10 flex items-center">
+          <label htmlFor="pageSize" className="mr-2">Show Results:</label>
+          <select
+            id="pageSize"
+            value={pageSize}
+            onChange={handlePageSizeChange}
+            className="px-2 py-1 border rounded"
+          >
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="30">30</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+
       </div>
 
 
@@ -541,7 +568,7 @@ export function SearchJobPost() {
         <div className="w-4/5 p-4 ml-4 mr-30">
           <div className="flex flex-col items-start mb-8">
             <h2 className="text-2xl font-bold text-center mb-4">
-              {totalElements>=1
+              {totalElements >= 1
                 ? `Search returned ${totalElements} job posts`
                 : "No job posts found"}
             </h2>
@@ -557,12 +584,12 @@ export function SearchJobPost() {
             <p className="text-center">No jobs found.</p>
           ) : (
             <>
-              
-                <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto" : "max-w-6xl mx-auto space-y-4"}>
-                  {jobPostsData.map((job) => (
-                    <Link to={`/job/${job.jobPostId}`}
-                key={job.jobPostId}
-              >
+
+              <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto" : "max-w-6xl mx-auto space-y-4"}>
+                {jobPostsData.map((job) => (
+                  <Link to={`/job/${job.jobPostId}`}
+                    key={job.jobPostId}
+                  >
                     <div
                       key={job.jobPostId}
                       className={`card border border-gray-300 ${viewType === "card" ? "hover:shadow-md hover:border-green-500 transition" : "rounded-lg shadow"} w-full ${viewType === "card" ? "max-w-sm" : ""} flex flex-col p-4 rounded-lg`}
@@ -592,12 +619,12 @@ export function SearchJobPost() {
                         </p>
                       )}
                       <input type="hidden" value={job.jobPostId} />
-                      
+
                     </div>
-                    </Link>
-                  ))}
-                </div>
-              
+                  </Link>
+                ))}
+              </div>
+
             </>
           )}
 

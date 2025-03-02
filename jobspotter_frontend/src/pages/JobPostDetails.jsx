@@ -259,7 +259,7 @@ export function JobPostDetails() {
 
     return (
         <div
-            className={`main-content min-h-screen p-6 ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
+            className={`main-content min-h-screen border-4  border-double rounded-3xl  mt-10 mb-30 p-6 ${darkMode ? "bg-gray-900 text-white border-blue-600" : "bg-gray-100 text-black border-green-600"
                 }`}
         >
              {/* Error Display (Conditional) */}
@@ -294,8 +294,8 @@ export function JobPostDetails() {
 
 
             <div
-                className={`max-w-4xl mx-auto shadow-lg rounded-lg p-6 transition-all duration-300 ${darkMode ? "bg-gray-800" : "bg-white"
-                    } hover:shadow-xl`}
+                className={`max-w-4xl mx-auto shadow-lg drop-shadow-2xl rounded-lg p-6 mt-30 transition-all duration-300 ${darkMode ? "bg-gray-800" : "bg-white"
+                    } hover:shadow-xl`} 
             >
                 {/* Top Section:  Logo, Title, Basic Info, and Poster */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center border-b pb-4 mb-6">
