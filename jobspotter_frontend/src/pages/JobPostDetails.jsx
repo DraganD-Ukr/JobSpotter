@@ -58,10 +58,76 @@ export function JobPostDetails() {
     const [errorMessage, setErrorMessage] = useState("");
     const { darkMode } = useContext(ThemeContext);
     const [isSaved, setIsSaved] = useState(false); // State to track if the job is saved
+    const [isApplyModalOpen, setIsApplyModalOpen] = useState(false); // State to control apply modal visibility
+    const [applicationMessage, setApplicationMessage] = useState(""); // State for the application message
+
+
 
     const toggleSave = () => {
         setIsSaved(!isSaved);
     };
+
+    const toggleApplyModal = () => {
+        setIsApplyModalOpen(!isApplyModalOpen);
+    };
+
+    const handleApply = () => {
+        toggleApplyModal(); // Open the apply modal
+    };
+
+    const submitApplication = () => {
+        // Here you would typically handle the application submission logic
+        // For now, let's just log the message and close the modal
+        console.log("Application Message:", applicationMessage);
+        applyToJobPost(applicationMessage); // Call the function to submit the application
+        toggleApplyModal(); // Close the modal after submission (or attempted submission)
+        // In a real application, you would send this message and jobId to your backend
+    };
+
+    function applyToJobPost(applicationMessage) {
+
+        fetch(`/api/v1/job-posts/${jobId}/apply`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ message: applicationMessage }),
+        })
+            .then(res => { // **MODIFIED: Removed parseNoContent here and handle status check**
+                if (!res.ok) { // Check if the response status is NOT in the success range (2xx)
+                    // Handle different error status codes
+                    if (res.status === 400) {
+                        throw new Error("Bad request. The application data might be invalid."); // Specific 400 error
+                    } else if (res.status === 401) {
+                        throw new Error("Unauthorized. You might not be logged in."); // Specific 401 error
+                    } else if (res.status === 403) {
+                        throw new Error("Forbidden. You don't have permission to apply for this job."); // Specific 403 error
+                    } else if (res.status === 404) {
+                        throw new Error("Job post not found."); // Specific 404 error
+                    } else if (res.status === 409) {
+                        throw new Error("You have already applied to this job post!"); // Conflict 409 error
+                    } else if (res.status >= 500 && res.status < 600) {
+                        throw new Error("Server error. Please try again later."); // General 5xx server error
+                    } else {
+                        throw new Error(`Request failed with status code ${res.status}`); // Generic error for other statuses
+                    }
+                }
+
+                // If res.ok is true (status in 2xx range), proceed to parseNoContent
+                return parseNoContent(res); // Call parseNoContent only for successful responses
+            })
+            .then(() => {
+                setErrorMessage(""); // Clear any previous error message
+                console.log("Application submitted successfully");
+                // Here you can show a success message to the user, e.g., using a state variable and conditional rendering
+                // Example: setSuccessMessage("Application submitted successfully!");
+            })
+            .catch((err) => {
+                console.error("Error applying to job post:", err);
+                setErrorMessage(err.message); // Use the error message from the thrown Error
+                // Here you can show an error message to the user, which is already being done using errorMessage state
+            });
+    }
+
 
     // Helper to parse responses with no content (204)
     function parseNoContent(res) {
@@ -71,6 +137,7 @@ export function JobPostDetails() {
         }
         return res.json();
     }
+
 
     useEffect(() => {
         if (!jobId) {
@@ -117,7 +184,7 @@ export function JobPostDetails() {
                         })
                         .catch((err) => {
                             console.error("Error fetching job jobPoster details:", err);
-                            // Don't set an error message here; it's less critical.  Just log it.
+                            // Don't set an error message here; it's less critical.  Just log it.
                         });
                 }
             })
@@ -139,24 +206,7 @@ export function JobPostDetails() {
         );
     }
 
-    if (errorMessage) {
-        return (
-            <div
-                className={`main-content min-h-screen p-6 ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
-                    }`}
-            >
-                <h1
-                    className={`text-2xl font-bold mb-4 ${darkMode ? "text-white" : "text-red-500"
-                        }`}
-                >
-                    Error
-                </h1>
-                <p className={`text-red-500 ${darkMode ? "text-red-400" : ""}`}>
-                    {errorMessage}
-                </p>
-            </div>
-        );
-    }
+
 
     if (!job) {
         return (
@@ -179,14 +229,23 @@ export function JobPostDetails() {
 
     return (
         <div
-            className={`main-content min-h-screen p-6 ${darkMode ? "bg-gray-600 text-white" : "bg-gray-100 text-black"
+            className={`main-content min-h-screen p-6 ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
                 }`}
         >
+            {/* Error Display (Conditional) */}
+            {errorMessage && ( // Render this block only if errorMessage is truthy (not empty)
+                <div className="mb-8 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md" role="alert">
+                    <h3 className="font-bold">Error</h3>
+                    <p>{errorMessage}</p>
+                </div>
+            )}
+
+
             <div
                 className={`max-w-4xl mx-auto shadow-lg rounded-lg p-6 transition-all duration-300 ${darkMode ? "bg-gray-800" : "bg-white"
                     } hover:shadow-xl`}
             >
-                {/* Top Section:  Logo, Title, Basic Info, and Poster */}
+                {/* Top Section:  Logo, Title, Basic Info, and Poster */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center border-b pb-4 mb-6">
                     {/* Placeholder for Logo */}
 
@@ -206,7 +265,7 @@ export function JobPostDetails() {
                             {jobPoster && (
                                 <div className={`flex items-center text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'} border p-3 rounded-lg ${darkMode ? 'border-gray-500' : 'border-gray-300'}`}>
                                     {/* Profile Picture Container */}
-                                    <div className={`w-15 h-15 rounded-full  bg-gray-300 mr-2 ${darkMode ? 'bg-gray-600' : ''} flex items-center justify-center`}>
+                                    <div className={`w-15 h-15 rounded-full  bg-gray-300 mr-2 ${darkMode ? 'bg-gray-600' : ''} flex items-center justify-center`}>
                                         {/* Profile Picture or Placeholder Icon */}
                                         {jobPoster.profilePicture ? (
                                             <img
@@ -231,20 +290,20 @@ export function JobPostDetails() {
                         </div>
                         <div className="flex flex-wrap items-center text-sm text-neutral-500 ">
                             <span className="flex items-center mr-4 font-bold">
-                                <FaMapMarkerAlt className={`mr-1 ${darkMode ? 'text-red-500' : 'text-red-600'} `} />
+                                <FaMapMarkerAlt className={`mr-1 ${darkMode ? 'text-red-500' : 'text-red-600'}`} />
                                 {job.address}
                             </span>
                             <span className="flex items-center mr-4 font-bold">
-                                <FaUsers className={`mr-1 ${darkMode ? 'text-yellow-400' : 'text-amber-700'} `} />
+                                <FaUsers className={`mr-1 ${darkMode ? 'text-purple-500' : 'text-purple-700'}`} />
                                 {job.maxApplicants}
                             </span>
                             <span className="flex items-center mr-4 font-bold">
-                                <FaCalendarAlt className={`mr-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'} `} />
+                                <FaCalendarAlt className={`mr-1 ${darkMode ? 'text-yellow-500' : 'text-amber-600'}`} />
                                 Posted: {new Date(job.datePosted).toLocaleDateString()}
                             </span>
                             <br />
                             <span className="flex items-center mr-4 font-bold ">
-                                <FaUsers className={`mr-1 ${darkMode ? 'text-green-400' : 'text-green-600'} `} />
+                                <FaUsers className={`mr-1 ${darkMode ? 'text-green-500' : 'text-green-600'}`} />
                                 Already applied: {job.applicantsCount}
                             </span>
                         </div>
@@ -252,24 +311,6 @@ export function JobPostDetails() {
                     </div>
                 </div>
 
-                {/* Buttons */}
-                <div className="flex justify-center sm:justify-end space-x-4 mb-6">
-                    <button
-                        className={`bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 ${darkMode ? "dark:bg-green-700 dark:hover:bg-green-800" : ""
-                            }`}
-                    >
-                        Apply
-                    </button>
-                    <button
-                        onClick={toggleSave}
-                        className={`px-6 py-2 rounded-md transition duration-300 ease-in-out transform hover:scale-105 flex items-center ${isSaved
-                            ? (darkMode ? 'bg-red-700 text-white hover:bg-red-800' : 'bg-red-500 text-white hover:bg-red-600')
-                            : (darkMode ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-gray-300 text-gray-700 hover:bg-gray-400')
-                            }`}
-                    >
-                        {isSaved ? <FaHeart className="w-5 h-5" /> : <FaRegHeart className="w-5 h-5" />}
-                    </button>
-                </div>
 
 
                 {/* Job Description */}
@@ -303,7 +344,7 @@ export function JobPostDetails() {
                     )}
 
                     {job.tags && job.tags.length > 0 && (
-                        <div className={`flex flex-wrap items-center mt-4 ${darkMode ? 'text-gray-300' : ''}`}>
+                        <div className={`flex flex-wrap items-center mt-20 ${darkMode ? 'text-gray-300' : ''}`}>
 
                             {job.tags.map((tag) => (
                                 <span
@@ -318,7 +359,62 @@ export function JobPostDetails() {
                         </div>
                     )}
                 </div>
+
+                {/* Buttons */}
+                <div className="flex justify-center sm:justify-end space-x-4 mb-6">
+                    <button
+                        onClick={handleApply}
+                        className={`bg-green-500 text-white px-6 py-2 rounded-3xl hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 ${darkMode ? "dark:bg-green-700 dark:hover:bg-green-800" : ""
+                            }`}
+                    >
+                        Apply
+                    </button>
+                    <button
+                        onClick={toggleSave}
+                        className={`px-2.5 py-2 rounded-3xl transition duration-300 ease-in-out transform hover:scale-105 flex items-center ${isSaved
+                            ? (darkMode ? 'bg-red-700 text-white hover:bg-red-800' : 'bg-red-500 text-white hover:bg-red-600')
+                            : (darkMode ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-gray-300 text-gray-700 hover:bg-gray-400')
+                            }`}
+                    >
+                        {isSaved ? <FaHeart className="w-5 h-5" /> : <FaRegHeart className="w-5 h-5" />}
+                    </button>
+                </div>
+
             </div>
+
+
+
+            {/* Apply Modal */}
+            {isApplyModalOpen && (
+                <div className="fixed inset-0 z-50 overflow-auto backdrop-blur-xs bg-opacity-50 flex justify-center items-center">
+
+                    <div className={`  ${darkMode ? 'bg-gray-700 text-white' : 'bg-neutral-200 bg-opacity-40 '} rounded-lg p-8 max-w-md w-full mx-auto`}>
+                        <h2 className="text-2xl font-bold mb-4">Apply for Job</h2>
+                        <p className="mb-4">Leave an optional message with your application:</p>
+                        <textarea
+                            className={`w-full p-2 border rounded mb-4 text-black ${darkMode ? 'bg-gray-700 text-white border-gray-500' : ''}`}
+                            placeholder="Optional message to the job poster..."
+                            value={applicationMessage}
+                            onChange={(e) => setApplicationMessage(e.target.value)}
+                        />
+                        <div className="flex justify-end space-x-4">
+                            <button
+                                onClick={submitApplication}
+                                className={` px-4 py-2 rounded ${darkMode ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-green-500 text-white hover:bg-green-600'} `}
+                            >
+                                Submit Application
+                            </button>
+                            <button
+                                id="cancel-apply"
+                                onClick={toggleApplyModal}
+                                className={`px-4 py-2 rounded   ${darkMode ? 'bg-gray-300 hover:bg-gray-500 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-700 '}`}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
