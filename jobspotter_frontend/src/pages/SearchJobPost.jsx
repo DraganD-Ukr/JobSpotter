@@ -4,40 +4,9 @@ import { FaList, FaTh, FaTag, FaChevronDown, FaChevronUp, FaMapMarkerAlt, FaUser
 import { ThemeContext } from "../components/ThemeContext"; // Import ThemeContext for dark mode
 import { MdDateRange } from "react-icons/md";
 
-const reversedTagMapping = new Map([
-  ["General Help", "GENERAL_HELP"],
-  ["Handyman Services", "HANDYMAN_SERVICES"],
-  ["Skilled Trades", "SKILLED_TRADES"],
-  ["Cleaning Services", "CLEANING_SERVICES"],
-  ["Delivery Services", "DELIVERY_SERVICES"],
-  ["Caregiving", "CAREGIVING"],
-  ["Pet Care", "PET_CARE"],
-  ["Tutoring/Mentoring", "TUTORING_MENTORING"],
-  ["Event Staff", "EVENT_STAFF"],
-  ["Administrative Support", "ADMINISTRATIVE_SUPPORT"],
-  ["Virtual Assistance", "VIRTUAL_ASSISTANCE"],
-  ["Food Services", "FOOD_SERVICES"],
-  ["Gardening/Landscaping", "GARDENING_LANDSCAPING"],
-  ["Community Outreach", "COMMUNITY_OUTREACH"],
-  ["IT Support", "IT_SUPPORT"],
-  ["Creative Services", "CREATIVE_SERVICES"],
-  ["Personal Services", "PERSONAL_SERVICES"],
-  ["Tutoring Languages", "TUTORING_LANGUAGES"],
-  ["Music Instruction", "MUSIC_INSTRUCTION"],
-  ["Home Maintenance", "HOME_MAINTENANCE"],
-  ["Transportation Assistance", "TRANSPORTATION_ASSISTANCE"],
-  ["Errands/Shopping", "ERRANDS_SHOPPING"],
-  ["Volunteer Work", "VOLUNTEER_WORK"],
-  ["Community Events", "COMMUNITY_EVENTS"],
-  ["Fundraising", "FUNDRAISING"],
-  ["Animal Welfare", "ANIMAL_WELFARE"],
-  ["Mentoring (Community)", "MENTORING"],
-  ["Health Support", "HEALTH_SUPPORT"],
-  ["Counseling Support", "COUNSELING_SUPPORT"],
-  ["Disaster Relief", "DISASTER_RELIEF"],
-  ["Environmental Conservation", "ENVIRONMENTAL_CONSERVATION"],
-  ["Other", "OTHER"],
-]);
+
+
+let tagMappingCache = null;
 
 export function SearchJobPost() {
   const [jobPostsData, setJobPostsData] = useState([]);
@@ -54,6 +23,57 @@ export function SearchJobPost() {
     longitude: "",
     radius: 50,
   });
+
+  const [tagMapping, setTagMapping] = useState(new Map()); // State for dynamic tag map
+
+  useEffect(() => {
+    const fetchTags = async () => {
+        if (tagMappingCache) {
+            console.log("Using cached tag data.");
+            setTagMapping(tagMappingCache);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/v1/job-posts/tags', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+            });
+            if (!res.ok) {
+                throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
+            }
+            const tagsData = await res.json();
+            console.log("Fetched tags data from API:", tagsData);
+
+            if (!tagsData || typeof tagsData !== 'object' || Array.isArray(tagsData)) { // **Improved type checking**
+                console.warn("API response did not return a valid tags object.");
+                setTagMapping(new Map());
+                return;
+            }
+
+
+            const newTagMap = new Map();
+            Object.keys(tagsData).forEach(enumValue => { // **Iterate over object keys**
+                const friendlyName = tagsData[enumValue]; // **Get friendly name using enumValue as key**
+                if (friendlyName) { // Check if friendlyName exists
+                    newTagMap.set(friendlyName, enumValue); // **Correctly set the map - friendlyName as key, enumValue as value (reversed mapping)**
+                } else {
+                    console.warn(`Tag object missing friendlyName for enumValue: ${enumValue}`);
+                }
+            });
+
+            tagMappingCache = newTagMap;
+            setTagMapping(newTagMap);
+
+        } catch (error) {
+            console.error("Error fetching tags:", error);
+            setErrorMessage("Failed to load job tags.");
+        }
+    };
+
+    fetchTags();
+}, []);
 
 
   const [isTagsCollapsed, setIsTagsCollapsed] = useState(false);
@@ -146,7 +166,7 @@ export function SearchJobPost() {
       if (Array.isArray(job.tags)) {
         friendlyTags = job.tags.map((tagObj) => {
           const enumVal = tagObj.tagName || tagObj.name || tagObj.value;
-          return reversedTagMapping.get(enumVal) || enumVal;
+          return tagMapping.get(enumVal) || enumVal;
         });
       }
       return { ...job, tags: friendlyTags };
@@ -393,7 +413,7 @@ export function SearchJobPost() {
                     >
                       <FaTag className="mr-2" />
                       <span className="mr-2">
-                        {Array.from(reversedTagMapping.entries()).find(([key, value]) => value === tag)?.[0]}
+                        {Array.from(tagMapping.entries()).find(([key, value]) => value === tag)?.[0]}
                       </span>
                       <button
                         type="button"
@@ -412,8 +432,8 @@ export function SearchJobPost() {
                   className="w-full px-4 py-2 border rounded-md"
                 >
                   <option value="">Select a tag</option>
-                  {Array.from(reversedTagMapping.keys()).map((tag) => (
-                    <option key={tag} value={reversedTagMapping.get(tag)}>
+                  {Array.from(tagMapping.keys()).map((tag) => (
+                    <option key={tag} value={tagMapping.get(tag)}>
                       {tag}
                     </option>
                   ))}
@@ -567,7 +587,7 @@ export function SearchJobPost() {
                         <p className="my-3 text-sm">
 
                           {job.tags
-                            .map((tag) => Array.from(reversedTagMapping.entries()).find(([key, value]) => value === tag)?.[0])
+                            .map((tag) => Array.from(tagMapping.entries()).find(([key, value]) => value === tag)?.[0])
                             .join(", ")}
                         </p>
                       )}

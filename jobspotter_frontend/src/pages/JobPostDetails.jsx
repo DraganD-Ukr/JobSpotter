@@ -15,40 +15,11 @@ import {
 } from "react-icons/fa";
 import { ThemeContext } from "../components/ThemeContext";
 
-const tagMapping = new Map([
-    ["GENERAL_HELP", "General Help"],
-    ["HANDYMAN_SERVICES", "Handyman Services"],
-    ["SKILLED_TRADES", "Skilled Trades"],
-    ["CLEANING_SERVICES", "Cleaning Services"],
-    ["DELIVERY_SERVICES", "Delivery Services"],
-    ["CAREGIVING", "Caregiving"],
-    ["PET_CARE", "Pet Care"],
-    ["TUTORING_MENTORING", "Tutoring/Mentoring"],
-    ["EVENT_STAFF", "Event Staff"],
-    ["ADMINISTRATIVE_SUPPORT", "Administrative Support"],
-    ["VIRTUAL_ASSISTANCE", "Virtual Assistance"],
-    ["FOOD_SERVICES", "Food Services"],
-    ["GARDENING_LANDSCAPING", "Gardening/Landscaping"],
-    ["COMMUNITY_OUTREACH", "Community Outreach"],
-    ["IT_SUPPORT", "IT Support"],
-    ["CREATIVE_SERVICES", "Creative Services"],
-    ["PERSONAL_SERVICES", "Personal Services"],
-    ["TUTORING_LANGUAGES", "Tutoring Languages"],
-    ["MUSIC_INSTRUCTION", "Music Instruction"],
-    ["HOME_MAINTENANCE", "Home Maintenance"],
-    ["TRANSPORTATION_ASSISTANCE", "Transportation Assistance"],
-    ["ERRANDS/SHOPPING", "Errands/Shopping"],
-    ["VOLUNTEER_WORK", "Volunteer Work"],
-    ["COMMUNITY_EVENTS", "Community Events"],
-    ["FUNDRAISING", "Fundraising"],
-    ["ANIMAL_WELFARE", "Animal Welfare"],
-    ["Mentoring (Community)", "Mentoring (Community)"],
-    ["HEALTH_SUPPORT", "Health Support"],
-    ["COUNSELING_SUPPORT", "Counseling Support"],
-    ["DISASTER_RELIEF", "Disaster Relief"],
-    ["ENVIRONMENTAL_CONSERVATION", "Environmental Conservation"],
-    ["OTHER", "Other"],
-]);
+
+let tagMappingCache = null;
+
+
+
 
 export function JobPostDetails() {
     const { jobId } = useParams();
@@ -61,7 +32,56 @@ export function JobPostDetails() {
     const [isApplyModalOpen, setIsApplyModalOpen] = useState(false); // State to control apply modal visibility
     const [applicationMessage, setApplicationMessage] = useState(""); // State for the application message
 
+const [tagMapping, setTagMapping] = useState(new Map()); // State for dynamic tag map
 
+  useEffect(() => {
+    const fetchTags = async () => {
+        if (tagMappingCache) {
+            console.log("Using cached tag data.");
+            setTagMapping(tagMappingCache);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/v1/job-posts/tags', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+            });
+            if (!res.ok) {
+                throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
+            }
+            const tagsData = await res.json();
+            console.log("Fetched tags data from API:", tagsData);
+
+            if (!tagsData || typeof tagsData !== 'object' || Array.isArray(tagsData)) { // **Improved type checking**
+                console.warn("API response did not return a valid tags object.");
+                setTagMapping(new Map());
+                return;
+            }
+
+
+            const newTagMap = new Map();
+            Object.keys(tagsData).forEach(enumValue => { // **Iterate over object keys**
+                const friendlyName = tagsData[enumValue]; // **Get friendly name using enumValue as key**
+                if (friendlyName) { // Check if friendlyName exists
+                    newTagMap.set(friendlyName, enumValue); // **Correctly set the map - friendlyName as key, enumValue as value (reversed mapping)**
+                } else {
+                    console.warn(`Tag object missing friendlyName for enumValue: ${enumValue}`);
+                }
+            });
+
+            tagMappingCache = newTagMap;
+            setTagMapping(newTagMap);
+
+        } catch (error) {
+            console.error("Error fetching tags:", error);
+            setErrorMessage("Failed to load job tags.");
+        }
+    };
+
+    fetchTags();
+}, []);
 
     const toggleSave = () => {
         setIsSaved(!isSaved);
