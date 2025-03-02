@@ -569,9 +569,9 @@ public class JobPostImpl implements JobPostService {
 
     }
 
-
-//    ----------------------------------------- Helper methods -----------------------------------------
-
+//----------------------------------------------------------------------------------------------------------------
+//                                              Helper methods
+//----------------------------------------------------------------------------------------------------------------
 
     private void checkIfUserIsJobPoster(UUID userId, JobPost jobPost) {
         if (!jobPost.getJobPosterId().equals(userId)) {
@@ -590,7 +590,18 @@ public class JobPostImpl implements JobPostService {
 
     private List<String> covertTagsToListFromString(String tags) {
         return (tags != null && !tags.isEmpty())
-                ? Arrays.stream(tags.split(",")).map(String::trim).toList()
+                ? Arrays
+                .stream(tags.split(","))
+                .map(String::trim)
+                .map(tagName -> {
+                    try {
+                        return JobTagEnum.valueOf(tagName.toUpperCase()).getDisplayName();
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Invalid tag name: {}", tagName);
+                        throw new IllegalArgumentException("Invalid tag name: " + tagName);
+                    }
+                })
+                .toList()
                 : null;
     }
 

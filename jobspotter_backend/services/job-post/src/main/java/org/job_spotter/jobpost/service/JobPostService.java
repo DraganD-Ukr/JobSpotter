@@ -10,15 +10,19 @@ import java.util.UUID;
 
 public interface JobPostService {
 
+    //Job Post View Queries
     MyJobPostDetailedResponse getMyJobPostDetails(UUID userId, Long jobPostId);
+
+    JobPostDetailedResponse getJobPostById(Long id);
 
     Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize);
 
-    Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title);
-
     Page<MyJobPostResponse> getMyJobPosts(UUID userId,String title, String tags, String status, int page, int size);
 
-    //Job Post Functions
+    Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title);
+
+
+    //Job Post Operations
     Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken);
 
     HttpStatus applyToJobPost(Long id, UUID userId, JobPostApplyRequest jobPostApplyRequest);
@@ -31,6 +35,6 @@ public interface JobPostService {
 
     HttpStatus finishJobPost(UUID userId, Long id);
 
-    JobPostDetailedResponse getJobPostById(Long id);
+
 
 }
