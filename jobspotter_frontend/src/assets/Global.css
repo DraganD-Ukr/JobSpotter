@@ -150,9 +150,30 @@ input[type="submit"] {
 }
 
 .darkMode input[type="text"]::placeholder {
-  color: #b4b0b093;
+  color: #b4b0b093; /* White placeholder text */
 }
 
+input[type="text"]::placeholder {
+  color: #3d3939ad; /* White placeholder text */
+}
+
+.darkMode button:active,
+.darkMode input[type="button"]:active,
+.darkMode input[type="submit"]:active {
+  background-color: #333333;
+}
+
+
+
+
+
+
+
+
+
+/* Dark mode properties for certain elements */
+
+/* Page button in pagination */
 .darkMode #page-button {
   background-color: #4a4d4b;
   color: #ffffff;
@@ -201,6 +222,20 @@ input[type="submit"] {
 .darkMode #distance-range-input-ticks {
   color: #545151;
 }
+
+.darkMode #cancel-apply {
+  background-color: #80817dac; /* Green thumb */
+}
+
+.darkMode #cancel-apply:hover {
+  background-color: #60605dac; /* Green thumb */
+}
+
+
+
+/* Job Post Search Range Slider */
+
+/* Custom range slider */
 .range-slider {
   -webkit-appearance: none;
   appearance: none;

@@ -202,7 +202,7 @@ export function MyJobs() {
 
   // Navigate to job details page
   function handleViewDetails(jobId) {
-    navigate(`/job/${jobId}`);
+    navigate(`/myJob/${jobId}`);
   }
 
   // Pagination
