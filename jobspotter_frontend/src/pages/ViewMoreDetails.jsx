@@ -5,41 +5,7 @@ import { useSpring, animated } from 'react-spring';
 import { BeatLoader } from 'react-spinners'; // Or any other loading indicator you prefer
 import { ThemeContext } from "../components/ThemeContext"; // Import ThemeContext for dark mode
 
-const tagMapping = new Map([
-    ["GENERAL_HELP", "General Help"],
-    ["HANDYMAN_SERVICES", "Handyman Services"],
-    ["SKILLED_TRADES", "Skilled Trades"],
-    ["CLEANING_SERVICES", "Cleaning Services"],
-    ["DELIVERY_SERVICES", "Delivery Services"],
-    ["CAREGIVING", "Caregiving"],
-    ["PET_CARE", "Pet Care"],
-    ["TUTORING_MENTORING", "Tutoring/Mentoring"],
-    ["EVENT_STAFF", "Event Staff"],
-    ["ADMINISTRATIVE_SUPPORT", "Administrative Support"],
-    ["VIRTUAL_ASSISTANCE", "Virtual Assistance"],
-    ["FOOD_SERVICES", "Food Services"],
-    ["GARDENING_LANDSCAPING", "Gardening/Landscaping"],
-    ["COMMUNITY_OUTREACH", "Community Outreach"],
-    ["IT_SUPPORT", "IT Support"],
-    ["CREATIVE_SERVICES", "Creative Services"],
-    ["PERSONAL_SERVICES", "Personal Services"],
-    ["TUTORING_LANGUAGES", "Tutoring Languages"],
-    ["MUSIC_INSTRUCTION", "Music Instruction"],
-    ["HOME_MAINTENANCE", "Home Maintenance"],
-    ["TRANSPORTATION_ASSISTANCE", "Transportation Assistance"],
-    ["ERRANDS/SHOPPING", "Errands/Shopping"],
-    ["VOLUNTEER_WORK", "Volunteer Work"],
-    ["COMMUNITY_EVENTS", "Community Events"],
-    ["FUNDRAISING", "Fundraising"],
-    ["ANIMAL_WELFARE", "Animal Welfare"],
-    ["Mentoring (Community)", "Mentoring (Community)"],
-    ["HEALTH_SUPPORT", "Health Support"],
-    ["COUNSELING_SUPPORT", "Counseling Support"],
-    ["DISASTER_RELIEF", "Disaster Relief"],
-    ["ENVIRONMENTAL_CONSERVATION", "Environmental Conservation"],
-    ["OTHER", "Other"],
-]);
-
+// Removed the static tagMapping; now fetching dynamically
 export function ViewMoreDetails() {
     const { jobId } = useParams();
     const [job, setJob] = useState(null);
@@ -48,6 +14,7 @@ export function ViewMoreDetails() {
     const [actionMessage, setActionMessage] = useState("");
     const [errorBoxOpacity, setErrorBoxOpacity] = useState(0);
     const [successBoxOpacity, setSuccessBoxOpacity] = useState(0);
+    const [tagMapping, setTagMapping] = useState(new Map());
 
     const { darkMode } = useContext(ThemeContext); // Use dark mode context
 
@@ -81,6 +48,31 @@ export function ViewMoreDetails() {
         }
     }, [actionMessage]);
 
+    // Fetch tag mapping from API
+    useEffect(() => {
+        const fetchTags = async () => {
+            try {
+                const res = await fetch('/api/v1/job-posts/tags', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                });
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
+                }
+                const tagsData = await res.json();
+                const newTagMap = new Map();
+                Object.keys(tagsData).forEach((key) => {
+                    newTagMap.set(key, tagsData[key]);
+                });
+                setTagMapping(newTagMap);
+            } catch (error) {
+                console.error("Error fetching tags:", error);
+            }
+        };
+
+        fetchTags();
+    }, []);
 
     // Helper to parse responses that might have no content (204)
     function parseNoContent(res) {
@@ -126,7 +118,7 @@ export function ViewMoreDetails() {
                 setErrorMessage(err.message);
             })
             .finally(() => setLoading(false));
-    }, [jobId]);
+    }, [jobId, tagMapping]);
 
     // Approve or reject an applicant
     function handleApplicantAction(applicantId, action) {
@@ -226,14 +218,7 @@ export function ViewMoreDetails() {
         );
     }
 
-
-
-
-
-
-
     return (
-        
         <div className="main-content min-h-screen p-6 bg-gray-50 dark:bg-gray-900 flex gap-8 border-1 rounded-4xl">
             {/* LEFT: Job Details */}
             <div className="flex-1 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
@@ -247,7 +232,6 @@ export function ViewMoreDetails() {
                     <FaTrophy className="mr-2 text-green-500 h-6 w-6" />
                     <p>{actionMessage}</p>
                 </animated.div>
-
 
                 <div className="mb-4">
                     <strong className="block font-medium text-gray-700 dark:text-gray-300 mb-1">Job ID:</strong>
@@ -346,6 +330,5 @@ export function ViewMoreDetails() {
                 )}
             </div>
         </div>
-       
     );
 }

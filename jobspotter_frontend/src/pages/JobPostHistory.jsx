@@ -4,45 +4,41 @@ import { FaList, FaTh, FaTag, FaChevronDown, FaChevronUp, FaMapMarkerAlt, FaChec
 import { ThemeContext } from "../components/ThemeContext"; // Import ThemeContext for dark mode
 import { MdDateRange } from "react-icons/md";
 
-
-
-
-const reversedTagMapping = new Map([
-  ["General Help", "GENERAL_HELP"],
-  ["Handyman Services", "HANDYMAN_SERVICES"],
-  ["Skilled Trades", "SKILLED_TRADES"],
-  ["Cleaning Services", "CLEANING_SERVICES"],
-  ["Delivery Services", "DELIVERY_SERVICES"],
-  ["Caregiving", "CAREGIVING"],
-  ["Pet Care", "PET_CARE"],
-  ["Tutoring/Mentoring", "TUTORING_MENTORING"],
-  ["Event Staff", "EVENT_STAFF"],
-  ["Administrative Support", "ADMINISTRATIVE_SUPPORT"],
-  ["Virtual Assistance", "VIRTUAL_ASSISTANCE"],
-  ["Food Services", "FOOD_SERVICES"],
-  ["Gardening/Landscaping", "GARDENING_LANDSCAPING"],
-  ["Community Outreach", "COMMUNITY_OUTREACH"],
-  ["IT Support", "IT_SUPPORT"],
-  ["Creative Services", "CREATIVE_SERVICES"],
-  ["Personal Services", "PERSONAL_SERVICES"],
-  ["Tutoring Languages", "TUTORING_LANGUAGES"],
-  ["Music Instruction", "MUSIC_INSTRUCTION"],
-  ["Home Maintenance", "HOME_MAINTENANCE"],
-  ["Transportation Assistance", "TRANSPORTATION_ASSISTANCE"],
-  ["Errands/Shopping", "ERRANDS_SHOPPING"],
-  ["Volunteer Work", "VOLUNTEER_WORK"],
-  ["Community Events", "COMMUNITY_EVENTS"],
-  ["Fundraising", "FUNDRAISING"],
-  ["Animal Welfare", "ANIMAL_WELFARE"],
-  ["Mentoring (Community)", "MENTORING"],
-  ["Health Support", "HEALTH_SUPPORT"],
-  ["Counseling Support", "COUNSELING_SUPPORT"],
-  ["Disaster Relief", "DISASTER_RELIEF"],
-  ["Environmental Conservation", "ENVIRONMENTAL_CONSERVATION"],
-  ["Other", "OTHER"],
-]);
-
 export function JobPostHistory() {
+  // ---------------------------------------TAG MAPPING (Dynamic via API)----------------------------------------
+  const [tagMapping, setTagMapping] = useState(new Map());
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const res = await fetch("/api/v1/job-posts/tags", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
+        }
+        const tagsData = await res.json();
+        console.log("Fetched tags data from API:", tagsData);
+        const newTagMap = new Map();
+        Object.keys(tagsData).forEach((enumValue) => {
+          const friendlyName = tagsData[enumValue];
+          if (friendlyName) {
+            newTagMap.set(friendlyName, enumValue);
+          } else {
+            console.warn(`Tag object missing friendlyName for enumValue: ${enumValue}`);
+          }
+        });
+        setTagMapping(newTagMap);
+      } catch (error) {
+        console.error("Error fetching tags:", error);
+      }
+    };
+
+    fetchTags();
+  }, []);
+
+  // ---------------------------------------STATE DECLARATIONS----------------------------------------
   const [jobPostsData, setJobPostsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -56,7 +52,7 @@ export function JobPostHistory() {
   const [filters, setFilters] = useState({
     title: "",
     tags: [],
-    applicantStatus: 'ACCEPTED',
+    applicantStatus: "ACCEPTED",
   });
 
   // ---------------------------------------Collapsable filters----------------------------------------
@@ -66,11 +62,9 @@ export function JobPostHistory() {
   const toggleTagsCollapse = () => setIsTagsCollapsed(!isTagsCollapsed);
   const toggleStatusCollapse = () => setIsStatusCollapsed(!isStatusCollapsed);
 
-
   useEffect(() => {
     fetchJobPostHistory();
   }, [page]);
-
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("title") || "";
@@ -79,8 +73,6 @@ export function JobPostHistory() {
   useEffect(() => {
     fetchJobPostHistory();
   }, [searchParams, page, pageSize, sortBy]);
-
-
 
   useEffect(() => {
     fetchJobPostHistory();
@@ -95,9 +87,11 @@ export function JobPostHistory() {
 
     // Ensure tagArray is an array and join the tags into a string
     const tagArray = filters.tags || []; // Default to an empty array if filters.tags is undefined or null
-    const tagsParam = tagArray.length > 0 ? (tagArray.join(",")) : ""; // Only join if tags are present
+    const tagsParam = tagArray.length > 0 ? tagArray.join(",") : ""; // Only join if tags are present
     // Construct the API endpoint
-    const endpoint = `/api/v1/job-posts/history?title=${encodeURIComponent(query)}&tags=${encodeURIComponent(tagsParam)}&applicantStatus=${applicantStatus}&page=${page}&size=${pageSize}&sortBy=${sortBy}`;
+    const endpoint = `/api/v1/job-posts/history?title=${encodeURIComponent(
+      query
+    )}&tags=${encodeURIComponent(tagsParam)}&applicantStatus=${applicantStatus}&page=${page}&size=${pageSize}&sortBy=${sortBy}`;
 
     fetch(endpoint, {
       method: "GET",
@@ -117,7 +111,7 @@ export function JobPostHistory() {
           if (Array.isArray(job.tags)) {
             friendlyTags = job.tags.map((tagObj) => {
               const enumVal = tagObj.tagName || tagObj.name || tagObj.value;
-              return reversedTagMapping.get(enumVal) || enumVal;
+              return tagMapping.get(enumVal) || enumVal;
             });
           }
           setTotalElements(data.totalElements);
@@ -166,20 +160,16 @@ export function JobPostHistory() {
     setSearchParams({ ...filters, title: localQuery, tags: tagsParam, sortBy: sortBy });
   }
 
-
-
   // Handle filter changes
   function handleFilterChange(e) {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
-
   }
   // ---------------------------------------SORT BY----------------------------------------
   const handleSortByChange = (event) => {
     setSortBy(event.target.value);
     setPage(0); // Reset to the first page when sort by changes
   };
-
 
   // ---------------------------------------TAGS----------------------------------------
 
@@ -203,20 +193,29 @@ export function JobPostHistory() {
 
   function getRandomColor() {
     const colors = [
-      "bg-red-400", "bg-red-500",
-      "bg-yellow-400", "bg-yellow-500",
-      "bg-green-400", "bg-green-500",
-      "bg-blue-400", "bg-blue-500",
-      "bg-purple-400", "bg-purple-500",
-      "bg-pink-400", "bg-pink-500",
-      "bg-indigo-400", "bg-indigo-500",
-      "bg-teal-400", "bg-teal-500",
-      "bg-cyan-400", "bg-cyan-500",
-      "bg-orange-400", "bg-orange-500",
-      "bg-lime-400", "bg-lime-500",
+      "bg-red-400",
+      "bg-red-500",
+      "bg-yellow-400",
+      "bg-yellow-500",
+      "bg-green-400",
+      "bg-green-500",
+      "bg-blue-400",
+      "bg-blue-500",
+      "bg-purple-400",
+      "bg-purple-500",
+      "bg-pink-400",
+      "bg-pink-500",
+      "bg-indigo-400",
+      "bg-indigo-500",
+      "bg-teal-400",
+      "bg-teal-500",
+      "bg-cyan-400",
+      "bg-cyan-500",
+      "bg-orange-400",
+      "bg-orange-500",
+      "bg-lime-400",
+      "bg-lime-500",
     ];
-
-
 
     return colors[Math.floor(Math.random() * colors.length)];
   }
@@ -256,17 +255,17 @@ export function JobPostHistory() {
           <button
             key={i}
             onClick={() => handlePageChange(i)}
-            id={page === i ? "active-page" : "page-button"}// Correctly apply the ID conditionally
-            className={`px-4 py-2 mx-1 rounded-full ${page === i
-              ? "bg-green-500 text-white"
-              : "bg-gray-300 text-black hover:bg-gray-400"
-              }`}
+            id={page === i ? "active-page" : "page-button"}
+            className={`px-4 py-2 mx-1 rounded-full ${
+              page === i
+                ? "bg-green-500 text-white"
+                : "bg-gray-300 text-black hover:bg-gray-400"
+            }`}
           >
             {console.log(`Page: ${page}, i: ${i}, Active ID: ${page === i ? "active-page" : "none"}`)}
             {i + 1}
           </button>
         );
-
       }
     } else {
       let startPage = Math.max(0, page - Math.floor(maxButtons / 2));
@@ -281,11 +280,12 @@ export function JobPostHistory() {
           <button
             key={i}
             onClick={() => handlePageChange(i)}
-            id={page === i ? "active-page" : "page-button"}// Correctly apply the ID conditionally
-            className={`px-4 py-2 mx-1 rounded-full ${page === i
-              ? "bg-green-500 light:bg-amber-400 text-white"
-              : "bg-gray-300 text-black hover:bg-gray-400"
-              }`}
+            id={page === i ? "active-page" : "page-button"}
+            className={`px-4 py-2 mx-1 rounded-full ${
+              page === i
+                ? "bg-green-500 light:bg-amber-400 text-white"
+                : "bg-gray-300 text-black hover:bg-gray-400"
+            }`}
           >
             {i + 1}
           </button>
@@ -322,8 +322,6 @@ export function JobPostHistory() {
     return buttons;
   }
 
-
-
   // ---------------------------------------LOADING----------------------------------------
   if (loading) {
     return (
@@ -333,29 +331,15 @@ export function JobPostHistory() {
     );
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
   return (
-    <div className="my-10 main-content min-h-screen p-4  border-1 rounded-4xl">
+    <div className="my-10 main-content min-h-screen p-4 border-1 rounded-4xl">
       <h1 className="text-3xl font-bold mb-12 text-center">
-        Search  Your Job Post History
+        Search Your Job Post History
       </h1>
 
       {errorMessage && (
         <div className="text-red-500 mb-4 text-center">{errorMessage}</div>
       )}
-
-
 
       {/* Search Bar */}
       <div className="flex justify-center lg:text-md sm:text-sm mb-8 sm:ml-4 md:ml-6 lg:ml-30 xl:ml-100">
@@ -374,8 +358,6 @@ export function JobPostHistory() {
             Search
           </button>
         </form>
-
-
 
         <button
           onClick={toggleView}
@@ -429,13 +411,10 @@ export function JobPostHistory() {
       </div>
 
       <div className="flex">
-
         {/* Filters */}
-        {/* Tags for history og jobs not implemented yet on back end */}
         <div className="w-1/5 pr-12 border-r ml-42 mr-4">
           <h3 className="text-lg font-bold mb-4">Filters</h3>
           <form onSubmit={handleSearchSubmit}>
-
             {/* Tags Section */}
             <div className="mb-4 p-4 border rounded-md">
               <div className="flex justify-between items-center cursor-pointer" onClick={toggleTagsCollapse}>
@@ -457,7 +436,7 @@ export function JobPostHistory() {
                     >
                       <FaTag className="mr-2" />
                       <span className="mr-2">
-                        {Array.from(reversedTagMapping.entries()).find(([key, value]) => value === tag)?.[0]}
+                        {Array.from(tagMapping.entries()).find(([key, value]) => value === tag)?.[0]}
                       </span>
                       <button
                         type="button"
@@ -476,13 +455,12 @@ export function JobPostHistory() {
                   className="w-full px-4 py-2 border rounded-md"
                 >
                   <option value="">Select a tag</option>
-                  {Array.from(reversedTagMapping.keys()).map((tag) => (
-                    <option key={tag} value={reversedTagMapping.get(tag)}>
+                  {Array.from(tagMapping.keys()).map((tag) => (
+                    <option key={tag} value={tagMapping.get(tag)}>
                       {tag}
                     </option>
                   ))}
                 </select>
-
               </div>
             </div>
 
@@ -496,14 +474,11 @@ export function JobPostHistory() {
                   <FaChevronDown className="text-gray-500" />
                 )}
               </div>
-
-
               <div
                 className={`transition-all ease-in-out duration-500 overflow-hidden ${isStatusCollapsed ? "max-h-screen opacity-100" : "max-h-0 opacity-0"}`}
               >
                 <div className="mb-3 p-3 ">
                   <div className="flex justify-between items-center cursor-pointer ">
-
                     <select
                       name="applicantStatus"
                       value={filters.applicantStatus}
@@ -515,7 +490,6 @@ export function JobPostHistory() {
                       <option value="REJECTED">Rejected</option>
                     </select>
                   </div>
-
                 </div>
               </div>
             </div>
@@ -529,13 +503,11 @@ export function JobPostHistory() {
           </form>
         </div>
 
-
-
         {/* Job Posts */}
         <div className="w-4/5 p-4 ml-4 mr-30">
           <div className="flex flex-col items-start mb-8">
             <h2 className="text-2xl font-bold text-center mb-4">
-              {totalElements>=1
+              {totalElements >= 1
                 ? `Search returned ${totalElements} job posts`
                 : "No job posts found"}
             </h2>
@@ -545,13 +517,10 @@ export function JobPostHistory() {
             <div className="text-red-500 mb-4 text-center">{errorMessage}</div>
           )}
 
-
-
           {jobPostsData.length === 0 ? (
             <p className="text-center">No jobs found.</p>
           ) : (
             <>
-
               <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto" : "max-w-6xl mx-auto space-y-4"}>
                 {jobPostsData.map((job) => {
                   let statusColor = "text-gray-400"; // Default color
@@ -584,33 +553,29 @@ export function JobPostHistory() {
                       statusText = "N/A";
                   }
 
-
                   let applicantStatusColor = "text-gray-400";
                   let applicantStatusText = job.applicantStatus || "N/A";
 
                   switch (job.applicantStatus) {
                     case "PENDING":
-                
                       applicantStatusColor = "text-yellow-500";
                       break;
                     case "ACCEPTED":
-                      
                       applicantStatusColor = "text-green-500";
                       break;
                     case "REJECTED":
-                     
                       applicantStatusColor = "text-red-500";
                       break;
                     default:
-                      
                       applicantStatusColor = "text-gray-400";
                   }
-
 
                   return (
                     <div
                       key={job.jobPostId}
-                      className={`card border border-gray-300 ${viewType === "card" ? "hover:shadow-md hover:border-green-500 transition" : "rounded-lg shadow"} w-full ${viewType === "card" ? "max-w-sm" : ""} flex flex-col p-4 rounded-lg`}
+                      className={`card border border-gray-300 ${
+                        viewType === "card" ? "hover:shadow-md hover:border-green-500 transition" : "rounded-lg shadow"
+                      } w-full ${viewType === "card" ? "max-w-sm" : ""} flex flex-col p-4 rounded-lg`}
                     >
                       <h3 className="text-xl font-semibold">{job.title}</h3>
                       <p className="flex items-center gap-1">
@@ -624,19 +589,18 @@ export function JobPostHistory() {
                       </p>
 
                       <p className="mt-2">
-                        <strong>Description:</strong>  {job.description.length > 100 ? job.description.slice(0, 100) + "..." : job.description}
+                        <strong>Description:</strong> {job.description.length > 100 ? job.description.slice(0, 100) + "..." : job.description}
                       </p>
                       {job.tags && job.tags.length > 0 && (
                         <p className="my-3 text-sm">
-
                           {job.tags
-                            .map((tag) => Array.from(reversedTagMapping.entries()).find(([key, value]) => value === tag)?.[0])
+                            .map((tag) => Array.from(tagMapping.entries()).find(([key, value]) => value === tag)?.[0])
                             .join(", ")}
                         </p>
                       )}
                       <p className="flex items-center mt-2 gap-1">
-                        <StatusIcon className={`${statusColor} mr-1`} /> {/* Use dynamically determined Icon and color */}
-                        <strong className="mr-2" >Job Status: </strong> <span className={`${statusColor}`}>{statusText}</span> {/* Use dynamically determined color and text */}
+                        <StatusIcon className={`${statusColor} mr-1`} />
+                        <strong className="mr-2">Job Status: </strong> <span className={`${statusColor}`}>{statusText}</span>
                       </p>
 
                       <p className="flex items-center mt-2 gap-1">
@@ -653,11 +617,10 @@ export function JobPostHistory() {
                 })}
               </div>
             </>
-
           )}
           {/* Pagination */}
           <div className="flex justify-center mt-8">
-            {/* Previous Button - Left arrow */}
+            {/* Previous Button */}
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 0}
@@ -670,10 +633,10 @@ export function JobPostHistory() {
 
             {renderPaginationButtons()}
 
-            {/* Next Button - Right arrow */}
+            {/* Next Button */}
             <button
               onClick={() => handlePageChange(page + 1)}
-              disabled={page === totalPages - 1 || (jobPostsData.length === 0)}
+              disabled={page === totalPages - 1 || jobPostsData.length === 0}
               className="w-26 px-4 py-2 ml-6 mx-1 bg-gray-300 text-black rounded-r-full rounded-l-md hover:bg-gray-400 disabled:opacity-50 flex justify-center"
               id="navigate-page"
               style={{ clipPath: "polygon(0% 0%, 15% 50%, 0% 100%, 100% 100%, 100% 0%)" }}
