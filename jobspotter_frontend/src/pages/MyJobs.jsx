@@ -4,42 +4,40 @@ import { FaList, FaTh, FaTag, FaMapMarkerAlt, FaUsers, FaRoute } from "react-ico
 import { MdDateRange } from "react-icons/md";
 import { ThemeContext } from "../components/ThemeContext";
 
-const tagMapping = new Map([
-  ["General Help", "GENERAL_HELP"],
-  ["Handyman Services", "HANDYMAN_SERVICES"],
-  ["Skilled Trades", "SKILLED_TRADES"],
-  ["Cleaning Services", "CLEANING_SERVICES"],
-  ["Delivery Services", "DELIVERY_SERVICES"],
-  ["Caregiving", "CAREGIVING"],
-  ["Pet Care", "PET_CARE"],
-  ["Tutoring/Mentoring", "TUTORING_MENTORING"],
-  ["Event Staff", "EVENT_STAFF"],
-  ["Administrative Support", "ADMINISTRATIVE_SUPPORT"],
-  ["Virtual Assistance", "VIRTUAL_ASSISTANCE"],
-  ["Food Services", "FOOD_SERVICES"],
-  ["Gardening/Landscaping", "GARDENING_LANDSCAPING"],
-  ["Community Outreach", "COMMUNITY_OUTREACH"],
-  ["IT Support", "IT_SUPPORT"],
-  ["Creative Services", "CREATIVE_SERVICES"],
-  ["Personal Services", "PERSONAL_SERVICES"],
-  ["Tutoring Languages", "TUTORING_LANGUAGES"],
-  ["Music Instruction", "MUSIC_INSTRUCTION"],
-  ["Home Maintenance", "HOME_MAINTENANCE"],
-  ["Transportation Assistance", "TRANSPORTATION_ASSISTANCE"],
-  ["Errands/Shopping", "ERRANDS_SHOPPING"],
-  ["Volunteer Work", "VOLUNTEER_WORK"],
-  ["Community Events", "COMMUNITY_EVENTS"],
-  ["Fundraising", "FUNDRAISING"],
-  ["Animal Welfare", "ANIMAL_WELFARE"],
-  ["Mentoring (Community)", "MENTORING"],
-  ["Health Support", "HEALTH_SUPPORT"],
-  ["Counseling Support", "COUNSELING_SUPPORT"],
-  ["Disaster Relief", "DISASTER_RELIEF"],
-  ["Environmental Conservation", "ENVIRONMENTAL_CONSERVATION"],
-  ["Other", "OTHER"],
-]);
 
 export function MyJobs() {
+  // State for dynamic tag mapping via API
+  const [tagMapping, setTagMapping] = useState(new Map());
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const res = await fetch("/api/v1/job-posts/tags", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
+        }
+        const tagsData = await res.json();
+        const newTagMap = new Map();
+        Object.keys(tagsData).forEach(enumValue => {
+          const friendlyName = tagsData[enumValue];
+          if (friendlyName) {
+            newTagMap.set(friendlyName, enumValue);
+          } else {
+            console.warn(`Tag object missing friendlyName for enumValue: ${enumValue}`);
+          }
+        });
+        setTagMapping(newTagMap);
+      } catch (error) {
+        console.error("Error fetching tags:", error);
+      }
+    };
+
+    fetchTags();
+  }, []);
+
   // State for jobs data, loading, and errors
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -6,41 +6,7 @@ import { useSpring, animated } from 'react-spring';
 import { BeatLoader } from 'react-spinners';
 import { ThemeContext } from "../components/ThemeContext";
 
-const tagMapping = new Map([
-    ["GENERAL_HELP", "General Help"],
-    ["HANDYMAN_SERVICES", "Handyman Services"],
-    ["SKILLED_TRADES", "Skilled Trades"],
-    ["CLEANING_SERVICES", "Cleaning Services"],
-    ["DELIVERY_SERVICES", "Delivery Services"],
-    ["CAREGIVING", "Caregiving"],
-    ["PET_CARE", "Pet Care"],
-    ["TUTORING_MENTORING", "Tutoring/Mentoring"],
-    ["EVENT_STAFF", "Event Staff"],
-    ["ADMINISTRATIVE_SUPPORT", "Administrative Support"],
-    ["VIRTUAL_ASSISTANCE", "Virtual Assistance"],
-    ["FOOD_SERVICES", "Food Services"],
-    ["GARDENING_LANDSCAPING", "Gardening/Landscaping"],
-    ["COMMUNITY_OUTREACH", "Community Outreach"],
-    ["IT_SUPPORT", "IT Support"],
-    ["CREATIVE_SERVICES", "Creative Services"],
-    ["PERSONAL_SERVICES", "Personal Services"],
-    ["TUTORING_LANGUAGES", "Tutoring Languages"],
-    ["MUSIC_INSTRUCTION", "Music Instruction"],
-    ["HOME_MAINTENANCE", "Home Maintenance"],
-    ["TRANSPORTATION_ASSISTANCE", "Transportation Assistance"],
-    ["ERRANDS/SHOPPING", "Errands/Shopping"],
-    ["VOLUNTEER_WORK", "Volunteer Work"],
-    ["COMMUNITY_EVENTS", "Community Events"],
-    ["FUNDRAISING", "Fundraising"],
-    ["ANIMAL_WELFARE", "Animal Welfare"],
-    ["Mentoring (Community)", "Mentoring (Community)"],
-    ["HEALTH_SUPPORT", "Health Support"],
-    ["COUNSELING_SUPPORT", "Counseling Support"],
-    ["DISASTER_RELIEF", "Disaster Relief"],
-    ["ENVIRONMENTAL_CONSERVATION", "Environmental Conservation"],
-    ["OTHER", "Other"],
-]);
-
+// Removed the static tagMapping; now fetching dynamically
 export function ViewMoreDetails() {
     const { jobId } = useParams();
     const [job, setJob] = useState(null);
@@ -52,6 +18,7 @@ export function ViewMoreDetails() {
     const [autoStartMessage, setAutoStartMessage] = useState("");
 
     const { darkMode } = useContext(ThemeContext);
+    const [tagMapping, setTagMapping] = useState(new Map());
 
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
@@ -86,6 +53,31 @@ export function ViewMoreDetails() {
             setSuccessBoxOpacity(0);
         }
     }, [actionMessage]);
+    // Fetch tag mapping from API
+    useEffect(() => {
+        const fetchTags = async () => {
+            try {
+                const res = await fetch('/api/v1/job-posts/tags', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                });
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
+                }
+                const tagsData = await res.json();
+                const newTagMap = new Map();
+                Object.keys(tagsData).forEach((key) => {
+                    newTagMap.set(key, tagsData[key]);
+                });
+                setTagMapping(newTagMap);
+            } catch (error) {
+                console.error("Error fetching tags:", error);
+            }
+        };
+
+        fetchTags();
+    }, []);
 
     // Helper to parse responses that might have no content (204)
     function parseNoContent(res) {
@@ -129,7 +121,7 @@ export function ViewMoreDetails() {
                 setErrorMessage(err.message);
             })
             .finally(() => setLoading(false));
-    }, [jobId]);
+    }, [jobId, tagMapping]);
 
     const refreshJobDetails = () => {
         setLoading(true);

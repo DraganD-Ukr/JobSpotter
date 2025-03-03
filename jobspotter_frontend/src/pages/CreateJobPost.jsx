@@ -1,41 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
 
-const tagMapping = new Map([
-  ["General Help", "GENERAL_HELP"],
-  ["Handyman Services", "HANDYMAN_SERVICES"],
-  ["Skilled Trades", "SKILLED_TRADES"],
-  ["Cleaning Services", "CLEANING_SERVICES"],
-  ["Delivery Services", "DELIVERY_SERVICES"],
-  ["Caregiving", "CAREGIVING"],
-  ["Pet Care", "PET_CARE"],
-  ["Tutoring/Mentoring", "TUTORING_MENTORING"],
-  ["Event Staff", "EVENT_STAFF"],
-  ["Administrative Support", "ADMINISTRATIVE_SUPPORT"],
-  ["Virtual Assistance", "VIRTUAL_ASSISTANCE"],
-  ["Food Services", "FOOD_SERVICES"],
-  ["Gardening/Landscaping", "GARDENING_LANDSCAPING"],
-  ["Community Outreach", "COMMUNITY_OUTREACH"],
-  ["IT Support", "IT_SUPPORT"],
-  ["Creative Services", "CREATIVE_SERVICES"],
-  ["Personal Services", "PERSONAL_SERVICES"],
-  ["Tutoring Languages", "TUTORING_LANGUAGES"],
-  ["Music Instruction", "MUSIC_INSTRUCTION"],
-  ["Home Maintenance", "HOME_MAINTENANCE"],
-  ["Transportation Assistance", "TRANSPORTATION_ASSISTANCE"],
-  ["Errands/Shopping", "ERRANDS_SHOPPING"],
-  ["Volunteer Work", "VOLUNTEER_WORK"],
-  ["Community Events", "COMMUNITY_EVENTS"],
-  ["Fundraising", "FUNDRAISING"],
-  ["Animal Welfare", "ANIMAL_WELFARE"],
-  ["Mentoring (Community)", "MENTORING"],
-  ["Health Support", "HEALTH_SUPPORT"],
-  ["Counseling Support", "COUNSELING_SUPPORT"],
-  ["Disaster Relief", "DISASTER_RELIEF"],
-  ["Environmental Conservation", "ENVIRONMENTAL_CONSERVATION"],
-  ["Other", "OTHER"],
-]);
-
-// Array of Tailwind color classes for random tag backgrounds
 const colorPool = [
   "bg-red-200",
   "bg-green-200",
@@ -66,8 +30,35 @@ export function CreateJobPost() {
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Convert our Map to an array of strings
-  const allTags = useMemo(() => Array.from(tagMapping.keys()), []);
+  // Dynamic tag mapping fetched from API (friendly name -> enum)
+  const [tagMapping, setTagMapping] = useState(new Map());
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const res = await fetch("/api/v1/job-posts/tags", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
+        }
+        const tagsData = await res.json();
+        const newTagMap = new Map();
+        Object.keys(tagsData).forEach((enumVal) => {
+          const friendlyName = tagsData[enumVal];
+          newTagMap.set(friendlyName, enumVal);
+        });
+        setTagMapping(newTagMap);
+      } catch (error) {
+        console.error("Error fetching tags:", error);
+      }
+    };
+    fetchTags();
+  }, []);
+
+  // Convert our dynamic Map to an array of friendly tag strings
+  const allTags = useMemo(() => Array.from(tagMapping.keys()), [tagMapping]);
 
   useEffect(() => {
     fetchUserData();
