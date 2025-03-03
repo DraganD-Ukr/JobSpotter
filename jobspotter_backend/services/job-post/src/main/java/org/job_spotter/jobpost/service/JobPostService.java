@@ -11,30 +11,28 @@ import java.util.UUID;
 public interface JobPostService {
 
     //Job Post View Queries
-    MyJobPostDetailedResponse getMyJobPostDetails(UUID userId, Long jobPostId);
-
     JobPostDetailedResponse getJobPostById(Long id);
 
+    MyJobPostDetailedResponse getMyJobPostDetails(UUID userId, Long jobPostId);
+
+    //Job Post Search Queries
     Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize);
 
-    Page<MyJobPostResponse> getMyJobPosts(UUID userId,String title, String tags, String status, int page, int size);
+    Page<MyJobPostSearchResponse> searchMyJobPosts(UUID userId, String title, String tags, String status, int page, int size);
 
-    Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title);
-
+    Page<JobPostsUserWorkedOnSearchResponse> searchJobsUserWorkedOn(UUID userId, String title, String status, String sortBy, String sortDirection, int page, int size);
 
     //Job Post Operations
     Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken);
 
-    HttpStatus applyToJobPost(Long id, UUID userId, JobPostApplyRequest jobPostApplyRequest);
+    HttpStatus applyToJobPost(UUID userId, Long id, JobPostApplyRequest jobPostApplyRequest);
 
-    JobPost takeApplicantsAction(Long jobPostId, UUID userId, List<ApplicantActionRequest> applicantsActionRequest);
+    JobPost takeApplicantsAction(UUID userId, Long jobPostId, List<ApplicantActionRequest> applicantsActionRequest);
 
     HttpStatus startJobPost(UUID userId, Long jobPostId);
 
     HttpStatus cancelJobPost(UUID userId, Long jobPostId);
 
     HttpStatus finishJobPost(UUID userId, Long id);
-
-
 
 }

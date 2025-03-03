@@ -14,7 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class JobPostsUserWorkedOnResponse {
+public class JobPostsUserWorkedOnSearchResponse {
 
     private Long jobPostId;
     private Set<Tag> tags;

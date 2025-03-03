@@ -20,11 +20,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/job-posts")
@@ -94,7 +92,7 @@ public class JobPostController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved job post details along with applicants information",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyJobPostResponse.class))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyJobPostSearchResponse.class))
             ),
             @ApiResponse(responseCode = "400", description = "Bad request",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
@@ -171,7 +169,7 @@ public class JobPostController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully got job posts created by user",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyJobPostResponse.class))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyJobPostSearchResponse.class))
             ),
             @ApiResponse(responseCode = "400", description = "Bad request",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
@@ -181,7 +179,7 @@ public class JobPostController {
             )
     })
     @GetMapping("/my-job-posts")
-    public ResponseEntity<Page<MyJobPostResponse>> getMyJobPosts(
+    public ResponseEntity<Page<MyJobPostSearchResponse>> getMyJobPosts(
             @RequestHeader("Authorization") String accessToken,
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "tags", required = false) String tags,
@@ -192,13 +190,13 @@ public class JobPostController {
         log.info("Getting my job posts");
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
-        return ResponseEntity.ok(jobPostService.getMyJobPosts(userId, title, tags, status, pageNumber, size));
+        return ResponseEntity.ok(jobPostService.searchMyJobPosts(userId, title, tags, status, pageNumber, size));
     }
 
 
 
     @GetMapping("/history")
-    public ResponseEntity<Page<JobPostsUserWorkedOnResponse>> getJobsUserWorkedOn(
+    public ResponseEntity<Page<JobPostsUserWorkedOnSearchResponse>> getJobsUserWorkedOn(
 
             @RequestHeader("Authorization") String accessToken,
             @RequestParam(value = "title", required = false) String title,
@@ -214,7 +212,7 @@ public class JobPostController {
         log.info("Getting my worked jobs");
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
-        return ResponseEntity.ok(jobPostService.getJobsUserWorkedOn(userId, page, size, sortBy, sortDirection, status, title));
+        return ResponseEntity.ok(jobPostService.searchJobsUserWorkedOn(userId, title, status, sortBy, sortDirection, page, size));
     }
 
     //-----------------------------------------------------------------------------------------------------------------
@@ -287,7 +285,7 @@ public class JobPostController {
         log.info("Applying to job post");
 
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
-        jobPostService.applyToJobPost(id, userId, jobPostApplyRequest);
+        jobPostService.applyToJobPost(userId, id, jobPostApplyRequest);
 
         return ResponseEntity.noContent().build();
     }
@@ -300,7 +298,7 @@ public class JobPostController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Successfully updated(managed) applicants",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyJobPostResponse.class))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyJobPostSearchResponse.class))
             ),
             @ApiResponse(responseCode = "400", description = "Bad request",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
@@ -322,7 +320,7 @@ public class JobPostController {
         log.info("Accepting applicant");
 
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
-        jobPostService.takeApplicantsAction(id, userId, applicantsActionRequest);
+        jobPostService.takeApplicantsAction(userId, id, applicantsActionRequest);
 
         return ResponseEntity.noContent().build();
     }
@@ -361,7 +359,6 @@ public class JobPostController {
 
         return ResponseEntity.noContent().build();
     }
-
 
 
 

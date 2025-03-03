@@ -49,7 +49,7 @@ public class JobPostSpecification implements ApplicationContextAware {
      * @return Specification
      */
     //This has tags method returns if the either of the tags are present in the job post
-// Create the specification to filter by tags
+    // Create the specification to filter by tags
     public static Specification<JobPost> hasTags(List<String> tagNames) {
         return (root, query, criteriaBuilder) -> {
             if (tagNames == null || tagNames.isEmpty()) {
