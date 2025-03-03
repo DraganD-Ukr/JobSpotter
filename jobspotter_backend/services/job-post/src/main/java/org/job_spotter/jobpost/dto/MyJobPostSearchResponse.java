@@ -5,7 +5,6 @@ import org.job_spotter.jobpost.model.JobStatus;
 import org.job_spotter.jobpost.model.Tag;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -13,7 +12,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MyJobPostResponse {
+public class MyJobPostSearchResponse {
 
     private Long jobPostId;
     private Set<Tag> tags;

@@ -39,8 +39,42 @@ public class JobPostImpl implements JobPostService {
     private final ApplicantRepository applicantRepository;
     private final JobPostSpecificationRepository jobPostSpecificationRepository;
 
+    //----------------------------------------------------------------------------------------------------------------
+    //                                     Job Post Get View Queries implementation
+    //----------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Get a job post by its ID
+     *
+     * @param id The ID of the job post
+     * @return The job post with the given ID
+     */
+    @Override
+    public JobPostDetailedResponse getJobPostById(Long id) {
+
+//        Fetch the job post from the repository
+        JobPost jobPost = jobPostRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + id));
 
 
+//        Create the JobPostResponse object
+        return JobPostDetailedResponse.builder()
+                .jobPostId(jobPost.getJobPostId())
+                .jobPosterId(jobPost.getJobPosterId())
+                .tags(jobPost.getTags())
+                .title(jobPost.getTitle())
+                .description(jobPost.getDescription())
+                .address(jobPost.getAddress())
+                .longitude(jobPost.getLongitude())
+                .latitude(jobPost.getLatitude())
+                .datePosted(jobPost.getDatePosted())
+                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                .applicantsCount(jobPost.getApplicants().size())
+                .maxApplicants(jobPost.getMaxApplicants())
+                .status(jobPost.getStatus())
+                .build();
+
+    }
 
     @Override
     public MyJobPostDetailedResponse getMyJobPostDetails(UUID userId, Long jobPostId) {
@@ -74,6 +108,10 @@ public class JobPostImpl implements JobPostService {
                 .status(jobPost.getStatus())
                 .build();
     }
+
+    //----------------------------------------------------------------------------------------------------------------
+    //                                     Job Post Search Queries implementation
+    //----------------------------------------------------------------------------------------------------------------
 
     /**
      * Search for job posts based on the given parameters
@@ -133,6 +171,110 @@ public class JobPostImpl implements JobPostService {
     }
 
 
+    /**
+     * Get all job posts created by the user
+     * Filter by title, tags, and status
+     * Returns a paginated list of job posts created by the user with response optimised for large lists
+     * Details can then be fetched on with another method using the given jobPostId
+     *
+     * @param userId The user ID of the job poster
+     * @param title  The title of the job post
+     * @param tags  The tags associated with the job post
+     * @param status The status of the job post
+     * @param pageNumber The page number
+     * @param pageSize The page size
+     * @return Page of MyJobPostSearchResponse
+     */
+    @Override
+    public Page<MyJobPostSearchResponse> searchMyJobPosts(UUID userId, String title, String tags, String status, int pageNumber, int pageSize) {
+        //TODO: Sort By and Sort Direction
+        //TODO: Trim Discription For better request performance
+
+        // Split the tags string into a list of tag names
+        List<String> tagList = covertTagsToListFromString(tags);
+
+        // Create a PageRequest object for pagination
+        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
+
+        // Build the specification for filtering
+        Specification<JobPost> spec = JobPostSpecification.filterByParams(userId, title, tagList, status);
+
+        // Fetch the job posts with the specification
+        Page<JobPost> jobPosts = jobPostSpecificationRepository.findAll(spec, pageRequest);
+
+        // Map the job posts to MyJobPostSearchResponse
+        return jobPosts.map(jobPost -> MyJobPostSearchResponse.builder()
+                .jobPostId(jobPost.getJobPostId())
+                .tags(jobPost.getTags())
+                .title(jobPost.getTitle())
+                .description(jobPost.getDescription())
+                .address(jobPost.getAddress())
+                .datePosted(jobPost.getDatePosted())
+                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                .ApplicantsCount(jobPost.getApplicants().size())
+                .maxApplicants(jobPost.getMaxApplicants())
+                .status(jobPost.getStatus())
+                .build());
+    }
+
+
+    //This Function returns Job post based on job p[ost worked on response DTO which incudes job post details and applicant details from
+    //applicant model
+    @Override
+    public Page<JobPostsUserWorkedOnSearchResponse> searchJobsUserWorkedOn(UUID userId, String title, String status, String sortBy, String sortDirection, int page, int size) {
+
+        // Define allowed sorting fields
+        Set<String> allowedSortFields = Set.of("datePosted", "lastUpdatedAt", "title", "status");
+
+        // Validate the sortBy parameter
+        if (!allowedSortFields.contains(sortBy)) {
+            throw new InvalidRequestException("Invalid sortBy parameter: " + sortBy);
+        }
+
+        // Create a Specification with dynamic filters
+        Specification<JobPost> spec = JobPostSpecification.filterByParamsJobWorkedOn(status, title, userId);
+
+        // Define the sort direction
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        // Paginate and sort
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        // Fetch the filtered and paginated results
+        Page<JobPost> jobPosts = jobPostSpecificationRepository.findAll(spec, pageable);
+        return jobPosts.map(jobPost -> JobPostsUserWorkedOnSearchResponse.builder()
+                .jobPostId(jobPost.getJobPostId())
+                .tags(jobPost.getTags())
+                .title(jobPost.getTitle())
+                .description(jobPost.getDescription())
+                .address(jobPost.getAddress())
+                .datePosted(jobPost.getDatePosted())
+                .lastUpdatedAt(jobPost.getLastUpdatedAt())
+                .applicantsCount(jobPost.getApplicants().size())
+                .maxApplicants(jobPost.getMaxApplicants())
+                .applicantStatus(jobPost.getApplicants().stream()
+                        .filter(applicant -> applicant.getUserId().equals(userId))
+                        .findFirst()
+                        .map(Applicant::getStatus)
+                        .orElse(null))
+                .dateApplied(jobPost.getApplicants().stream()
+                        .filter(applicant -> applicant.getUserId().equals(userId))
+                        .findFirst()
+                        .map(Applicant::getDateApplied)
+                        .orElse(null))
+                .lastApplicantStatusChange(jobPost.getApplicants().stream()
+                        .filter(applicant -> applicant.getUserId().equals(userId))
+                        .findFirst()
+                        .map(Applicant::getDateUpdated)
+                        .orElse(null))
+                .status(jobPost.getStatus())
+                .build()
+        );
+
+    }
+
+    //----------------------------------------------------------------------------------------------------------------
+    //                                     Job Post Operations implementation
+    //----------------------------------------------------------------------------------------------------------------
 
     @Override
     public Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken) {
@@ -202,7 +344,7 @@ public class JobPostImpl implements JobPostService {
     }
 
     @Override
-    public HttpStatus applyToJobPost(Long jobPostId, UUID userId, JobPostApplyRequest jobPostApplyRequest) {
+    public HttpStatus applyToJobPost(UUID userId, Long jobPostId, JobPostApplyRequest jobPostApplyRequest) {
 
         JobPost jobPost = jobPostRepository.findById(jobPostId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + jobPostId));
@@ -247,55 +389,11 @@ public class JobPostImpl implements JobPostService {
         return HttpStatus.CREATED;
     }
 
-    /**
-     * Get all job posts created by the user
-     * Filter by title, tags, and status
-     * Returns a paginated list of job posts created by the user with response optimised for large lists
-     * Details can then be fetched on with another method using the given jobPostId
-     *
-     * @param userId The user ID of the job poster
-     * @param title  The title of the job post
-     * @param tags  The tags associated with the job post
-     * @param status The status of the job post
-     * @param pageNumber The page number
-     * @param pageSize The page size
-     * @return Page of MyJobPostResponse
-     */
-    @Override
-    public Page<MyJobPostResponse> getMyJobPosts(UUID userId, String title, String tags, String status, int pageNumber, int pageSize) {
-        //TODO: Sort By and Sort Direction
-        //TODO: Trim Discription For better request performance
 
-        // Split the tags string into a list of tag names
-        List<String> tagList = covertTagsToListFromString(tags);
-
-        // Create a PageRequest object for pagination
-        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
-
-        // Build the specification for filtering
-        Specification<JobPost> spec = JobPostSpecification.filterByParams(userId, title, tagList, status);
-
-        // Fetch the job posts with the specification
-        Page<JobPost> jobPosts = jobPostSpecificationRepository.findAll(spec, pageRequest);
-
-        // Map the job posts to MyJobPostResponse
-        return jobPosts.map(jobPost -> MyJobPostResponse.builder()
-                .jobPostId(jobPost.getJobPostId())
-                .tags(jobPost.getTags())
-                .title(jobPost.getTitle())
-                .description(jobPost.getDescription())
-                .address(jobPost.getAddress())
-                .datePosted(jobPost.getDatePosted())
-                .lastUpdatedAt(jobPost.getLastUpdatedAt())
-                .ApplicantsCount(jobPost.getApplicants().size())
-                .maxApplicants(jobPost.getMaxApplicants())
-                .status(jobPost.getStatus())
-                .build());
-    }
 
     @Transactional
     @Override
-    public JobPost takeApplicantsAction(Long jobPostId, UUID userId, List<ApplicantActionRequest> applicantsActionRequest) {
+    public JobPost takeApplicantsAction(UUID userId, Long jobPostId, List<ApplicantActionRequest> applicantsActionRequest) {
 
 //        TODO: Refactor for readability and efficiency
 
@@ -481,93 +579,9 @@ public class JobPostImpl implements JobPostService {
         return HttpStatus.NO_CONTENT;
     }
 
-    /**
-     * Get a job post by its ID
-     *
-     * @param id The ID of the job post
-     * @return The job post with the given ID
-     */
-    @Override
-    public JobPostDetailedResponse getJobPostById(Long id) {
-
-//        Fetch the job post from the repository
-        JobPost jobPost = jobPostRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + id));
 
 
-//        Create the JobPostResponse object
-        return JobPostDetailedResponse.builder()
-                .jobPostId(jobPost.getJobPostId())
-                .jobPosterId(jobPost.getJobPosterId())
-                .tags(jobPost.getTags())
-                .title(jobPost.getTitle())
-                .description(jobPost.getDescription())
-                .address(jobPost.getAddress())
-                .longitude(jobPost.getLongitude())
-                .latitude(jobPost.getLatitude())
-                .datePosted(jobPost.getDatePosted())
-                .lastUpdatedAt(jobPost.getLastUpdatedAt())
-                .applicantsCount(jobPost.getApplicants().size())
-                .maxApplicants(jobPost.getMaxApplicants())
-                .status(jobPost.getStatus())
-                .build();
 
-    }
-
-
-//This Function returns Job post based on job p[ost worked on response DTO which incudes job post details and applicant details from
-//applicant model
-    @Override
-    public Page<JobPostsUserWorkedOnResponse> getJobsUserWorkedOn(UUID userId, int page, int size, String sortBy, String sortDirection, String status, String title) {
-
-        // Define allowed sorting fields
-        Set<String> allowedSortFields = Set.of("datePosted", "lastUpdatedAt", "title", "status");
-
-        // Validate the sortBy parameter
-        if (!allowedSortFields.contains(sortBy)) {
-            throw new InvalidRequestException("Invalid sortBy parameter: " + sortBy);
-        }
-
-        // Create a Specification with dynamic filters
-        Specification<JobPost> spec = JobPostSpecification.filterByParamsJobWorkedOn(status, title, userId);
-
-        // Define the sort direction
-        Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        // Paginate and sort
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-
-        // Fetch the filtered and paginated results
-        Page<JobPost> jobPosts = jobPostSpecificationRepository.findAll(spec, pageable);
-        return jobPosts.map(jobPost -> JobPostsUserWorkedOnResponse.builder()
-                .jobPostId(jobPost.getJobPostId())
-                .tags(jobPost.getTags())
-                .title(jobPost.getTitle())
-                .description(jobPost.getDescription())
-                .address(jobPost.getAddress())
-                .datePosted(jobPost.getDatePosted())
-                .lastUpdatedAt(jobPost.getLastUpdatedAt())
-                .applicantsCount(jobPost.getApplicants().size())
-                .maxApplicants(jobPost.getMaxApplicants())
-                .applicantStatus(jobPost.getApplicants().stream()
-                        .filter(applicant -> applicant.getUserId().equals(userId))
-                        .findFirst()
-                        .map(Applicant::getStatus)
-                        .orElse(null))
-                .dateApplied(jobPost.getApplicants().stream()
-                        .filter(applicant -> applicant.getUserId().equals(userId))
-                        .findFirst()
-                        .map(Applicant::getDateApplied)
-                        .orElse(null))
-                .lastApplicantStatusChange(jobPost.getApplicants().stream()
-                        .filter(applicant -> applicant.getUserId().equals(userId))
-                        .findFirst()
-                        .map(Applicant::getDateUpdated)
-                        .orElse(null))
-                .status(jobPost.getStatus())
-                .build()
-        );
-
-    }
 
 //----------------------------------------------------------------------------------------------------------------
 //                                              Helper methods
