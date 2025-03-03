@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react"; // Import useCallback
 import { useParams } from "react-router-dom";
-import { FaExclamationTriangle, FaTrophy, FaCheckCircle, FaTimesCircle, FaTag } from 'react-icons/fa';
-import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
+import { FaExclamationTriangle, FaTrophy, FaCheckCircle, FaTimesCircle, FaTag, FaUserCheck, FaUserTimes, FaUserClock } from 'react-icons/fa';
 import { useSpring, animated } from 'react-spring';
 import { BeatLoader } from 'react-spinners';
 import { ThemeContext } from "../components/ThemeContext";
+import ApplicantsManagementPopup from "../components/ApplicantsManagementPopup";
 
 // Removed the static tagMapping; now fetching dynamically
 export function ViewMoreDetails() {
@@ -16,6 +16,14 @@ export function ViewMoreDetails() {
     const [errorBoxOpacity, setErrorBoxOpacity] = useState(0);
     const [successBoxOpacity, setSuccessBoxOpacity] = useState(0);
     const [autoStartMessage, setAutoStartMessage] = useState("");
+    const [isApplicantsPopupVisible, setIsApplicantsPopupVisible] = useState(false); // State for popup visibility
+    const [applicantCounts, setApplicantCounts] = useState({ // State for applicant counts
+        approved: 0,
+        rejected: 0,
+        pending: 0,
+    });
+    const [localApplicants, setLocalApplicants] = useState([]); // Local state for popup applicants
+
 
     const { darkMode } = useContext(ThemeContext);
     const [tagMapping, setTagMapping] = useState(new Map());
@@ -115,6 +123,7 @@ export function ViewMoreDetails() {
                     });
                 }
                 setJob(data);
+                updateApplicantCounts(data.applicants); // Initialize counts on job load
             })
             .catch((err) => {
                 console.error("Error fetching job details:", err);
@@ -145,6 +154,7 @@ export function ViewMoreDetails() {
                     });
                 }
                 setJob(data);
+                updateApplicantCounts(data.applicants); // Update counts on refresh
             })
             .catch((err) => {
                 console.error("Error refreshing job details:", err);
@@ -153,22 +163,43 @@ export function ViewMoreDetails() {
             .finally(() => setLoading(false));
     };
 
+    const updateApplicantCounts = useCallback((applicants) => { // Use useCallback
+        if (!Array.isArray(applicants)) {
+            setApplicantCounts({ approved: 0, rejected: 0, pending: 0 });
+            return;
+        }
+        const counts = applicants.reduce(
+            (acc, applicant) => {
+                if (applicant.status === "APPROVED") {
+                    acc.approved++;
+                } else if (applicant.status === "REJECTED") {
+                    acc.rejected++;
+                } else {
+                    acc.pending++; // Assuming any status other than APPROVED/REJECTED is pending
+                }
+                return acc;
+            },
+            { approved: 0, rejected: 0, pending: 0 }
+        );
+        setApplicantCounts(counts);
+    }, []);
 
-    function handleApplicantAction(applicantId, action) {
-        if (job.status !== "OPEN") { // Assuming "OPEN" is the status before job starts
+
+    const handleApplicantAction = (applicantId, action) => {
+        if (job.status !== "OPEN") {
             setActionMessage(`Cannot ${action} applicants after job has started.`);
             setTimeout(() => setActionMessage(""), 5000);
             return;
         }
 
         if (action === "approve") {
-            const approvedApplicantsCount = job.applicants.filter(app => app.status === "APPROVED").length;
-            if (approvedApplicantsCount >= job.maxApplicants) {
+            if (applicantCounts.approved >= job.maxApplicants) {
                 setActionMessage(`Cannot approve more than ${job.maxApplicants} applicants.`);
                 setTimeout(() => setActionMessage(""), 5000);
+                console.log("Cannot approve more than max applicants");
                 return;
             }
-            if (approvedApplicantsCount + 1 === job.maxApplicants) {
+            if (applicantCounts.approved + 1 === job.maxApplicants) {
                 setAutoStartMessage("Approving this applicant will automatically start the job post.");
             } else {
                 setAutoStartMessage("");
@@ -177,36 +208,16 @@ export function ViewMoreDetails() {
             setAutoStartMessage("");
         }
 
-
-        fetch(`/api/v1/job-posts/my-job-posts/${jobId}/applicants/approve-reject`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ applicantId, action }),
-        })
-            .then((res) => {
-                if (!res.ok) throw new Error("Failed to perform applicant action");
-                return res.json();
-            })
-            .then(() => {
-                setActionMessage(
-                    `Applicant action '${action}' for applicant ${applicantId} was successful.`
-                );
-                setJob(prevJob => {
-                    if (!prevJob || !prevJob.applicants) return prevJob;
-                    const updatedApplicants = prevJob.applicants.map(applicant =>
-                        applicant.applicantId === applicantId ? { ...applicant, status: action.toUpperCase() } : applicant
-                    );
-                    return { ...prevJob, applicants: updatedApplicants };
-                });
-                setTimeout(() => setActionMessage(""), 3000);
-            })
-            .catch((err) => {
-                console.error("Error performing applicant action:", err);
-                setActionMessage(`Error: ${err.message}`);
-                setTimeout(() => setActionMessage(""), 5000);
-            });
-    }
+        setLocalApplicants(prevLocalApplicants => {
+            const updatedApplicants = prevLocalApplicants.map(applicant =>
+                applicant.applicantId === applicantId ? { ...applicant, status: action.toUpperCase() } : applicant
+            );
+            console.log("Updated applicants:", updatedApplicants);
+            // Recalculate applicant counts based on the newly updated localApplicants
+            updateApplicantCounts(updatedApplicants); // Call update counts with the new array
+            return updatedApplicants; // Return the new array to update localApplicants state
+        });
+    };
 
     const handleStartJob = () => {
         setLoading(true);
@@ -278,6 +289,61 @@ export function ViewMoreDetails() {
                 setTimeout(() => setErrorMessage(""), 5000);
                 setLoading(false); // Stop loading even on error
             });
+    };
+
+    const handleOpenApplicantsPopup = () => {
+        setIsApplicantsPopupVisible(true);
+        setLocalApplicants(job.applicants ? [...job.applicants] : []); // Initialize localApplicants when popup opens
+        updateApplicantCounts(job.applicants); // Initialize counts when popup opens
+
+    };
+
+    const handleCloseApplicantsPopup = () => {
+        setIsApplicantsPopupVisible(false);
+        setLocalApplicants([]); // Clear local applicants when popup closes
+        setAutoStartMessage(""); // Clear auto-start message
+    };
+
+
+    const handleSaveChanges = async () => {
+        setActionMessage("Saving changes..."); // User feedback - saving started
+        try {
+            const applicantsToUpdate = localApplicants.map(applicant => ({
+                applicantId: applicant.applicantId,
+                status: applicant.status // Status from local state, reflecting approvals/rejections
+            }));
+
+            const response = await fetch(`/api/jobs/${jobId}/applicants/status`, { // Replace with your actual API endpoint
+                method: 'POST', // Or 'PUT', depending on your API
+                headers: {
+                    'Content-Type': 'application/json',
+                    // ... include any authorization headers if needed ...
+                },
+                body: JSON.stringify(applicantsToUpdate), // Send the array of applicant IDs and statuses
+            });
+
+            if (!response.ok) {
+                const message = `Error saving applicant changes: ${response.status} ${response.statusText}`;
+                setActionMessage(message);
+                setTimeout(() => setActionMessage(""), 5000); // Clear message after 5 seconds
+                throw new Error(message);
+            }
+
+            const responseData = await response.json();
+            console.log("Applicant statuses updated successfully:", responseData);
+
+            setActionMessage("Changes saved successfully!");
+            setTimeout(() => setActionMessage(""), 3000); // Success message for 3 seconds
+
+            // After successful save:
+            setApplicantsPopupVisible(false); // Close the popup
+            fetchJobDetails(); // Refresh job details to reflect updated applicant statuses
+            // (or) You could manually update applicant lists in state to avoid full refresh if preferred for performance
+
+        } catch (error) {
+            console.error("Error saving applicant status updates:", error);
+            // Error message is already set by setActionMessage in the try block.
+        }
     };
 
 
@@ -355,17 +421,27 @@ export function ViewMoreDetails() {
     // Pagination Calculations
     const indexOfLastApplicant = currentPage * applicantsPerPage;
     const indexOfFirstApplicant = indexOfLastApplicant - applicantsPerPage;
-    const currentApplicants = Array.isArray(job.applicants)
-        ? job.applicants.slice(indexOfFirstApplicant, indexOfLastApplicant)
+    const currentApplicants = Array.isArray(localApplicants) // Use localApplicants for popup view
+        ? localApplicants.slice(indexOfFirstApplicant, indexOfLastApplicant)
         : [];
-    const totalPages = Array.isArray(job.applicants)
-        ? Math.ceil(job.applicants.length / applicantsPerPage)
+    const totalPages = Array.isArray(localApplicants) // Use localApplicants for popup pagination
+        ? Math.ceil(localApplicants.length / applicantsPerPage)
         : 0;
+
+
+    const pendingApplicants = Array.isArray(localApplicants) ? localApplicants.filter(app => app.status !== 'APPROVED' && app.status !== 'REJECTED') : [];
+    const approvedApplicants = Array.isArray(localApplicants) ? localApplicants.filter(app => app.status === 'APPROVED') : [];
+    const rejectedApplicants = Array.isArray(localApplicants) ? localApplicants.filter(app => app.status === 'REJECTED') : [];
+
+
+    const currentPendingApplicants = pendingApplicants.slice(indexOfFirstApplicant, indexOfLastApplicant);
+    const currentApprovedApplicants = approvedApplicants.slice(indexOfFirstApplicant, indexOfLastApplicant);
+    const currentRejectedApplicants = rejectedApplicants.slice(indexOfFirstApplicant, indexOfLastApplicant);
 
 
     return (
 
-        <div className="main-content min-h-screen px-20 py-15 my-15 p-6 bg-gray-50 dark:bg-gray-900 flex gap-8 border-1 rounded-4xl">
+        <div className={`main-content min-h-screen px-20 py-15 my-15 p-6 bg-gray-50 dark:bg-gray-900 flex gap-8 border-1 rounded-4xl `}> {/* Apply blur conditionally */}
             {/* LEFT: Job Details */}
             <div className="flex-1 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
                 <h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${darkMode ? "text-green-400" : "text-green-600"
@@ -438,132 +514,79 @@ export function ViewMoreDetails() {
                 <div className="mt-8 flex gap-4 justify-start">
                     <button
                         onClick={handleStartJob}
-                        className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                        disabled={!isJobOpen} // Disable if job is not open
+                        className={`px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+                            ${!isJobOpen ? 'opacity-50 cursor-not-allowed bg-gray-300 hover:bg-gray-300 text-gray-500 border border-gray-400 focus:ring-0 focus:outline-none' : ''}`}
+                        disabled={!isJobOpen}
                     >
                         Start
                     </button>
                     <button
                         onClick={handleFinishJob}
-                        className="px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
-                        disabled={!isJobInProgress} // Disable if job is not in progress
+                        className={`px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50
+                            ${!isJobInProgress ? 'opacity-50 cursor-not-allowed bg-gray-300 hover:bg-gray-300 text-gray-500 border border-gray-400 focus:ring-0 focus:outline-none' : ''}`}
+                        disabled={!isJobInProgress}
                     >
                         Finish
                     </button>
                     <button
                         onClick={handleCancelJob}
-                        className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
-                        disabled={!isJobOpen} // Disable if job is not open
+                        className={`px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50
+                            ${!isJobOpen ? 'opacity-50 cursor-not-allowed bg-gray-300 hover:bg-gray-300 text-gray-500 border border-gray-400 focus:ring-0 focus:outline-none' : ''}`}
+                        disabled={!isJobOpen}
                     >
                         Cancel
                     </button>
                 </div>
             </div>
 
-            {/* RIGHT: Applicants Sidebar */}
-            <div className="w-120 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md flex flex-col">
-                <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100">Applicants:</h2>
+            {/* RIGHT: Applicants Sidebar (Now conditionally rendered as a Popup) */}
+            <div className="w-60 h-40 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md flex flex-col">
+                <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100 flex items-center ">
+                    Applicants
 
-                {autoStartMessage && ( // Auto-start message at the top of applicant list
-                    <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-md flex items-center" role="alert">
-                        <FaExclamationTriangle className="mr-2 text-yellow-500 h-5 w-5" />
-                        <p className="text-sm">{autoStartMessage}</p>
-                    </div>
-                )}
-
+                </h2>
+                <button
+                    onClick={handleOpenApplicantsPopup}
+                    className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm"
+                >
+                    Manage Applicants
+                </button>
 
                 {Array.isArray(job.applicants) && job.applicants.length > 0 ? (
                     <div className="space-y-4">
-                        {currentApplicants.map((applicant) => (
-                            <div key={applicant.applicantId} className="p-4 border-b border-gray-200 dark:border-gray-700">
-                                <h4 className="font-semibold text-gray-800 dark:text-gray-200">{applicant.name || `Applicant ID ${applicant.applicantId}`}</h4>
 
-                                {applicant.message && applicant.message.trim() !== "" && (
-                                    <p className={`font-mono mt-2 ${darkMode ? 'text-neutral-400' : 'text-neutral-500'}`}>
-                                        <span className={`font-extralight ${darkMode ? 'text-neutral-300' : 'text-neutral-500'}`}>Message: </span>
-                                        {applicant.message}
-                                    </p>
-                                )}
-
-                                {applicant.email && <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">Email: {applicant.email}</p>}
-
-                                <p className={`text-sm mb-2 font-medium ${applicant.status === 'APPROVED' ? 'text-green-500' :
-                                    applicant.status === 'REJECTED' ? 'text-red-500' :
-                                        'text-gray-500 dark:text-gray-300' // Default status color
-                                    }`}>
-                                    Status: {applicant.status}
-                                </p>
-
-
-                                <div className="mt-3 flex justify-end gap-4">
-                                    {isJobOpen && ( // Conditional rendering: only show buttons if isJobOpen is true
-                                        <> {/* Use a fragment to group buttons without extra DOM node */}
-                                            <button
-                                                id="confirm-applicant"
-                                                onClick={() => handleApplicantAction(applicant.applicantId, "approve")}
-                                                className={`p-2 ${darkMode ? 'bg-green-600 hover:bg-green-700 focus:ring-green-600' : 'bg-green-500 hover:bg-green-600  focus:ring-green-500'} rounded-full focus:outline-none focus:ring-2  focus:ring-opacity-50`}
-                                                aria-label="Approve"
-                                                disabled={!isJobOpen || applicant.status === 'APPROVED'} // Keep disabled logic
-                                            >
-                                                <FaCheckCircle className="text-white h-5 w-5" />
-                                            </button>
-                                            <button
-                                                id="reject-applicant"
-                                                onClick={() => handleApplicantAction(applicant.applicantId, "reject")}
-                                                className={`p-2 bg-red-500 hover:bg-red-600 focus:ring-red-500  rounded-full focus:outline-none focus:ring-2  focus:ring-opacity-50`}
-                                                aria-label="Reject"
-                                                disabled={!isJobOpen || applicant.status === 'REJECTED'} // Keep disabled logic
-                                            >
-                                                <FaTimesCircle className="text-white h-5 w-5" />
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
-
-
-                            </div>
-                        ))}
                     </div>
                 ) : (
                     <p className="text-gray-600 dark:text-gray-400">No applicants found for this job.</p>
                 )}
 
-                {/* Pagination Controls */}
-                <div className="flex justify-center mt-6">
-                    <nav className="inline-flex rounded-md shadow-sm gap-2" aria-label="Applicants pagination">
-                        <button
-                            onClick={() => setCurrentPage(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className={`relative inline-flex items-center justify-center p-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            <span className="sr-only">Previous</span>
-                            <AiOutlineLeft className="h-4 w-4" aria-hidden="true" /> {/* React Icon for Previous */}
-                        </button>
+                {/* Pagination Controls - outside of popup initially for testing - REMOVED from here - now in Popup */}
 
-                        {/* Page numbers */}
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNumber => (
-                            <button
-                                key={pageNumber}
-                                onClick={() => setCurrentPage(pageNumber)}
-                                id={currentPage === pageNumber ? 'active-page-button' : `page-button-${pageNumber}`}
-                                className={`relative inline-flex items-center justify-center rounded-full w-8 h-8 text-xs font-medium ${currentPage === pageNumber ? 'z-10 bg-blue-50 border-blue-700 text-blue-800' : 'border border-gray-300 bg-white text-gray-500 hover:bg-gray-50'} focus:outline-none`}
-                                aria-current={currentPage === pageNumber ? "page" : undefined}
-                            >
-                                {pageNumber}
-                            </button>
-                        ))}
-
-                        <button
-                            onClick={() => setCurrentPage(currentPage + 1)}
-                            disabled={currentPage === totalPages || totalPages === 0} // Disable on last page or if no applicants
-                            className={`relative inline-flex items-center justify-center p-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${currentPage === totalPages || totalPages === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            <span className="sr-only">Next</span>
-                            <AiOutlineRight className="h-4 w-4" aria-hidden="true" /> {/* React Icon for Next */}
-                        </button>
-                    </nav>
-                </div>
             </div>
+
+            {/* Applicants Management Popup */}
+            {/* Applicants Management Popup */}
+            <ApplicantsManagementPopup
+                isApplicantsPopupVisible={isApplicantsPopupVisible}
+                applicantCounts={applicantCounts}
+                errorMessage={errorMessage}
+                errorBoxAnimation={errorBoxAnimation}
+                autoStartMessage={autoStartMessage}
+                pendingApplicants={pendingApplicants}
+                approvedApplicants={approvedApplicants}
+                rejectedApplicants={rejectedApplicants}
+                currentPendingApplicants={currentPendingApplicants}
+                currentApprovedApplicants={currentApprovedApplicants}
+                currentRejectedApplicants={currentRejectedApplicants}
+                handleApplicantAction={handleApplicantAction}
+                handleSaveChanges={handleSaveChanges}
+                handleCloseApplicantsPopup={handleCloseApplicantsPopup}
+                setCurrentPage={setCurrentPage}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                job={job}
+                isJobOpen={isJobOpen}
+            />
         </div>
 
     );
