@@ -19,8 +19,7 @@ export default function Navbar() {
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
 
-
-  // Listens for changes from other components/tabs 
+  // Listen for localStorage theme changes from other tabs
   useEffect(() => {
     function handleStorage(e) {
       if (e.key === "theme") {
@@ -132,7 +131,10 @@ export default function Navbar() {
             <span className="inline-block px-3 py-2 text-white font-medium hover:underline">
               Jobs Available
             </span>
-            <div className="absolute hidden group-hover:block top-full right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg">
+            <div
+              className="absolute top-full right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg 
+              transition-all ease-in-out duration-500 overflow-hidden transform origin-bottom max-h-0 opacity-0 group-hover:max-h-40 group-hover:opacity-100"
+            >
               <a
                 href="/SearchJobPost"
                 className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -146,7 +148,6 @@ export default function Navbar() {
                 View Job Post History
               </a>
               <div className="h-px w-full bg-gray-300 dark:bg-gray-600" />
-             
             </div>
           </div>
 
@@ -154,7 +155,10 @@ export default function Navbar() {
             <span className="inline-block px-3 py-2 text-white font-medium hover:underline">
               My Job Posts
             </span>
-            <div className="absolute hidden group-hover:block top-full right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg">
+            <div
+              className="absolute top-full right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg 
+              transition-all ease-in-out duration-500 overflow-hidden transform origin-bottom max-h-0 opacity-0 group-hover:max-h-40 group-hover:opacity-100"
+            >
               <a
                 href="/myJobs"
                 className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -175,8 +179,7 @@ export default function Navbar() {
           </a>
         </div>
 
-
-      <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4">
           {/* Search Bar */}
           <div className="relative flex items-center" ref={searchRef}>
             {isExpanded ? (
@@ -290,8 +293,10 @@ export default function Navbar() {
                   alt="Profile"
                   className="w-10 h-10 rounded-full cursor-pointer"
                 />
+                {/* Profile dropdown now has the same slow bottom-up animation */}
                 <div
-                  className="absolute hidden group-hover:block top-full right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg z-50"
+                  className="absolute top-full right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg z-50
+                  transition-all ease-in-out duration-500 overflow-hidden transform origin-bottom max-h-0 opacity-0 group-hover:max-h-40 group-hover:opacity-100"
                 >
                   <a
                     href="/profile"
@@ -324,7 +329,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Absolutely positioned container for dark mode toggle*/}
+        {/* Absolutely positioned container for dark mode toggle */}
         {isLoggedIn && (
           <div className="absolute top-4 right-4 z-50">
             <div
@@ -332,9 +337,9 @@ export default function Navbar() {
               className="relative w-12 h-7 flex-shrink-0 rounded-full cursor-pointer transition-colors bg-white dark:bg-gray-900"
             >
               <div
-                className={`
-                  absolute top-1 left-1 h-5 w-5 flex items-center justify-center rounded-full bg-white dark:bg-gray-900 text-gray-700 dark:text-white shadow-md transform transition-transform ${darkMode ? "translate-x-5" : "translate-x-0"}
-                `}
+                className={`absolute top-1 left-1 h-5 w-5 flex items-center justify-center rounded-full bg-white dark:bg-gray-900 text-gray-700 dark:text-white shadow-md transform transition-transform ${
+                  darkMode ? "translate-x-5" : "translate-x-0"
+                }`}
               >
                 {darkMode ? <Moon size={14} /> : <Sun size={14} />}
               </div>

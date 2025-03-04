@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import thanosImage from "../assets/thanos.jpg";
+import { ThemeContext } from "../components/ThemeContext";
 
 export default function Sidebar() {
   const [user, setUser] = useState({});
+  const { setDarkMode } = useContext(ThemeContext);
 
   useEffect(() => {
     fetch("/api/v1/users/me", {
@@ -15,8 +17,25 @@ export default function Sidebar() {
       .catch((err) => console.error("Error fetching user data:", err));
   }, []);
 
+  // Logout function added for Sign Out link
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/v1/users/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Logout failed");
+      localStorage.setItem("theme", "light");
+      setDarkMode(false);
+      window.location.href = "/Login";
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  };
+
   return (
-    <aside className="sidebar w-1/4 p-6 shadow-md">
+    <aside>
       <div className="flex items-center gap-3 mb-6">
         <img
           src={user.profileImage || thanosImage}
@@ -49,7 +68,11 @@ export default function Sidebar() {
         <a href="#" className="block text-sm hover:text-green-400">
           Notifications
         </a>
-        <a href="/Login" className="block text-sm hover:text-green-400">
+        <a
+          href="#"
+          onClick={handleLogout}
+          className="block text-sm hover:text-green-400"
+        >
           Sign Out
         </a>
       </nav>
