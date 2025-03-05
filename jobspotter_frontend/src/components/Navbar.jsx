@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useContext } from "react";
 import { Search, Bell, Sun, Moon } from "lucide-react";
 import trollImage from "../assets/troll.jpg";
 import gigachadImage from "../assets/gigachad.png";
-import { ThemeContext } from "./ThemeContext"; 
+import { ThemeContext } from "./ThemeContext";
 
 export default function Navbar() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -296,7 +296,7 @@ export default function Navbar() {
                 {/* Profile dropdown now has the same slow bottom-up animation */}
                 <div
                   className="absolute top-full right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg z-50
-                  transition-all ease-in-out duration-500 overflow-hidden transform origin-bottom max-h-0 opacity-0 group-hover:max-h-40 group-hover:opacity-100"
+                  transition-all ease-in-out duration-500 overflow-hidden transform origin-bottom max-h-0 opacity-0 group-hover:max-h-60 group-hover:opacity-100"
                 >
                   <a
                     href="/profile"
@@ -316,6 +316,7 @@ export default function Navbar() {
                   >
                     Settings
                   </a>
+                  <div className="h-px w-full bg-gray-300 dark:bg-gray-600" />
                   <div
                     onClick={handleLogout}
                     className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-100 cursor-pointer"
