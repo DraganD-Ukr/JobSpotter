@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { ThemeContext } from "../components/ThemeContext";
+import { Link } from "react-router-dom";
 
 const ApplicantItem = React.memo(({ applicant, handleApplicantAction, isJobOpen, applicantCounts, jobMaxApplicants }) => {
     const { darkMode } = useContext(ThemeContext);
@@ -26,7 +27,13 @@ const ApplicantItem = React.memo(({ applicant, handleApplicantAction, isJobOpen,
 
 
     return (
+        
         <div key={applicant.applicantId} className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <Link // Make the outer div a Link
+                                to={`/users/${applicant.userId}`}
+                                className={`flex items-center text-sm p-3 rounded-lg hover:shadow-lg hover:scale-105  duration-300  ${darkMode ? 'text-gray-300 border-gray-500 border' : 'text-gray-700 border-gray-300'}`}
+                                style={{ display: 'flex', textDecoration: 'none' }} // Ensure flex display and remove default link underline
+                            >
             <h4 className="font-semibold text-gray-800 dark:text-gray-200">{applicant.name || `Applicant ID ${applicant.applicantId}`}</h4>
             {applicant.message && applicant.message.trim() !== "" && (
                 <p className={`font-mono mt-2 ${darkMode ? 'text-neutral-400' : 'text-neutral-500'}`}>
@@ -73,6 +80,7 @@ const ApplicantItem = React.memo(({ applicant, handleApplicantAction, isJobOpen,
                     </>
                 )}
             </div>
+            </Link>
         </div>
     );
 });

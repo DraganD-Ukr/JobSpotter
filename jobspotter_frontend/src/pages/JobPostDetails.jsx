@@ -313,28 +313,31 @@ export function JobPostDetails() {
 
 
                             {/* Display Job Poster */}
-                            {/* Display Job Poster */}
                             {jobPoster && (
-                                <div className={`flex items-center text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'} border p-3 rounded-lg ${darkMode ? 'border-gray-500' : 'border-gray-300'}`}>
-                                    {/* Profile Picture Container */}
-                                    <div className={`w-15 h-15 rounded-full  bg-gray-300 mr-2 ${darkMode ? 'bg-gray-600' : ''} flex items-center justify-center`}>
-                                        {/* Profile Picture or Placeholder Icon */}
-                                        {jobPoster.profilePicture ? (
-                                            <img
-                                                src={jobPoster.profilePicture}
-                                                alt={`${jobPoster.firstName} ${jobPoster.lastName}`}
-                                                className="w-full h-full object-cover rounded-full"
-                                            />
-                                        ) : (
-                                            <FaUser className={`w-6 h-6 text-gray-500 ${darkMode ? "text-gray-400" : ""}`} />
-                                        )}
-                                    </div>
-                                    {/* User Info */}
-                                    <div className="flex flex-col font-semibold text-lg">
-                                        <span>{jobPoster.firstName}</span>
-                                        <span>{jobPoster.lastName}</span>
-                                    </div>
+                                <Link // Make the outer div a Link
+                                to={`/users/${jobPoster.userId}`}
+                                className={`flex items-center text-sm p-3 rounded-lg hover:shadow-lg hover:bg-sky-50  duration-300  ${darkMode ? 'text-gray-300 border-gray-500 border' : 'text-gray-700 border-gray-300'}`}
+                                style={{ display: 'flex', textDecoration: 'none' }} // Ensure flex display and remove default link underline
+                            >
+                                {/* Profile Picture Container */}
+                                <div className={`w-15 h-15 rounded-full bg-gray-300 mr-2 ${darkMode ? 'bg-gray-600' : ''} flex items-center justify-center`}>
+                                    {/* Profile Picture or Placeholder Icon */}
+                                    {jobPoster.profilePicture ? (
+                                        <img
+                                            src={jobPoster.profilePicture}
+                                            alt={`${jobPoster.firstName} ${jobPoster.lastName}`}
+                                            className="w-full h-full object-cover rounded-full"
+                                        />
+                                    ) : (
+                                        <FaUser className={`w-6 h-6 text-gray-500 ${darkMode ? "text-gray-400" : ""}`} />
+                                    )}
                                 </div>
+                                {/* User Info */}
+                                <div className="flex flex-col font-semibold text-lg">
+                                    <span>{jobPoster.firstName}</span>
+                                    <span>{jobPoster.lastName}</span>
+                                </div>
+                            </Link>
                             )}
 
 
