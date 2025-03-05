@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaMapMarkerAlt, FaUsers, FaRoute } from "react-icons/fa";
+import { FaMapMarkerAlt, FaUsers, FaRoute, FaFire, FaThumbsUp } from "react-icons/fa";
 import { MdDateRange } from "react-icons/md";
 
 export function Home() {
@@ -134,13 +134,14 @@ export function Home() {
   return (
     <div className="main-content min-h-screen p-4">
       {/* Banner Section */}
-      <div className="mt-20 mb-20 lava-lamp-background object-contain h-25 p-2 rounded-lg shadow-2xl flex justify-center items-center">
+      <div className="mt-20 mb-20 lava-lamp-background object-contain h-25 p-2 rounded-full shadow-2xl flex flex-col items-center justify-center w-2/4 mx-auto">
         <img
           src="/jb.png"
           alt="JobSpotter Logo"
           className="mb-6 object-contain h-110"
         />
       </div>
+
 
       {/* Welcome Section */}
       <div className="max-w-2xl mx-auto text-center">
@@ -176,7 +177,26 @@ export function Home() {
 
       {/* Hot Jobs Section */}
       <div className="mt-16 w-full max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold mb-8 text-center">Hot Jobs</h2>
+        <h2 className="text-3xl font-bold mb-8 text-center flex items-center justify-center">
+          <svg width="0" height="0">
+            <defs>
+              <linearGradient id="fireGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style={{ stopColor: "#ec4899", stopOpacity: 1 }} />
+                <stop offset="50%" style={{ stopColor: "#ef4444", stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: "#facc15", stopOpacity: 1 }} />
+              </linearGradient>
+            </defs>
+          </svg>
+
+          <span className="mr-2">
+            <FaFire style={{ fill: "url(#fireGradient)" }} />
+          </span>
+          Hot Jobs
+          <span className="ml-2">
+            <FaFire style={{ fill: "url(#fireGradient)" }} />
+          </span>
+
+        </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
           {jobPostsData.slice(0, 3).map((job) => (
             <Link to={`/job/${job.jobPostId}`} key={job.jobPostId}>
@@ -196,8 +216,37 @@ export function Home() {
       </div>
 
       {/* Recommended Jobs Section */}
-      <div className="mt-16 w-full max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold mb-8 text-center">Recommended Jobs</h2>
+      <div className="mt-16 mb-7 w-full max-w-6xl mx-auto">
+
+      <div className="text-center">
+      {/* Thumbs-Up Icons with Gradient around the heading */}
+      <div className="flex justify-center items-center space-x-4 text-xl font-bold mb-8">
+        {/* SVG Gradient Definition */}
+        <svg width="0" height="0">
+          <defs>
+            <linearGradient id="thumbGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="1" /> {/* Green */}
+              <stop offset="50%" stopColor="#34d399" stopOpacity="1" /> {/* Light Green */}
+              <stop offset="100%" stopColor="#6ee7b7" stopOpacity="1" /> {/* Lighter Green */}
+            </linearGradient>
+          </defs>
+        </svg>
+
+        {/* Left Thumbs-Up Icon */}
+        <span className=" animate-bounce">
+          <FaThumbsUp style={{ fill: "url(#thumbGradient)" }} />
+        </span>
+
+        {/* Recommended Jobs Text */}
+        <h2 className="text-3xl font-bold">Recommended Jobs</h2>
+
+        {/* Right Thumbs-Up Icon */}
+        <span className=" animate-bounce">
+          <FaThumbsUp style={{ fill: "url(#thumbGradient)" }} />
+        </span>
+      </div>
+    </div>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
           {jobPostsData.slice(3, 6).map((job) => (
             <Link to={`/job/${job.jobPostId}`} key={job.jobPostId}>
@@ -234,11 +283,10 @@ export function Home() {
             {jobPostsData.map((job) => (
               <Link to={`/job/${job.jobPostId}`} key={job.jobPostId}>
                 <div
-                  className={`card border border-gray-300 ${
-                    viewType === "card"
-                      ? "hover:shadow-md hover:border-green-500 transition"
-                      : "rounded-lg shadow"
-                  } w-full ${viewType === "card" ? "max-w-sm" : ""} flex flex-col p-4 rounded-lg`}
+                  className={`card border border-gray-300 ${viewType === "card"
+                    ? "hover:shadow-md hover:border-green-500 transition"
+                    : "rounded-lg shadow"
+                    } w-full ${viewType === "card" ? "max-w-sm" : ""} flex flex-col p-4 rounded-lg`}
                 >
                   <h3 className="text-xl font-semibold">{job.title}</h3>
                   <p className="flex items-center gap-1">
