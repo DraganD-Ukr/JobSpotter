@@ -100,7 +100,7 @@ export function MyJobs() {
     setLoading(true);
     const size = 9;
     // Include sortBy in your query if your backend supports it
-    const endpoint = `/api/v1/job-posts/my-job-posts?page=${page}&size=${size}&sortBy=${filters.sortBy}`;
+    const endpoint = `/api/v1/job-posts/my-job-posts?pageNumber=${page}&size=${size}&sortBy=${filters.sortBy}`;
 
     fetch(endpoint, {
       method: "GET",
@@ -473,9 +473,8 @@ export function MyJobs() {
                 }
                 className="px-3 py-2 border rounded-md"
               >
-                <option value="latest">Latest</option>
-                <option value="oldest">Oldest</option>
-                {/* Add more sort options as needed */}
+                <option value="datePosted">Date Posted</option>
+#                {/* Add more sort options as needed */}
               </select>
             </div>
           </div>
