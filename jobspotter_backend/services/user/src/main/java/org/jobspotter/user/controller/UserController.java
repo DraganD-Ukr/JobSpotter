@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.util.List;
@@ -71,6 +72,7 @@ public class UserController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
+
 
 
     @PostMapping("/auth/login")
@@ -215,6 +217,62 @@ public class UserController {
 
     }
 
+    @Operation(summary = "Update user profile image")
+    @ApiResponses(value = {
+                    @ApiResponse(responseCode = "200", description = "Profile image updated"),
+                    @ApiResponse(responseCode = "400", description = "Bad request",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    ),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized: Invalid token",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    ),
+                    @ApiResponse(responseCode = "500", description = "Internal server error",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    )
+            }
+    )
+    @PutMapping("/me/profile-image")
+    public ResponseEntity<HttpStatus> updateProfileImage(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestParam("profileImage") MultipartFile profileImage
+    ) throws Exception {
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+        log.info("Updating user profile image");
+        return userService.uploadProfilePicture(userId, profileImage);
+    }
+
+    @Operation(summary = "Delete user profile image")
+    @ApiResponses(value = {
+                    @ApiResponse(responseCode = "204", description = "Profile image deleted"),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized: Invalid token",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    ),
+                    @ApiResponse(responseCode = "404", description = "Profile image not found",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    ),
+                    @ApiResponse(responseCode = "500", description = "Internal server error",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    )
+            }
+    )
+    @DeleteMapping("/me/profile-image")
+    public ResponseEntity<HttpStatus> deleteProfileImage(
+            @RequestHeader("Authorization") String accessToken
+    ) throws Exception {
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+        log.info("Deleting user profile image");
+        return userService.deleteProfilePicture(userId);
+    }
 
     private void clearCookie(String name, HttpServletResponse response) {
         Cookie cookie = new Cookie(name, "");

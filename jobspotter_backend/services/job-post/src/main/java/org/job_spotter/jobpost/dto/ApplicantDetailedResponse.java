@@ -16,6 +16,10 @@ public class ApplicantDetailedResponse {
     @EqualsAndHashCode.Include
     private UUID userId;
     private Long applicantId;
+    private String firstName;
+    private String lastName;
+    private String ratingCount;
+    private String ratingAverage;
     private String message;
     private ApplicantStatus status;
     private LocalDateTime dateApplied;
