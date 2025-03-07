@@ -11,22 +11,27 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.user.authUtils.JWTUtils;
 import org.jobspotter.user.dto.*;
+import org.jobspotter.user.exception.InvalidFileExtensionException;
 import org.jobspotter.user.exception.ResourceAlreadyExistsException;
 import org.jobspotter.user.exception.ResourceNotFoundException;
+import org.jobspotter.user.fileUtils.FileUtils;
 import org.jobspotter.user.model.User;
 import org.jobspotter.user.model.UserType;
 import org.jobspotter.user.repository.UserRepository;
 import org.jobspotter.user.service.KeyCloakService;
+import org.jobspotter.user.service.S3BucketService;
 import org.jobspotter.user.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    private final S3BucketService s3BucketService;
     private final KeyCloakService keyCloakService;
     private final UserRepository userRepository;
 
@@ -147,6 +152,51 @@ public class UserServiceImpl implements UserService {
                 .build()
         );
     }
+
+    /**
+     * Upload user profile picture to S3 bucket
+     *
+     * @param multipartFile uploaded file
+     * @param userId user id of the user
+     * @return ResponseEntity<HttpStatus> response entity
+     */
+    //upload user profile picture
+    @Override
+    public ResponseEntity<HttpStatus> uploadProfilePicture(UUID userId, MultipartFile multipartFile) throws Exception {
+
+        //check if file is empty
+        if(multipartFile.isEmpty()){
+            log.warn("No file uploaded");
+            throw new ResourceNotFoundException("No file uploaded");
+
+            //check if file is an image
+        } else if (!FileUtils.isImage(multipartFile.getOriginalFilename())) {
+            log.warn("Wrong file type uploaded");
+            throw new InvalidFileExtensionException( multipartFile.getOriginalFilename(),FileUtils.IMAGE_EXTENSIONS);
+        }
+
+        //upload file to S3 bucket
+        s3BucketService.uploadFile(userId, multipartFile);
+
+        return ResponseEntity.ok(HttpStatus.NO_CONTENT);
+    }
+
+    /**
+     * Delete user profile picture from S3 bucket
+     *
+     * @param userId user id of the user
+     * @return ResponseEntity<HttpStatus> response entity
+     */
+    //delete user profile picture
+    @Override
+    public ResponseEntity<HttpStatus> deleteProfilePicture(UUID userId) throws Exception {
+
+        //delete file from S3 bucket
+        s3BucketService.deleteFile(userId);
+
+        return ResponseEntity.ok(HttpStatus.NO_CONTENT);
+    }
+
 
     @Override
     public ResponseEntity<Map<UUID, UserBasicInfoResponse>> getAllByIds(List<UUID> userIds) {

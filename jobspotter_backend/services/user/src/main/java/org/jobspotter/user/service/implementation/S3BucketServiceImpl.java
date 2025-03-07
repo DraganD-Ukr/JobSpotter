@@ -2,6 +2,8 @@ package org.jobspotter.user.service.implementation;
 
 import feign.Request;
 import lombok.extern.slf4j.Slf4j;
+import org.jobspotter.user.exception.ResourceNotFoundException;
+import org.springframework.context.annotation.Bean;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -12,8 +14,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -24,39 +28,12 @@ public class S3BucketServiceImpl implements S3BucketService {
     @Value("${aws.s3.bucket}")
     private String bucketName;
 
-    @Value("${aws.accessKeyId}")
-    private String accessKeyId;
+    // injecting the S3Client object
+    private final S3Client s3Client;
 
-    @Value("${aws.secretAccessKey}")
-    private String secretAccessKey;
 
-    @Value("${aws.s3.region}")
-    private String region;
-
-    private S3Client s3Client;
-
-    public S3BucketServiceImpl() {
-    }
-
-    /**
-     * This method creates a S3Client object which connects to the JobSpotter S3 bucket
-     * @return S3Client object
-     */
-    // Create a S3Client object
-    private S3Client getS3Client() {
-        if (s3Client == null) {
-            AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
-            s3Client = S3Client.builder()
-                    .region(Region.of(region))
-                    .credentialsProvider(StaticCredentialsProvider.create(credentials))
-                    .build();
-        }else{
-            log.warn("S3 Client exists returning the existing client");
-        }
-
-        log.info("S3 Client created");
-
-        return s3Client;
+    public S3BucketServiceImpl(S3Client s3Client) {
+        this.s3Client = s3Client;
     }
 
     /**
@@ -94,8 +71,15 @@ public class S3BucketServiceImpl implements S3BucketService {
     @Override
     public void deleteFile(UUID userID) {
 
+        // Check if the file exists in the S3 bucket
+        if(!fileExists(userID)) {
+            log.warn("File does not exist in S3 bucket for user: {}", userID);
+            throw new ResourceNotFoundException("File does not exist in S3 bucket for user: " + userID);
+        }
+
         // Convert the user ID to a string
         String fileName = userID.toString();
+
 
         // Create a DeleteObjectRequest object
         DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
@@ -107,5 +91,33 @@ public class S3BucketServiceImpl implements S3BucketService {
         s3Client.deleteObject(deleteObjectRequest);
 
         log.info("File deleted from S3 bucket by :{}", userID);
+    }
+
+    /**
+     * Checks if a file exists in the S3 bucket
+     *
+     * @param userID User ID to whom the file belongs
+     * @return true if the file exists, false otherwise
+     */
+    // Check if the file exists in the S3 bucket
+    public boolean fileExists(UUID userID) {
+
+        // Convert the user ID to a string
+        String fileName = userID.toString();
+
+        // Create a HeadObjectRequest object
+        HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                .bucket(bucketName)
+                .key(fileName)
+                .build();
+
+        // Check if the file exists in the S3 bucket
+        try {
+            s3Client.headObject(headObjectRequest);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+
     }
 }
