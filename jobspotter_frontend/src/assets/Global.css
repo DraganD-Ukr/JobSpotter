@@ -1,47 +1,64 @@
 @import "tailwindcss";
 
-/* Global Styles */
 body {
-  @apply bg-gray-100 text-gray-900 font-sans;
+  @apply font-sans;
 }
 
-/* App.css Styles */
-.logo {
-  @apply w-16 h-16;
+body.lightMode {
+  color: #000000;
+  position: relative; 
+  margin: 0;
+}
+body.lightMode::before {
+  content: "";
+  position: fixed;     
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;         
+  pointer-events: none; 
+  
+  background: #ffffff url("/src/assets/lightmode.jpg") repeat;
+  background-size: repeat;
+  
+  filter: blur(8px);
+  -webkit-filter: blur(8px);
 }
 
-.card {
-  @apply p-6 bg-white shadow-md rounded-lg;
+body.darkMode {
+  color: #ffffff;
+  position: relative;
+  margin: 0;
+}
+body.darkMode::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  
+  background: #1a1a1a url("/src/assets/darkmode.png") repeat;
+  background-size: repeat;
+  
+  filter: blur(8px);
+  -webkit-filter: blur(8px);
 }
 
-/* Index.css Styles */
-h1 {
-  @apply text-4xl font-bold text-black;
-}
-
-
-/* Theme colours */
-
-/* Light mode */
-.lightMode {
-  @apply bg-white text-gray-900;
-}
-
-.lightMode.color1{
-  @apply bg-blue-500 text-white;
-}
-/* Dark mode */
-
-.darkMode {
-  @apply bg-gray-900 text-white;
-}
 
 .lava-lamp-background {
-  background: linear-gradient(120deg, #369d55, #05e690, #32cd32);
+  background: linear-gradient(120deg, #205b31, #13c100, #59c70f);
   background-size: 400% 400%;
   animation: lavaLampAnimation 10s ease infinite;
 }
-
+.darkMode .lava-lamp-background {
+  background: linear-gradient(120deg, #4a6551, #509452, #235f3a);
+  background-size: 400% 400%;
+  animation: lavaLampAnimation 10s ease infinite;
+}
 @keyframes lavaLampAnimation {
   0% {
     background-position: 0% 50%;
@@ -52,4 +69,297 @@ h1 {
   100% {
     background-position: 0% 50%;
   }
+}
+
+.sidebar {
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #000000;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+.darkMode .sidebar {
+  background-color: rgba(47, 47, 47, 0.8);
+  color: #ffffff;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.main-content {
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #000000;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+.darkMode .main-content {
+  background-color: rgba(26, 26, 26, 0.8);
+  color: #ffffff;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.card {
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #000000;
+  @apply p-6 shadow-md rounded-lg;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+.darkMode .card {
+  background-color: rgba(41, 44, 38, 0.8);
+  color: #ffffff;
+  box-shadow: none;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.darkMode .textbox {
+  background-color: #2f2f2f;
+  color: #ffffff;
+}
+
+.darkMode button,
+.darkMode input[type="button"],
+.darkMode input[type="submit"] {
+  background-color: #28e85c70;
+  color: #ffffff;
+}
+.darkMode button:hover,
+.darkMode input[type="button"]:hover,
+.darkMode input[type="submit"]:hover {
+  background-color: #28e85b3e;
+}
+.darkMode button:active,
+.darkMode input[type="button"]:active,
+.darkMode input[type="submit"]:active {
+  background-color: #333333;
+}
+button,
+input[type="button"],
+input[type="submit"] {
+  transition: background-color 0.3s ease;
+}
+
+
+/* Style for disabled buttons */
+button:disabled,
+input[type="button"]:disabled,
+input[type="submit"]:disabled {
+  background-color: #919397;
+  color: #f1ebeb;
+}
+/* Style for disabled buttons (Dark mode)*/
+.darkMode button:disabled,
+.darkMode input[type="button"]:disabled,
+.darkMode input[type="submit"]:disabled {
+  background-color: #4a4a4a;
+  color: #ffffff;
+}
+
+
+.darkMode select {
+  background-color: #2f2f2f;
+  color: #ffffff;
+  border-color: #444444;
+}
+.darkMode option {
+  background-color: #2f2f2f;
+  color: #ffffff;
+}
+
+.darkMode input[type="text"]::placeholder {
+  color: #b4b0b093; /* White placeholder text */
+}
+
+input[type="text"]::placeholder {
+  color: #3d3939ad; /* White placeholder text */
+}
+
+.darkMode button:active,
+.darkMode input[type="button"]:active,
+.darkMode input[type="submit"]:active {
+  background-color: #333333;
+}
+
+
+
+
+
+
+
+
+
+/* Dark mode properties for certain elements */
+
+/* Page button in pagination */
+.darkMode #page-button {
+  background-color: #4a4d4b;
+  color: #ffffff;
+}
+.darkMode #page-button:hover {
+  background-color: #3a3c3b;
+  color: #ffffff;
+}
+.darkMode #active-page {
+  background-color: #2f6b38;
+  color: #ffffff;
+}
+.darkMode #active-page:hover {
+  background-color: #24552a;
+  color: #ffffff;
+}
+
+
+.darkMode #active-applicants-page {
+  background-color: #15811e;
+  color: #ffffff;
+}
+.darkMode #active-applicants-page:hover {
+  background-color: #24552a;
+  color: #ffffff;
+}
+
+.darkMode #navigate-page {
+  background-color: #606463;
+  color: #ffffff;
+}
+.darkMode #navigate-page:hover {
+  background-color: #424443;
+  color: #ffffff;
+}
+.darkMode #other-pages {
+  background-color: #3c3f3e;
+  color: #bfbfbf;
+}
+.darkMode #other-pages:hover {
+  background-color: #2b2c2b;
+  color: #ffffff;
+}
+.darkMode #toggle-view {
+  background-color: #4a4d4b;
+  color: #ffffff;
+}
+.darkMode #toggle-view:hover {
+  background-color: #3a3c3b;
+  color: #ffffff;
+}
+
+.darkMode #distance-range-input {
+  color: #ffffff;
+  border-color: #444444;
+}
+.darkMode #distance-range-input-ticks {
+  color: #545151;
+}
+
+.darkMode #cancel-apply {
+  background-color: #80817dac; /* Green thumb */
+}
+
+.darkMode #cancel-apply:hover {
+  background-color: #60605dac; /* Green thumb */
+}
+
+/* Applicant managing buttons */
+.darkMode #reject-applicant {
+  background-color: #c02222fc; /* Red thumb */
+}
+.darkMode #reject-applicant:hover {
+  background-color: #891919fc; /* Red thumb */
+}
+
+
+/* Job Post Search Range Slider */
+.range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right, #3b82f6 0%, #3b82f6 50%, #d1d5db 50%, #d1d5db 100%);
+  border-radius: 8px;
+  outline: none;
+  transition: background 0.15s ease-in-out;
+}
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+.range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+.range-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+.range-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+}
+
+.footer {
+  background-color: #ffffff;
+  color: #000000;
+}
+.darkMode .footer {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+.nav-container {
+  background-color: transparent !important;
+}
+.darkMode .nav-container {
+  background-color: transparent !important;
+}
+
+.nav-username {
+  color: #ffffff;
+}
+.darkMode .nav-username {
+  color: #ffffff;
+}
+
+.details-panel {
+  background-color: #f8f8f8;
+  color: #000000;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+.darkMode .details-panel {
+  background-color: #4a4a4a;
+  color: #ffffff;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.toggle-switch {
+  background-color: #ffffff;
+  transition: background-color 0.3s ease;
+}
+.darkMode .toggle-switch {
+  background-color: #2f2f2f;
+}
+
+nav .group > div {
+  transition-delay: 175ms;
+}
+nav .group:hover > div {
+  transition-delay: 0ms;
+}
+
+
+.card:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  box-shadow: 0 0 10px 2px #59c70f, 
+              0 0 20px 4px #13c100 inset;
 }

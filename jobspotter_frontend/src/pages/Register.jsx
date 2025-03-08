@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 export function Register() {
-  // New state to track if registration was successful
   const [registrationSuccessful, setRegistrationSuccessful] = useState(false);
 
   const [formValues, setFormValues] = useState({
@@ -128,7 +127,7 @@ export function Register() {
       };
 
       try {
-        const response = await fetch("/api/v1/user/auth/register", {
+        const response = await fetch("/api/v1/users/auth/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Cookies from "js-cookie";
 
 export function Login() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -53,7 +52,7 @@ export function Login() {
     // Proceed only if there are no validation errors
     if (Object.keys(errors).length === 0) {
       try {
-        const response = await fetch("/api/v1/user/auth/login", {
+        const response = await fetch("/api/v1/users/auth/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -62,14 +61,6 @@ export function Login() {
         });
 
         if (response.ok) {
-          const data = await response.json();
-
-          // Store tokens in cookies using js-cookie.
-          // Adjust the cookie settings as needed (remove 'secure' for local development if necessary)
-          Cookies.set("AccessToken", data.access_token);
-          Cookies.set("RefreshToken", data.refresh_token);
-
-          // Instead of an alert, set loggedIn to true so the component displays the success message.
           setLoggedIn(true);
         } else {
           // If login fails, extract error messages from the response.
@@ -89,18 +80,16 @@ export function Login() {
 
   // Handler to redirect the user to the job posts page
   const handleRedirect = () => {
-    window.location.href = "/jobpost";
+    window.location.href = "/SearchJobPost";
   };
 
   // If login is successful, remove the form and display a success message with two buttons.
   if (loggedIn) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="bg-white shadow-md rounded-2xl p-8 w-3/5 max-w-4xl text-center">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">
-            Login Successful!
-          </h2>
-          <p className="text-gray-600 mb-4">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white w-3/5 max-w-4xl rounded-lg shadow-lg p-6 text-center">
+          <h2 className="text-3xl font-bold mb-6">Login Successful!</h2>
+          <p className="mb-4">
             You have successfully logged in. Click one of the buttons below to proceed.
           </p>
           <div className="flex justify-center gap-4">
@@ -111,7 +100,7 @@ export function Login() {
               Go to Job Posts
             </button>
             <button
-              onClick={() => window.location.href = "/profile"}
+              onClick={() => (window.location.href = "/profile")}
               className="px-6 py-2 bg-green-500 text-white font-bold rounded-lg hover:opacity-90"
             >
               See Profiles
@@ -124,91 +113,97 @@ export function Login() {
 
   // Render the login form when not logged in.
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white shadow-md rounded-2xl overflow-hidden w-3/5 max-w-4xl">
-        <div className="grid grid-cols-1 md:grid-cols-2">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      {/* Outer container with two columns */}
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 bg-white rounded-lg shadow-lg overflow-hidden">
+        {/* Left Section (Green Gradient) */}
+        <div className="hidden md:flex flex-col justify-center items-center p-10 bg-gradient-to-br from-green-400 to-lime-500 text-white">
+          <h2 className="text-3xl font-bold mb-2">Welcome Back!</h2>
+          <p>Don't have an account?</p>
+          <a
+            href="/register"
+            className="mt-4 px-6 py-2 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-200"
+          >
+            Sign Up
+          </a>
+        </div>
 
-          {/* Left Section */}
-          <div className="p-10">
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">Sign In</h2>
-            {errors.general && (
-              <p className="text-red-500 text-sm mb-4">{errors.general}</p>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              
-              {/* Username */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  name="username"
-                  value={formValues.username}
-                  onChange={handleChange}
-                  className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                  placeholder="Username or Email"
-                />
-                {errors.username && (
-                  <p className="text-red-500 text-sm">{errors.username}</p>
-                )}
-              </div>
+        {/* Right Section (Form) */}
+        <div className="p-10">
+          <h2 className="text-3xl font-bold mb-6">Sign In</h2>
+          {errors.general && (
+            <p className="text-red-500 text-sm mb-4">{errors.general}</p>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Username */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Username
+              </label>
+              <input
+                type="text"
+                name="username"
+                value={formValues.username}
+                onChange={handleChange}
+                placeholder="Username or Email"
+                className="
+                  mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none
+                  focus:ring-2 focus:ring-green-400
+                "
+              />
+              {errors.username && (
+                <p className="text-red-500 text-sm">{errors.username}</p>
+              )}
+            </div>
 
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formValues.password}
-                  onChange={handleChange}
-                  className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                  placeholder="Password"
-                />
-                {errors.password && (
-                  <p className="text-red-500 text-sm">{errors.password}</p>
-                )}
-              </div>
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formValues.password}
+                onChange={handleChange}
+                placeholder="Password"
+                className="
+                  mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none
+                  focus:ring-2 focus:ring-green-400
+                "
+              />
+              {errors.password && (
+                <p className="text-red-500 text-sm">{errors.password}</p>
+              )}
+            </div>
 
-              {/* Sign In Button */}
-              <button
-                type="submit"
-                disabled={isButtonDisabled}
-                className={`w-full text-white font-bold py-2 rounded-lg transition ${
+            {/* Sign In Button */}
+            <button
+              type="submit"
+              disabled={isButtonDisabled}
+              className={`
+                w-full text-white font-bold py-2 rounded-lg transition mt-2
+                ${
                   isButtonDisabled
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-gradient-to-r from-green-500 to-lime-500 hover:opacity-90"
-                }`}
-              >
-                Sign In
-              </button>
-
-              {/* Extra Options */}
-              <div className="flex items-center justify-between mt-2">
-                <label className="flex items-center text-sm">
-                  <input type="checkbox" className="mr-2" />
-                  Remember Me
-                </label>
-                <a href="#" className="text-sm text-green-600 hover:underline">
-                  Forgot Password?
-                </a>
-              </div>
-            </form>
-          </div>
-
-          {/* Right Section */}
-          <div className="hidden md:flex flex-col justify-center items-center p-10 lava-lamp-background rounded-l-2xl">
-            <h2 className="text-3xl font-bold">Welcome Back!</h2>
-            <p className="mt-2">Don't have an account?</p>
-            <a
-              href="/register"
-              className="mt-4 px-6 py-2 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-200"
+                }
+              `}
             >
-              Sign Up
-            </a>
-          </div>
+              Sign In
+            </button>
+
+            {/* Extra Options */}
+            <div className="flex items-center justify-between mt-2">
+              <label className="flex items-center text-sm">
+                <input type="checkbox" className="mr-2" />
+                Remember Me
+              </label>
+              <a href="#" className="text-sm text-green-600 hover:underline">
+                Forgot Password?
+              </a>
+            </div>
+          </form>
         </div>
       </div>
     </div>
