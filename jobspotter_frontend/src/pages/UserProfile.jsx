@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import UserProfile from '../components/UserProfile'; // Adjust path if needed
+import UserProfile from '../components/UserProfile'; 
 import UserProfileSkeleton from '../components/skeleton/UserProfileSkeleton';
 import { useParams } from 'react-router-dom'; // If using React Router for navigation
 import { ThemeContext } from "../components/ThemeContext"; // Import ThemeContext for dark mode

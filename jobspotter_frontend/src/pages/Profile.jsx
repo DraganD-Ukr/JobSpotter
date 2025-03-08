@@ -1,6 +1,9 @@
 import { useEffect, useState, useContext } from "react";
-import Sidebar from "../components/Sidebar"; 
+import Sidebar from "../components/Sidebar";
 import { ThemeContext } from "../components/ThemeContext"; // <-- bring in dark mode context if you have it
+
+import MyProfilePicture from "../components/MyProfilePicture";
+import ProfilePicture from "../components/ProfilePicture";
 
 const LoadingSkeleton = () => (
   <div className="flex min-h-screen items-center justify-center">
@@ -194,11 +197,10 @@ export default function Profile() {
 
   return (
     <div
-      className={`main-content min-h-screen p-4 ${
-        darkMode
-          ? "bg-gray-900 text-white"
-          : "bg-gray-100 text-black" /* Slightly gray background in light mode */
-      }`}
+      className={`main-content min-h-screen p-4 ${darkMode
+        ? "bg-gray-900 text-white"
+        : "bg-gray-100 text-black" /* Slightly gray background in light mode */
+        }`}
     >
       {/* Use a flex layout similar to SearchJobPost */}
       <div className="flex">
@@ -209,8 +211,9 @@ export default function Profile() {
         <div className="w-4/5 p-4 ml-4 mr-30">
           {/* Banner */}
           <div
-            className="relative h-48 md:h-52 lg:h-56 flex items-center"
-            style={{ backgroundColor: bannerColor }}
+            className={`relative h-48 md:h-52 lg:h-56 flex items-center rounded-4xl 
+              ${darkMode ? 'bg-gradient-to-l from-green-500 via-emerald-700 to-cyan-400 opacity-50' : ''} `}
+          // style={{ backgroundColor: bannerColor }}
           >
             {editing && (
               <div className="absolute top-4 right-4 flex items-center space-x-2 text-white">
@@ -228,29 +231,33 @@ export default function Profile() {
             )}
           </div>
 
-          {/* Overlapping Avatar + Basic Info */}
-          <div className="relative px-4 -mt-12 flex items-end">
-            <div className="w-24 h-24 rounded-full border-4 border-gray-900 overflow-hidden">
-              <img
-                src={
-                  previewImage || formData.profileImage || "/default-avatar.png"
-                }
-                alt="User Avatar"
-                className="object-cover w-full h-full"
-              />
+          {/* Profile Pic + Basic Info */}
+          <div className="relative px-4 -mt-28 flex items-end">
+
+
+            {/* Profile Pic */}
+            <div className="relative w-24 h-24">
+              {/* Gradient Border */}
+              <div className="absolute inset-0 rounded-full p-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
+                {/* Inner Circle (Background Mask) */}
+                <div className="w-full h-full rounded-full bg-white dark:bg-gray-900 p-1">
+                  <MyProfilePicture userId={user.userId} darkMode={darkMode} />
+                </div>
+              </div>
             </div>
+
+
+
             <div className="ml-4 mb-2">
               <h1
-                className={`text-xl md:text-2xl font-bold ${
-                  darkMode ? "text-white" : "text-black"
-                }`}
+                className={`text-xl md:text-2xl font-bold ${darkMode ? "text-white" : "text-black"
+                  }`}
               >
                 {formData.firstName} {formData.lastName}
               </h1>
               <p
-                className={`text-sm ${
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                }`}
+                className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
               >
                 {formData.email}
               </p>
@@ -262,9 +269,8 @@ export default function Profile() {
           </div>
 
           <div
-            className={`border border-gray-300 hover:shadow-md hover:border-green-500 transition rounded-lg p-6 ${
-              darkMode ? "" : "bg-white"
-            }`}
+            className={`border border-gray-300 hover:shadow-md hover:border-green-500 transition rounded-lg p-6 ${darkMode ? "" : "bg-white"
+              }`}
           >
             <h2 className="font-semibold text-lg mb-4">My Information</h2>
             {errorMessage && (
@@ -323,11 +329,10 @@ export default function Profile() {
                   <button
                     onClick={handleSave}
                     disabled={!isEdited}
-                    className={`px-6 py-2 rounded text-white ${
-                      isEdited
-                        ? "bg-green-500 hover:bg-green-600"
-                        : "bg-gray-400 cursor-not-allowed"
-                    }`}
+                    className={`px-6 py-2 rounded text-white ${isEdited
+                      ? "bg-green-500 hover:bg-green-600"
+                      : "bg-gray-400 cursor-not-allowed"
+                      }`}
                   >
                     Save Changes
                   </button>

@@ -15,6 +15,7 @@ import {
     FaInfoCircle // Import info icon
 } from 'react-icons/fa';
 import { BsInfoLg } from "react-icons/bs";
+import ProfilePicture from './ProfilePicture';
 
 
 // Helper function to render star ratings
@@ -60,14 +61,11 @@ const UserProfile = React.memo(({ user, rating, ratingLoading, ratingError }) =>
 
             {/* Header with Profile Picture and Ratings */}
             <div className={`mb-8 p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} flex items-start justify-between`}> {/* items-start and justify-between */}
+
+                {/* Profile Picture and Username */}
                 <div className="flex items-start"> {/* items-start for vertical alignment of pic and username */}
                     <div className="mr-6">
-                        {/* Profile Picture Placeholder */}
-                        <div className={`w-20 h-20 rounded-full border-2 border-gray-400 ${darkMode ? 'dark:border-gray-600 bg-gray-200 dark:bg-gray-700' : 'bg-gray-100'}`}>
-                            <div className="flex items-center justify-center h-full w-full rounded-full">
-                                <FaUser className={`h-10 w-10 text-gray-500 ${darkMode ? 'dark:text-gray-400' : ''}`} />
-                            </div>
-                        </div>
+                        <ProfilePicture userId={user.userId} darkMode={darkMode} />
                     </div>
                     <div> {/* Container for username and status */}
                         <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-1`}>{user.username}</h2>
@@ -76,6 +74,7 @@ const UserProfile = React.memo(({ user, rating, ratingLoading, ratingError }) =>
                         </div>
                     </div>
                 </div>
+
                 {/* User Ratings  */}
                 <div className="text-right relative"> {/* Align ratings to the right and relative for tooltip positioning */}
                     {ratingLoading ? (
