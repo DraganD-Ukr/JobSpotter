@@ -1,6 +1,7 @@
 import { ThemeProvider } from "./components/ThemeContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import Notification from "./components/Notification";
 import { Routes, Route } from "react-router-dom";
 
 import { Home } from "./pages/Home";
@@ -49,7 +50,7 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/jobposthistory" element={<JobPostHistory />} />
           <Route path="/ViewMoreDetails" element={<ViewMoreDetails />} />
-              <Route path="/myJob/:jobId" element={<ViewMoreDetails />} />
+          <Route path="/myJob/:jobId" element={<ViewMoreDetails />} />
           <Route path="/job/:jobId" element={<JobPostDetails />} />
           <Route path="/users/:userId" element={<UserProfile />} />
         </Routes>

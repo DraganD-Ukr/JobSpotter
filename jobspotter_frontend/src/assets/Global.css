@@ -260,22 +260,15 @@ input[type="text"]::placeholder {
 }
 
 /* Applicant managing buttons */
-
 .darkMode #reject-applicant {
   background-color: #c02222fc; /* Red thumb */
 }
-
 .darkMode #reject-applicant:hover {
   background-color: #891919fc; /* Red thumb */
 }
 
 
-
-
-
 /* Job Post Search Range Slider */
-
-/* Custom range slider */
 .range-slider {
   -webkit-appearance: none;
   appearance: none;
@@ -353,4 +346,20 @@ input[type="text"]::placeholder {
 }
 .darkMode .toggle-switch {
   background-color: #2f2f2f;
+}
+
+nav .group > div {
+  transition-delay: 175ms;
+}
+nav .group:hover > div {
+  transition-delay: 0ms;
+}
+
+
+.card:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  box-shadow: 0 0 10px 2px #59c70f, 
+              0 0 20px 4px #13c100 inset;
 }

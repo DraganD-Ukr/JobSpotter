@@ -4,7 +4,6 @@ import { FaList, FaTh, FaTag, FaMapMarkerAlt, FaUsers, FaRoute } from "react-ico
 import { MdDateRange } from "react-icons/md";
 import { ThemeContext } from "../components/ThemeContext";
 
-
 export function MyJobs() {
   // State for dynamic tag mapping via API
   const [tagMapping, setTagMapping] = useState(new Map());
@@ -21,7 +20,7 @@ export function MyJobs() {
         }
         const tagsData = await res.json();
         const newTagMap = new Map();
-        Object.keys(tagsData).forEach(enumValue => {
+        Object.keys(tagsData).forEach((enumValue) => {
           const friendlyName = tagsData[enumValue];
           if (friendlyName) {
             newTagMap.set(friendlyName, enumValue);
@@ -60,6 +59,8 @@ export function MyJobs() {
     radius: 50,
     // Control sorting on the top-right
     sortBy: "latest", // Could be "latest", "oldest", etc.
+    // New: jobStatus filter added to the filters object (initially empty)
+    jobStatus: ""
   });
 
   const navigate = useNavigate();
@@ -367,6 +368,24 @@ export function MyJobs() {
               </select>
             </div>
 
+            {/* NEW: Job Status Filter */}
+            <div className="mb-4 p-4 border rounded-md">
+              <label className="block mb-2">Job Status</label>
+              <select
+                name="jobStatus"
+                value={filters.jobStatus}
+                onChange={handleFilterChange}
+                className="w-full px-4 py-2 border rounded-md"
+              >
+                <option value="">Select a status</option>
+                <option value="OPEN">Open</option>
+                <option value="ASSIGNED">Assigned</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </div>
+
             {/* Location Filter */}
             <div className="mb-4 p-4 border rounded-md">
               <label className="block mb-2">Location</label>
@@ -474,7 +493,7 @@ export function MyJobs() {
                 className="px-3 py-2 border rounded-md"
               >
                 <option value="datePosted">Date Posted</option>
-#                {/* Add more sort options as needed */}
+                {/* Add more sort options as needed */}
               </select>
             </div>
           </div>

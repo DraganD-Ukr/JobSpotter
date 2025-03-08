@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useContext } from "react";
-import { Search, Bell, Sun, Moon } from "lucide-react";
+import { Search, Sun, Moon } from "lucide-react";
 import trollImage from "../assets/troll.jpg";
 import gigachadImage from "../assets/gigachad.png";
 import { ThemeContext } from "./ThemeContext";
+import Notification from "./Notification";
 
 export default function Navbar() {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [username, setUsername] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -59,9 +59,8 @@ export default function Navbar() {
     window.location.href = `/SearchJobPost?jobId=${job.jobPostId}`;
   }
 
-  // Close search or notifications when clicking outside
+  // Close search when clicking outside
   const searchRef = useRef(null);
-  const notificationRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -69,12 +68,10 @@ export default function Navbar() {
         setIsExpanded(false);
         setShowResults(false);
       }
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
-        setShowNotifications(false);
-      }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Check if user is logged in
@@ -132,8 +129,7 @@ export default function Navbar() {
               Jobs Available
             </span>
             <div
-              className="absolute top-full right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg 
-              transition-all ease-in-out duration-500 overflow-hidden transform origin-bottom max-h-0 opacity-0 group-hover:max-h-40 group-hover:opacity-100"
+              className="absolute top-full mt-6 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg transform origin-bottom scale-0 opacity-0 transition-all ease-in-out duration-300 group-hover:scale-100 group-hover:opacity-100"
             >
               <a
                 href="/SearchJobPost"
@@ -156,8 +152,7 @@ export default function Navbar() {
               My Job Posts
             </span>
             <div
-              className="absolute top-full right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg 
-              transition-all ease-in-out duration-500 overflow-hidden transform origin-bottom max-h-0 opacity-0 group-hover:max-h-40 group-hover:opacity-100"
+              className="absolute top-full mt-6 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg transform origin-bottom scale-0 opacity-0 transition-all ease-in-out duration-300 group-hover:scale-100 group-hover:opacity-100"
             >
               <a
                 href="/myJobs"
@@ -233,7 +228,7 @@ export default function Navbar() {
 
             {isExpanded && showResults && searchResults.length > 0 && (
               <div
-                className="absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg z-50 w-full"
+                className="absolute top-full mt-6 left-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg z-50 w-full transition-all ease-in-out duration-300"
               >
                 {searchResults.map((job) => (
                   <div
@@ -248,24 +243,8 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Notifications */}
-          <div className="relative group inline-block" ref={notificationRef}>
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="bg-gradient-to-r from-green-500 to-lime-500 p-2 rounded-full shadow hover:opacity-80 transition duration-300"
-            >
-              <Bell size={24} className="text-white" />
-            </button>
-            {showNotifications && (
-              <div
-                className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg z-50"
-              >
-                <div className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">
-                  No notifications
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Notification */}
+          <Notification />
 
           {/* Profile/Login */}
           {isCheckingAuth ? (
@@ -293,10 +272,9 @@ export default function Navbar() {
                   alt="Profile"
                   className="w-10 h-10 rounded-full cursor-pointer"
                 />
-                {/* Profile dropdown now has the same slow bottom-up animation */}
+                {/* Profile dropdown now also uses mt-6 & origin-bottom */}
                 <div
-                  className="absolute top-full right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg z-50
-                  transition-all ease-in-out duration-500 overflow-hidden transform origin-bottom max-h-0 opacity-0 group-hover:max-h-60 group-hover:opacity-100"
+                  className="absolute top-full mt-6 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg z-50 transform origin-bottom scale-0 opacity-0 transition-all ease-in-out duration-300 group-hover:scale-100 group-hover:opacity-100"
                 >
                   <a
                     href="/profile"
@@ -316,7 +294,7 @@ export default function Navbar() {
                   >
                     Settings
                   </a>
-                  <div className="h-px w-full bg-gray-300 dark:bg-gray-600" />
+                  <div className="h-px bg-gray-300 dark:bg-gray-600" />
                   <div
                     onClick={handleLogout}
                     className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-100 cursor-pointer"
@@ -330,7 +308,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Absolutely positioned container for dark mode toggle */}
+        {/* Dark Mode Toggle */}
         {isLoggedIn && (
           <div className="absolute top-4 right-4 z-50">
             <div
@@ -338,7 +316,7 @@ export default function Navbar() {
               className="relative w-12 h-7 flex-shrink-0 rounded-full cursor-pointer transition-colors bg-white dark:bg-gray-900"
             >
               <div
-                className={`absolute top-1 left-1 h-5 w-5 flex items-center justify-center rounded-full bg-white dark:bg-gray-900 text-gray-700 dark:text-white shadow-md transform transition-transform ${
+                className={`absolute top-1 left-1 h-5 w-5 flex items-center justify-center rounded-full bg-white dark:bg-gray-900 text-gray-700 dark:text-white shadow-md transform transition-transform ease-in-out ${
                   darkMode ? "translate-x-5" : "translate-x-0"
                 }`}
               >

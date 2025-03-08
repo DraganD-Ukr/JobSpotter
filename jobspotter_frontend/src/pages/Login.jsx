@@ -80,7 +80,7 @@ export function Login() {
 
   // Handler to redirect the user to the job posts page
   const handleRedirect = () => {
-    window.location.href = "/jobpost";
+    window.location.href = "/SearchJobPost";
   };
 
   // If login is successful, remove the form and display a success message with two buttons.
