@@ -31,7 +31,7 @@ const ProfilePicture = ({ userId, darkMode }) => {
                     setProfilePicUrl(null);  // Image does not exist, show placeholder
                 }
             } catch (error) {
-                console.error('Error fetching profile picture:', error);
+                console.warn('Error fetching profile picture:', error);
                 setProfilePicUrl(null);  // Fallback to placeholder if error
             } finally {
                 setLoading(false);

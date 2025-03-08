@@ -16,6 +16,7 @@ import {
     FaTrophy
 } from "react-icons/fa";
 import { ThemeContext } from "../components/ThemeContext";
+import  ProfilePicture  from "../components/ProfilePicture";
 
 
 let tagMappingCache = null;
@@ -35,29 +36,29 @@ export function JobPostDetails() {
     const [isApplyModalOpen, setIsApplyModalOpen] = useState(false); // State to control apply modal visibility
     const [applicationMessage, setApplicationMessage] = useState(""); // State for the application message
 
-     // New opacity state for animations
-     const [errorBoxOpacity, setErrorBoxOpacity] = useState(0);
-     const [successBoxOpacity, setSuccessBoxOpacity] = useState(0);
- 
-     // ... other state and functions ...
- 
-     // useEffect for Error Message Animation
-     useEffect(() => {
-         if (errorMessage) {
-             setErrorBoxOpacity(1); // Set opacity to 1 to trigger fade-in
-         } else {
-             setErrorBoxOpacity(0); // Optionally reset opacity when errorMessage clears (for fade-out if needed later)
-         }
-     }, [errorMessage]); // Run when errorMessage changes
- 
-     // useEffect for Success Message Animation
-     useEffect(() => {
-         if (applicationSuccess) {
-             setSuccessBoxOpacity(1); // Set opacity to 1 to trigger fade-in
-         } else {
-             setSuccessBoxOpacity(0); // Optionally reset opacity when applicationSuccess clears
-         }
-     }, [applicationSuccess]); // Run when applicationSuccess changes
+    // New opacity state for animations
+    const [errorBoxOpacity, setErrorBoxOpacity] = useState(0);
+    const [successBoxOpacity, setSuccessBoxOpacity] = useState(0);
+
+    // ... other state and functions ...
+
+    // useEffect for Error Message Animation
+    useEffect(() => {
+        if (errorMessage) {
+            setErrorBoxOpacity(1); // Set opacity to 1 to trigger fade-in
+        } else {
+            setErrorBoxOpacity(0); // Optionally reset opacity when errorMessage clears (for fade-out if needed later)
+        }
+    }, [errorMessage]); // Run when errorMessage changes
+
+    // useEffect for Success Message Animation
+    useEffect(() => {
+        if (applicationSuccess) {
+            setSuccessBoxOpacity(1); // Set opacity to 1 to trigger fade-in
+        } else {
+            setSuccessBoxOpacity(0); // Optionally reset opacity when applicationSuccess clears
+        }
+    }, [applicationSuccess]); // Run when applicationSuccess changes
 
     const [tagMapping, setTagMapping] = useState(new Map()); // State for dynamic tag map
 
@@ -262,7 +263,7 @@ export function JobPostDetails() {
             className={`main-content min-h-screen border-4  border-double rounded-3xl  mt-10 mb-30 p-6 ${darkMode ? "bg-gray-900 text-white border-blue-600" : "bg-gray-100 text-black border-green-600"
                 }`}
         >
-             {/* Error Display (Conditional) */}
+            {/* Error Display (Conditional) */}
             {errorMessage && (
                 <div
                     className="mb-8 p-4 bg-red-100 mx-auto max-w-100 border border-red-400 text-red-700 rounded-md flex items-center transition-opacity duration-300 ease-out" // Removed opacity-100 from classes
@@ -295,7 +296,7 @@ export function JobPostDetails() {
 
             <div
                 className={`max-w-4xl mx-auto shadow-lg drop-shadow-2xl rounded-lg p-6 mt-30 transition-all duration-300 ${darkMode ? "bg-gray-800" : "bg-white"
-                    } hover:shadow-xl`} 
+                    } hover:shadow-xl`}
             >
                 {/* Top Section:  Logo, Title, Basic Info, and Poster */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center border-b pb-4 mb-6">
@@ -315,29 +316,22 @@ export function JobPostDetails() {
                             {/* Display Job Poster */}
                             {jobPoster && (
                                 <Link // Make the outer div a Link
-                                to={`/users/${jobPoster.userId}`}
-                                className={`flex items-center text-sm p-3 rounded-lg hover:shadow-lg hover:bg-sky-50  duration-300  ${darkMode ? 'text-gray-300 border-gray-500 border' : 'text-gray-700 border-gray-300'}`}
-                                style={{ display: 'flex', textDecoration: 'none' }} // Ensure flex display and remove default link underline
-                            >
-                                {/* Profile Picture Container */}
-                                <div className={`w-15 h-15 rounded-full bg-gray-300 mr-2 ${darkMode ? 'bg-gray-600' : ''} flex items-center justify-center`}>
-                                    {/* Profile Picture or Placeholder Icon */}
-                                    {jobPoster.profilePicture ? (
-                                        <img
-                                            src={jobPoster.profilePicture}
-                                            alt={`${jobPoster.firstName} ${jobPoster.lastName}`}
-                                            className="w-full h-full object-cover rounded-full"
-                                        />
-                                    ) : (
-                                        <FaUser className={`w-6 h-6 text-gray-500 ${darkMode ? "text-gray-400" : ""}`} />
-                                    )}
-                                </div>
-                                {/* User Info */}
-                                <div className="flex flex-col font-semibold text-lg">
-                                    <span>{jobPoster.firstName}</span>
-                                    <span>{jobPoster.lastName}</span>
-                                </div>
-                            </Link>
+                                    to={`/users/${jobPoster.userId}`}
+                                    className={`flex items-center text-sm p-3 rounded-lg hover:shadow-lg   duration-300  ${darkMode ? 'text-gray-300 border-gray-500 border hover:bg-gray-600' : 'text-gray-700 border-gray-600 border hover:bg-sky-100'}`}
+                                    style={{ display: 'flex', textDecoration: 'none' }} // Ensure flex display and remove default link underline
+                                >
+                                    {/* Profile Picture Container */}
+                                    
+                                        <div className="mr-6">
+                                            <ProfilePicture userId={jobPoster.userId} darkMode={darkMode} />
+                                        </div>
+                                
+                                    {/* User Info */}
+                                    <div className="flex flex-col font-semibold text-lg">
+                                        <span>{jobPoster.firstName}</span>
+                                        <span>{jobPoster.lastName}</span>
+                                    </div>
+                                </Link>
                             )}
 
 
