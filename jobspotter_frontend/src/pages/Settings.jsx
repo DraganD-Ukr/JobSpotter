@@ -8,7 +8,7 @@ export function Settings() {
 
   return (
     <div
-      className={`main-content min-h-screen p-6 ${
+      className={`my-10 border-1 rounded-4xl main-content min-h-screen p-6 ${
         darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
       }`}
     >

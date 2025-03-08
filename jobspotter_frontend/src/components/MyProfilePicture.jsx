@@ -20,10 +20,10 @@ const ProfilePicture = ({ userId, darkMode }) => {
             setLoading(true);
             try {
                 // Check if the image exists by making a GET request to the S3 URL
-                const response = await axios.get(imgLink, { 
-                    timeout: 5000 
+                const response = await axios.get(imgLink, {
+                    timeout: 5000
                 });
-                
+
                 // If the request was successful, the image exists
                 if (response.status === 200) {
                     setProfilePicUrl(imgLink);
@@ -37,10 +37,10 @@ const ProfilePicture = ({ userId, darkMode }) => {
                 setLoading(false);
             }
         };
-    
+
         fetchProfilePic();
     }, [userId]);
-    
+
 
     const handleFileChange = async (e) => {
         const file = e.target.files[0];
@@ -80,43 +80,43 @@ const ProfilePicture = ({ userId, darkMode }) => {
     };
 
     return (
-                <div className="relative w-20 h-20">
-                    {loading ? (
-                        <Placeholder darkMode={darkMode} />
-                    ) : (
-                        <>
-                            {profilePicUrl ? (  // Check if profilePicUrl is truthy (not null, not empty string)
-                                <img
-                                    src={profilePicUrl}
-                                    alt="Profile"
-                                    className="w-20 h-20 rounded-full object-cover cursor-pointer"
-                                    onClick={() => setShowModal(true)}
-                                />
-                            ) : (
-                                <Placeholder darkMode={darkMode} onClick={() => setShowModal(true)} /> // Display Placeholder if profilePicUrl is null
-                            )}
-                            <label className="absolute bottom-0 right-0 bg-gray-700 p-1 rounded-full cursor-pointer">
-                                <FaEdit className="text-white text-sm" />
-                                <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                            </label>
-                        </>
-                    )}
-        
-                    {showModal && (
-                        <CropModal
-                            imageSrc={imageSrc}
-                            crop={crop}
-                            setCrop={setCrop}
-                            zoom={zoom}
-                            setZoom={setZoom}
-                            onCropComplete={onCropComplete}
-                            uploadCroppedImage={uploadCroppedImage}
-                            closeModal={() => setShowModal(false)}
-                            handleFileChange={handleFileChange}
-                        />
-                    )}
-                </div>
-            );
+        <div className="relative w-20 h-20">
+            {loading ? (
+                <Placeholder darkMode={darkMode} />
+            ) : (
+                <>
+                    {profilePicUrl ? (  // Check if profilePicUrl is truthy (not null, not empty string)
+                        <img
+                            src={profilePicUrl}
+                            alt="Profile"
+                            className="w-20 h-20 rounded-full object-cover cursor-pointer"
+                            onClick={() => setShowModal(true)}
+                        />
+                    ) : (
+                        <Placeholder darkMode={darkMode} onClick={() => setShowModal(true)} /> // Display Placeholder if profilePicUrl is null
+                    )}
+                    <label className="absolute bottom-0 right-0 bg-gray-700 p-1 rounded-full cursor-pointer">
+                        <FaEdit className="text-white text-sm" />
+                        <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                    </label>
+                </>
+            )}
+
+            {showModal && (
+                <CropModal
+                    imageSrc={imageSrc}
+                    crop={crop}
+                    setCrop={setCrop}
+                    zoom={zoom}
+                    setZoom={setZoom}
+                    onCropComplete={onCropComplete}
+                    uploadCroppedImage={uploadCroppedImage}
+                    closeModal={() => setShowModal(false)}
+                    handleFileChange={handleFileChange}
+                />
+            )}
+        </div>
+    );
 };
 
 const CropModal = ({

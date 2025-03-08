@@ -57,9 +57,7 @@ export function MyJobs() {
     latitude: "",
     longitude: "",
     radius: 50,
-    // Control sorting on the top-right
-    sortBy: "latest", // Could be "latest", "oldest", etc.
-    // New: jobStatus filter added to the filters object (initially empty)
+    sortBy: "latest",
     jobStatus: ""
   });
 
@@ -100,7 +98,6 @@ export function MyJobs() {
   function fetchMyJobs() {
     setLoading(true);
     const size = 9;
-    // Include sortBy in your query if your backend supports it
     const endpoint = `/api/v1/job-posts/my-job-posts?pageNumber=${page}&size=${size}&sortBy=${filters.sortBy}`;
 
     fetch(endpoint, {
@@ -161,7 +158,6 @@ export function MyJobs() {
   // Search submit handler
   function handleSearchSubmit(e) {
     e.preventDefault();
-    // Optionally re-fetch jobs using the updated title filter
     fetchMyJobs();
   }
 
@@ -277,7 +273,7 @@ export function MyJobs() {
 
   return (
     <div
-      className={`main-content min-h-screen p-4 ${
+      className={`my-10 border-1 rounded-4xl main-content min-h-screen p-4 ${
         darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
       }`}
     >
@@ -368,7 +364,7 @@ export function MyJobs() {
               </select>
             </div>
 
-            {/* NEW: Job Status Filter */}
+            {/* Job Status Filter */}
             <div className="mb-4 p-4 border rounded-md">
               <label className="block mb-2">Job Status</label>
               <select
@@ -477,8 +473,6 @@ export function MyJobs() {
             <h2 className="text-2xl font-bold">
               Showing {totalElements} Job{totalElements !== 1 ? "s" : ""}
             </h2>
-
-            {/* Sort By Dropdown (Top-Right) */}
             <div className="flex items-center space-x-2">
               <label htmlFor="sortBy" className="font-medium">
                 Sort By:
@@ -522,17 +516,14 @@ export function MyJobs() {
                         : "rounded-lg shadow p-4 flex flex-col sm:flex-row justify-between"
                     }`}
                   >
-                    {/* Title */}
                     <h3 className="text-xl font-semibold">{job.title}</h3>
 
-                    {/* Address (if present) */}
                     {job.address && (
                       <p className="flex items-center gap-1">
                         <FaMapMarkerAlt className="text-red-500" /> {job.address}
                       </p>
                     )}
 
-                    {/* Date Posted (if present) */}
                     {job.datePosted && (
                       <p className="flex items-center gap-1">
                         <MdDateRange className="text-blue-500" /> Posted:{" "}
@@ -540,7 +531,6 @@ export function MyJobs() {
                       </p>
                     )}
 
-                    {/* Max Applicants (if present) */}
                     {typeof job.maxApplicants !== "undefined" && (
                       <p className="flex items-center gap-1">
                         <FaUsers className="text-purple-500" /> Max Applicants:{" "}
@@ -548,7 +538,6 @@ export function MyJobs() {
                       </p>
                     )}
 
-                    {/* Distance (if present) */}
                     {typeof job.relevantDistance !== "undefined" && (
                       <p className="flex items-center gap-1">
                         <FaRoute className="text-green-500" /> Distance:{" "}
@@ -556,7 +545,6 @@ export function MyJobs() {
                       </p>
                     )}
 
-                    {/* Description (truncate if >100 chars) */}
                     <p className="mt-2">
                       <strong>Description:</strong>{" "}
                       {job.description && job.description.length > 100
@@ -564,14 +552,12 @@ export function MyJobs() {
                         : job.description}
                     </p>
 
-                    {/* Tags */}
                     {job.tags && job.tags.length > 0 && (
                       <p className="my-3 text-sm">
                         <strong>Tags:</strong> {job.tags.join(", ")}
                       </p>
                     )}
 
-                    {/* View Details Button */}
                     <div className="mt-4">
                       <button
                         onClick={() => handleViewDetails(job.jobPostId)}
@@ -596,9 +582,7 @@ export function MyJobs() {
               >
                 Previous
               </button>
-
               {renderPaginationButtons()}
-
               <button
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page >= totalPages - 1}

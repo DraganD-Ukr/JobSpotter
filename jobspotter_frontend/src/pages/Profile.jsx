@@ -197,10 +197,7 @@ export default function Profile() {
 
   return (
     <div
-      className={`main-content min-h-screen p-4 ${darkMode
-        ? "bg-gray-900 text-white"
-        : "bg-gray-100 text-black" /* Slightly gray background in light mode */
-        }`}
+      className={`my-10 border-1 rounded-4xl main-content min-h-screen p-4 ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"}`}
     >
       {/* Use a flex layout similar to SearchJobPost */}
       <div className="flex">
@@ -213,7 +210,6 @@ export default function Profile() {
           <div
             className={`relative h-48 md:h-52 lg:h-56 flex items-center rounded-4xl 
               ${darkMode ? 'bg-gradient-to-l from-green-500 via-emerald-700 to-cyan-400 opacity-50' : ''} `}
-          // style={{ backgroundColor: bannerColor }}
           >
             {editing && (
               <div className="absolute top-4 right-4 flex items-center space-x-2 text-white">
@@ -233,8 +229,6 @@ export default function Profile() {
 
           {/* Profile Pic + Basic Info */}
           <div className="relative px-4 -mt-28 flex items-end">
-
-
             {/* Profile Pic */}
             <div className="relative w-24 h-24">
               {/* Gradient Border */}
@@ -245,20 +239,11 @@ export default function Profile() {
                 </div>
               </div>
             </div>
-
-
-
             <div className="ml-4 mb-2">
-              <h1
-                className={`text-xl md:text-2xl font-bold ${darkMode ? "text-white" : "text-black"
-                  }`}
-              >
+              <h1 className={`text-xl md:text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}>
                 {formData.firstName} {formData.lastName}
               </h1>
-              <p
-                className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-              >
+              <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
                 {formData.email}
               </p>
             </div>
@@ -268,21 +253,14 @@ export default function Profile() {
             <h2 className="text-2xl font-bold text-center mb-4">My Profile</h2>
           </div>
 
-          <div
-            className={`border border-gray-300 hover:shadow-md hover:border-green-500 transition rounded-lg p-6 ${darkMode ? "" : "bg-white"
-              }`}
-          >
+          <div className={`border border-gray-300 hover:shadow-md hover:border-green-500 transition rounded-lg p-6 ${darkMode ? "" : "bg-white"}`}>
             <h2 className="font-semibold text-lg mb-4">My Information</h2>
-            {errorMessage && (
-              <div className="text-red-500 mb-4">{errorMessage}</div>
-            )}
-
+            {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
             <div className="grid grid-cols-2 gap-6">
               {renderField("First Name", "firstName")}
               {renderField("Last Name", "lastName")}
               {renderField("Email", "email", "email")}
               {renderField("Phone Number", "phoneNumber")}
-
               <div className="col-span-2">
                 <label className="text-sm font-medium mb-1 block">About</label>
                 {editing ? (
@@ -293,17 +271,12 @@ export default function Profile() {
                     className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
                   />
                 ) : (
-                  <p className="mt-1">
-                    {formData.about || "No description available"}
-                  </p>
+                  <p className="mt-1">{formData.about || "No description available"}</p>
                 )}
               </div>
-
               {editing && (
                 <div className="col-span-2 mt-2">
-                  <label className="text-sm font-medium mb-1 block">
-                    Change Profile Picture
-                  </label>
+                  <label className="text-sm font-medium mb-1 block">Change Profile Picture</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -322,17 +295,13 @@ export default function Profile() {
                 </div>
               )}
             </div>
-
             <div className="mt-6 flex gap-4">
               {editing ? (
                 <>
                   <button
                     onClick={handleSave}
                     disabled={!isEdited}
-                    className={`px-6 py-2 rounded text-white ${isEdited
-                      ? "bg-green-500 hover:bg-green-600"
-                      : "bg-gray-400 cursor-not-allowed"
-                      }`}
+                    className={`px-6 py-2 rounded text-white ${isEdited ? "bg-green-500 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"}`}
                   >
                     Save Changes
                   </button>

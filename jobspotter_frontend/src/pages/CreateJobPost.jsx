@@ -194,8 +194,7 @@ export function CreateJobPost() {
   }
 
   return (
-    <div className="main-content min-h-screen p-6 bg-white text-black">
-      {/* White background, black text */}
+    <div className="my-10 border-1 rounded-4xl main-content min-h-screen p-6 bg-white text-black">
       <div className="max-w-2xl mx-auto border border-gray-300 rounded-md shadow-md p-6">
         <h1 className="text-2xl font-bold mb-4">Create Job Post</h1>
         {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}

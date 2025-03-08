@@ -354,8 +354,11 @@ export function SearchJobPost() {
 
   return (
 
-    <div className={`main-content min-h-screen p-4 ${darkMode ? "bg-gray-900 text-white" : "bg-white text-black"}`}>
-
+<div
+  className={`my-10 main-content min-h-screen p-4 border-1 rounded-4xl ${
+    darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
+  }`}
+>
       {/* Search Bar */}
       <div className="flex justify-center mb-8">
         <form onSubmit={handleSearchSubmit} className="flex">
