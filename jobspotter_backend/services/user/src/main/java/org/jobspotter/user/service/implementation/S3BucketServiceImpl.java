@@ -53,6 +53,7 @@ public class S3BucketServiceImpl implements S3BucketService {
         // Create a PutObjectRequest object
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
+                .contentType(file.getContentType())
                 .key(fileName)
                 .build();
 
