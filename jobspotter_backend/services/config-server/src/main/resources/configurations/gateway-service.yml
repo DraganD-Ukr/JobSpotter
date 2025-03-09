@@ -10,6 +10,11 @@ spring:
           predicates:
             - Path=/api/v1/users/**
 
+        - id: notification-service
+          uri: lb:http://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/v1/notifications/**
+
         - id: job-post-service
           uri: lb:http://JOB-POST-SERVICE
           predicates:
