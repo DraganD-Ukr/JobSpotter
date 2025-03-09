@@ -7,8 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
-@Document(collection = "notifications") // MongoDB Collection
+@Document(collection = "notification") // MongoDB Collection
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,9 +18,9 @@ public class Notification {
     @Id
     private String notificationID; // MongoDB uses String/ObjectId
 
-    private String userID;  // Storing user reference as String
+    private UUID userID;  // Storing user reference as String
 
-    private String jobPostID; // Storing jobPost reference as String (nullable)
+    private Long jobPostID; // Storing jobPost reference as String (nullable)
 
     private String message;
 
