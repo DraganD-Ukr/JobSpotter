@@ -30,6 +30,7 @@ services:
     networks:
       - jobSpotter-net  # Include MongoDB in the network
 
+  #----------------------Kafka and zookeper------------------------
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     container_name: jobSpotter_zookeeper
@@ -37,13 +38,16 @@ services:
       ZOOKEEPER_SERVER_ID: 1
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/data
+      - zookeeper-datalog:/datalog
     ports:
       - "22181:2181"
     networks:
       - jobSpotter-net
 
 
-  #----------------------Kafka and zookeper------------------------
+
   kafka:
     image: confluentinc/cp-kafka:latest
     container_name: jobSpotter_kafka
@@ -58,6 +62,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT, PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+    volumes:
+      - kafka-data:/var/lib/kafka/data
     networks:
       - jobSpotter-net
 
@@ -106,3 +112,6 @@ volumes:
   jobSpotter_mongo:
   jobSpotter_keycloak_data:
   jobSpotter_keycloak_db_data:
+  zookeeper-data: { }
+  zookeeper-datalog: { }
+  kafka-data: { }
