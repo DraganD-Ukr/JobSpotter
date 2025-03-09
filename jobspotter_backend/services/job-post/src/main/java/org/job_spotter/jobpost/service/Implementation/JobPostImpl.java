@@ -318,6 +318,14 @@ public class JobPostImpl implements JobPostService {
 
             log.info("Job post created successfully");
 
+            notificationService.sendNotification(Notification.builder()
+                    .message("You have successfully created a new job post '" + jobPost.getTitle() + "'.")
+                    .destinationUserId(userId)
+                    .jobPostId(jobPost.getJobPostId())
+                    .actionUrl("/job-posts/my-job-posts/" + jobPost.getJobPostId())
+                    .action("VIEW")
+                    .build(), KafkaTopic.JOB_POST_CREATE);
+
             return jobPost.getJobPostId();
             
         } catch (FeignClientException e){
@@ -472,6 +480,26 @@ public class JobPostImpl implements JobPostService {
         // If the number of accepted applicants reaches the max limit, change the job post status to IN_PROGRESS
         if (acceptedApplicantsCount >= jobPost.getMaxApplicants()) {
             jobPost.setStatus(JobStatus.IN_PROGRESS);
+
+            notificationService.sendNotification(Notification.builder()
+                    .message("Your job post '" + jobPost.getTitle() + "' have reached the desired number of accepted applicants. Job post is now in progress.")
+                    .destinationUserId(jobPost.getJobPosterId())
+                    .jobPostId(jobPost.getJobPostId())
+                    .actionUrl("/job-posts/my-job-posts/" + jobPost.getJobPostId())
+                    .action("VIEW")
+                    .build(), KafkaTopic.JOB_POST_START);
+
+            jobPost.getApplicants().stream()
+                    .filter(applicant -> applicant.getStatus() == ApplicantStatus.ACCEPTED)
+                    .forEach(applicant -> notificationService.sendNotification(Notification.builder()
+                            .message("You have been accepted for the job post '" + jobPost.getTitle() + "'. Good luck!")
+                            .destinationUserId(applicant.getUserId())
+                            .jobPostId(jobPost.getJobPostId())
+                            .actionUrl("/job-posts/" + jobPost.getJobPostId())
+                            .action("VIEW")
+                            .build(), KafkaTopic.APPLICANT_CONFIRMED)
+                    );
+
             log.info("Reached desired number of accepted applicants. Job post is now in progress.");
         }
 
@@ -586,6 +614,14 @@ public class JobPostImpl implements JobPostService {
         jobPost.setStatus(JobStatus.CANCELLED);
         jobPostRepository.save(jobPost);
 
+        notificationService.sendNotification(Notification.builder()
+                .message("Your job post '" + jobPost.getTitle() + "' have been cancelled.")
+                .destinationUserId(jobPost.getJobPosterId())
+                .jobPostId(jobPost.getJobPostId())
+                .actionUrl("/job-posts/my-job-posts/" + jobPost.getJobPostId())
+                .action("VIEW")
+                .build(), KafkaTopic.JOB_POST_CANCEL);
+
         log.info("Job post cancelled successfully");
         return HttpStatus.NO_CONTENT;
     }
@@ -611,6 +647,22 @@ public class JobPostImpl implements JobPostService {
         jobPostRepository.save(jobPost);
 
 //       TODO: Send notifications to all participating applicants
+        notificationService.sendNotification(Notification.builder()
+                .message("Your job post '" + jobPost.getTitle() + "' have been completed. Thank you for using JobSpotter.")
+                .destinationUserId(jobPost.getJobPosterId())
+                .jobPostId(jobPost.getJobPostId())
+                .actionUrl("/job-posts/my-job-posts/" + jobPost.getJobPostId())
+                .action("VIEW")
+                .build(), KafkaTopic.JOB_POST_FINISH);
+
+        jobPost.getApplicants().forEach(applicant -> notificationService.sendNotification(Notification.builder()
+                .message("The job post '" + jobPost.getTitle() + "' have been completed. Thank you for using JobSpotter.")
+                .destinationUserId(applicant.getUserId())
+                .jobPostId(jobPost.getJobPostId())
+                .actionUrl("/job-posts/" + jobPost.getJobPostId())
+                .action("VIEW")
+                .build(), KafkaTopic.JOB_POST_FINISH)
+        );
 
         return HttpStatus.NO_CONTENT;
     }
