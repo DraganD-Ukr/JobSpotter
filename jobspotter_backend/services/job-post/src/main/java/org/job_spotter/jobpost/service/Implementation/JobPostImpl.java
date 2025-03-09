@@ -16,6 +16,7 @@ import org.job_spotter.jobpost.repository.JobPostRepository;
 import org.job_spotter.jobpost.repository.JobPostSpecificationRepository;
 import org.job_spotter.jobpost.repository.specification.JobPostSpecification;
 import org.job_spotter.jobpost.service.JobPostService;
+import org.job_spotter.jobpost.service.NotificationService;
 import org.job_spotter.jobpost.utils.GeoUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +39,7 @@ public class JobPostImpl implements JobPostService {
     private final UserServiceClient userServiceClient;
     private final ApplicantRepository applicantRepository;
     private final JobPostSpecificationRepository jobPostSpecificationRepository;
+    private final NotificationService notificationService;
 
     //----------------------------------------------------------------------------------------------------------------
     //                                     Job Post Get View Queries implementation
@@ -386,6 +388,22 @@ public class JobPostImpl implements JobPostService {
 
         log.info("User applied to job post successfully");
 
+        notificationService.sendNotification(Notification.builder()
+                .message("You have successfully applied to the job post '" + jobPost.getTitle() + "'. Good luck!")
+                .destinationUserId(userId)
+                .jobPostId(jobPost.getJobPostId())
+                .actionUrl("/job-posts/" + jobPost.getJobPostId())
+                .action("VIEW")
+                .build(), KafkaTopic.APPLICANT_APPLIED);
+
+        notificationService.sendNotification(Notification.builder()
+                .message("New applicant applied to your job post '" + jobPost.getTitle() + "'.")
+                .destinationUserId(jobPost.getJobPosterId())
+                .jobPostId(jobPost.getJobPostId())
+                .actionUrl("/job-posts/my-job-posts/" + jobPost.getJobPostId())
+                .action("VIEW")
+                .build(), KafkaTopic.APPLICANT_APPLIED);
+
         return HttpStatus.CREATED;
     }
 
@@ -515,6 +533,24 @@ public class JobPostImpl implements JobPostService {
         jobPostRepository.save(jobPost);
 
 //        TODO: Send notification to all accepted applicants
+        notificationService.sendNotification(Notification.builder()
+                .message("Your job post '" + jobPost.getTitle() + "' have started. Good luck!:")
+                .destinationUserId(jobPost.getJobPosterId())
+                .jobPostId(jobPost.getJobPostId())
+                .actionUrl("/job-posts/my-job-posts/" + jobPost.getJobPostId())
+                .action("VIEW")
+                .build(), KafkaTopic.JOB_POST_START);
+
+        applicants.stream()
+                .filter(applicant -> applicant.getStatus() == ApplicantStatus.ACCEPTED)
+                .forEach(applicant -> notificationService.sendNotification(Notification.builder()
+                        .message("You have been accepted for the job post '" + jobPost.getTitle() + "'. Good luck!")
+                        .destinationUserId(applicant.getUserId())
+                        .jobPostId(jobPost.getJobPostId())
+                        .actionUrl("/job-posts/" + jobPost.getJobPostId())
+                        .action("VIEW")
+                        .build(), KafkaTopic.APPLICANT_CONFIRMED)
+                );
 
         log.info("Job post started successfully");
         return HttpStatus.NO_CONTENT;
