@@ -14,13 +14,5 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
 
-    @Override
-    public Mono<Notification> sendNotification(Notification notification) {
-        return notificationRepository.save(notification);
-    }
 
-    @Override
-    public Flux<Notification> getAllNotifications() {
-        return notificationRepository.findAll();
-    }
 }
