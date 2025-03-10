@@ -1,11 +1,15 @@
 package org.jobspotter.notification.service.Implementation;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.notification.model.Notification;
 import org.jobspotter.notification.model.NotificationType;
+import org.jobspotter.notification.repository.NotificationRepository;
+import org.jobspotter.notification.service.NotificationService;
 import org.jobspotter.notification.service.StreamService;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
@@ -16,9 +20,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class StreamImpl implements StreamService {
 
+    private final NotificationRepository notificationRepository;
     // Map to keep track of FluxSinks for each user.
     private final Map<UUID, FluxSink<Notification>> sinks = new ConcurrentHashMap<>();
 
@@ -31,12 +37,19 @@ public class StreamImpl implements StreamService {
     // Map to keep track of SseEmitters for each user.
     @Override
     public Flux<ServerSentEvent<Notification>> streamNotifications(UUID userId) {
-        return Flux.<Notification>create(emitter -> {
-                    // Save the sink so we can push notifications later.
-                    sinks.put(userId, emitter);
-                    // Remove the sink if the connection is closed.
-                    emitter.onDispose(() -> sinks.remove(userId));
-                })
+        // Fetch existing notifications for the user from the database.
+        Flux<Notification> existingNotifications = notificationRepository.findByDestinationUserId(userId);
+
+        // Create a Flux for new notifications that will be pushed via the sink.
+        Flux<Notification> newNotifications = Flux.create(emitter -> {
+            // Save the sink so that notifications can be pushed later.
+            sinks.put(userId, emitter);
+            // Remove the sink when the connection is closed to avoid memory leaks.
+            emitter.onDispose(() -> sinks.remove(userId));
+        });
+
+        // Combine existing notifications with new notifications into a single stream.
+        return Flux.concat(existingNotifications, newNotifications)
                 .map(notification -> ServerSentEvent.<Notification>builder()
                         .event("notification")
                         .data(notification)
