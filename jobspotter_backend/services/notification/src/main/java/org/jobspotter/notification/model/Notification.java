@@ -18,7 +18,11 @@ public class Notification {
     @Id
     private String notificationID; // MongoDB uses String/ObjectId
 
-    private UUID userID;  // Storing user reference as String
+    private UUID destinationUserId;  // Storing user reference as String
+
+    private UUID sourceUserId; // Storing user reference as String
+
+    private String actionUrl;
 
     private Long jobPostID; // Storing jobPost reference as String (nullable)
 
