@@ -24,18 +24,7 @@ import java.util.UUID;
 public class NotificationController {
 
     private final StreamService streamService;
-    private final NotificationService notificationService;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Mono<Notification> createNotification(@RequestBody Notification notification) {
-        return notificationService.sendNotification(notification);
-    }
-
-    @GetMapping
-    public Flux<Notification> getAllNotifications() {
-        return notificationService.getAllNotifications();
-    }
 
 
     @GetMapping("/stream")
