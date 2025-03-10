@@ -136,6 +136,8 @@ export function Home() {
   return (
     <div className="my-10 main-content min-h-screen p-4 border-1 rounded-4xl">
 
+
+
       {/* HERO SECTION */}
       <header
         className="
