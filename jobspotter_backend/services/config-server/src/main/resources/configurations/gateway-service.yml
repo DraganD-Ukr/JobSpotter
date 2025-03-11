@@ -24,11 +24,11 @@ spring:
           uri: lb:http://REVIEW-SERVICE
           predicates:
             - Path=/api/v1/reviews/**
-  #
-  #        - id: applicant-service
-  #          uri: lb:http://NOTIFICATION-SERVICE
-  #          predicates:
-  #            - Path=/api/v1/notifications/**
+
+        - id: report-service
+          uri: lb:http://REPORT-SERVICE
+          predicates:
+            - Path=/api/v1/reports/**
 
   security:
     oauth2:
@@ -61,3 +61,5 @@ springdoc:
           url: /api/v1/job-posts/v3/api-docs
       -   name: review-service
           url: /api/v1/reviews/v3/api-docs
+      -   name: report-service
+          url: /api/v1/reports/v3/api-docs

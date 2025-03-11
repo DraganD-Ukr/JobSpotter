@@ -49,7 +49,7 @@ public class JwtRefreshFilter implements WebFilter {
 
         if (path.contains("/login") || path.contains("/register") || path.contains("/webjars")
                 || path.contains("/swagger-ui") || path.contains("/swagger-ui.html")
-                || path.contains("/search")
+                || path.contains("job-posts/search")
                 || path.contains("/job-tags")
                 || path.contains("/v3/api-docs") || path.contains("/eureka") || path.contains("/actuator")) {
             return chain.filter(exchange);// Skip JWT validation here
