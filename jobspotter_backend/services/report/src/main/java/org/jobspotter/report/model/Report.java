@@ -44,6 +44,8 @@ public class Report {
 
     private Set<ReportTag> reportTags = new HashSet<>();
 
+    private ReportStatus reportStatus;
+
     @CreatedDate // Automatically set when document is created
     private LocalDateTime createdAt;
 
