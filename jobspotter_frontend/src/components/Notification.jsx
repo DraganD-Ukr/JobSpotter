@@ -1,23 +1,73 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import NotificationPopup from "./NotificationPopup";
+
+// Custom hook to get a value from session storage and update if it changes
+function useSessionStorage(key, pollInterval = 1000) {
+  const [value, setValue] = useState(() => sessionStorage.getItem(key));
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      const newValue = sessionStorage.getItem(key);
+      if (newValue !== value) {
+        setValue(newValue);
+      }
+    }, pollInterval);
+    return () => clearInterval(intervalId);
+  }, [key, value, pollInterval]);
+
+  return value;
+}
 
 function Notification() {
   // Controls whether the popup is visible
   const [isPopupVisible, setIsPopupVisible] = useState(false);
 
-  const [notifications, setNotifications] = useState([
-    {
-      title: "Welcome to JobSpotter!",
-      message: "Thanks for joining us!",
-      time: "2 min ago"
-    },
-    {
-      title: "Job Alert",
-      message: "A new job post matches your skills.",
-      time: "5 min ago"
+  // Notifications state (initially empty; will be updated via SSE)
+  const [notifications, setNotifications] = useState([]);
+
+  // Get userId from session storage using our custom hook
+  const userId = useSessionStorage("userId");
+
+  useEffect(() => {
+    // If no userId exists, skip opening SSE connection
+    if (!userId) {
+      console.log("[Notification] No userId found, skipping SSE connection.");
+      return;
     }
-  ]);
+
+    console.log("[Notification] Detected userId:", userId, " - opening SSE connection...");
+
+    // Create a new EventSource for the notifications stream
+    const eventSource = new EventSource("/api/v1/notifications/stream", {
+      withCredentials: true, // include cookies if needed
+    });
+
+    eventSource.onopen = () => {
+      console.log("[Notification] SSE connection opened successfully!");
+    };
+
+    eventSource.onmessage = (event) => {
+      console.log("[Notification] SSE message received:", event.data);
+      try {
+        const newNotification = JSON.parse(event.data);
+        console.log("[Notification] Parsed notification:", newNotification);
+        setNotifications((prev) => [newNotification, ...prev]);
+      } catch (error) {
+        console.error("[Notification] Error parsing SSE data:", error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error("[Notification] SSE connection error:", error);
+      eventSource.close();
+    };
+
+    return () => {
+      console.log("[Notification] Component unmounting. Closing SSE connection.");
+      eventSource.close();
+    };
+  }, [userId]); // re-run this effect whenever userId changes
 
   // Toggle popup
   const togglePopup = () => {
@@ -29,8 +79,9 @@ function Notification() {
     setIsPopupVisible(false);
   };
 
-  // Mark all as read 
+  // Mark all as read (clear notifications)
   const handleMarkAllRead = () => {
+    console.log("[Notification] Marking all notifications as read.");
     setNotifications([]);
   };
 
@@ -48,8 +99,8 @@ function Notification() {
       <NotificationPopup
         isNotificationPopupVisible={isPopupVisible}
         notifications={notifications}
-        errorMessage=""               
-        errorBoxAnimation={{}}        
+        errorMessage=""
+        errorBoxAnimation={{}}
         handleCloseNotificationPopup={handleCloseNotificationPopup}
         handleMarkAllRead={handleMarkAllRead}
       />

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FaArrowRight } from "react-icons/fa";
 
 export function Register() {
   const [registrationSuccessful, setRegistrationSuccessful] = useState(false);
@@ -141,7 +142,6 @@ export function Register() {
             setRegistrationSuccessful(true);
           } else {
             // In case the API returns a different success status,
-      
             const data = await response.json();
             console.log("User registered successfully:", data);
           }
@@ -172,236 +172,246 @@ export function Register() {
     formValues.password.length > 0;
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white shadow-lg rounded-2xl overflow-hidden w-4/5 max-w-3xl">
-        <div className="grid grid-cols-1 md:grid-cols-2">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-500">
+      <div className="shadow-lg rounded-2xl overflow-hidden w-11/12 max-w-4xl flex flex-col md:flex-row">
+        {/* Left Section: Lava-Lamp / Brand Panel */}
+        <div className="lava-lamp-background p-10 text-white flex flex-col justify-center items-center md:w-1/2">
+          <h2 className="text-3xl font-extrabold mb-4 drop-shadow-lg">
+            Welcome to JobSpotter!
+          </h2>
+          <p className="mb-6 text-center max-w-sm leading-relaxed">
+            Create an account to discover new job opportunities and connect with local employers.
+          </p>
+          <p className="mt-4 text-sm text-white">
+            Already have an account?{" "}
+            <a href="/login" className="underline font-bold hover:opacity-90">
+              Sign In <FaArrowRight className="inline ml-1" />
+            </a>
+          </p>
+        </div>
 
-          {/* Left Section */}
-          <div className="hidden md:flex flex-col justify-center items-center p-10 lava-lamp-background rounded-l-2xl">
-          </div>
+        {/* Right Section: Registration Form */}
+        <div className="p-10 bg-white dark:bg-gray-800 md:w-1/2">
+          {registrationSuccessful ? (
+            // Registration Successful will show success message and proceed button
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-6">
+                Registration Successful!
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Your account has been created successfully.
+              </p>
+              <a
+                href="/login"
+                className="inline-block px-6 py-2 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition"
+              >
+                Proceed to Login
+              </a>
+            </div>
+          ) : (
+            // Registration Form
+            <>
+              <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-6">
+                Sign Up
+              </h2>
 
-          {/* Right Section */}
-          <div className="p-10">
-            {registrationSuccessful ? (
-              
-              // Registration Successful will show success message and proceed button
-              <div className="text-center">
-                <h2 className="text-3xl font-bold text-gray-800 mb-6">
-                  Registration Successful!
-                </h2>
-                <p className="text-gray-600 mb-4">
-                  Your account has been created successfully.
-                </p>
-                <a
-                  href="/login"
-                  className="inline-block px-6 py-2 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600"
-                >
-                  Proceed to Login
-                </a>
-              </div>
-            ) : (
-              // Registration Form
-              <>
-                <h2 className="text-3xl font-bold text-gray-800 mb-6">Sign Up</h2>
+              {errors.general && (
+                <p className="text-red-500 text-sm mb-4">{errors.general}</p>
+              )}
 
-                {errors.general && (
-                  <p className="text-red-500 text-sm mb-4">{errors.general}</p>
-                )}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* First Name */}
+                <div>
+                  <input
+                    type="text"
+                    name="firstName"
+                    placeholder="First Name"
+                    value={formValues.firstName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                  />
+                  {errors.firstName && (
+                    <p className="text-red-500 text-sm">{errors.firstName}</p>
+                  )}
+                </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* First Name */}
-                  <div>
-                    <input
-                      type="text"
-                      name="firstName"
-                      placeholder="First Name"
-                      value={formValues.firstName}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                    />
-                    {errors.firstName && (
-                      <p className="text-red-500 text-sm">{errors.firstName}</p>
-                    )}
-                  </div>
+                {/* Last Name */}
+                <div>
+                  <input
+                    type="text"
+                    name="lastName"
+                    placeholder="Last Name"
+                    value={formValues.lastName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                  />
+                  {errors.lastName && (
+                    <p className="text-red-500 text-sm">{errors.lastName}</p>
+                  )}
+                </div>
 
-                  {/* Last Name */}
-                  <div>
-                    <input
-                      type="text"
-                      name="lastName"
-                      placeholder="Last Name"
-                      value={formValues.lastName}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                    />
-                    {errors.lastName && (
-                      <p className="text-red-500 text-sm">{errors.lastName}</p>
-                    )}
-                  </div>
+                {/* Email */}
+                <div>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Email address"
+                    value={formValues.email}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                  />
+                  {errors.email && (
+                    <p className="text-red-500 text-sm">{errors.email}</p>
+                  )}
+                </div>
 
-                  {/* Email */}
-                  <div>
-                    <input
-                      type="email"
-                      name="email"
-                      placeholder="Email address"
-                      value={formValues.email}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                    />
-                    {errors.email && (
-                      <p className="text-red-500 text-sm">{errors.email}</p>
-                    )}
-                  </div>
+                {/* Username */}
+                <div>
+                  <input
+                    type="text"
+                    name="username"
+                    placeholder="Username"
+                    value={formValues.username}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                  />
+                  {errors.username && (
+                    <p className="text-red-500 text-sm">{errors.username}</p>
+                  )}
+                </div>
 
-                  {/* Username */}
-                  <div>
-                    <input
-                      type="text"
-                      name="username"
-                      placeholder="Username"
-                      value={formValues.username}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                    />
-                    {errors.username && (
-                      <p className="text-red-500 text-sm">{errors.username}</p>
-                    )}
-                  </div>
-
-                  {/* Password */}
-                  <div>
-                    <input
-                      type="password"
-                      name="password"
-                      placeholder="Password"
-                      value={formValues.password}
-                      onChange={handleChange}
-                      onFocus={() => setPasswordFocused(true)}
-                      onBlur={() => setPasswordFocused(false)}
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                    />
-                    {errors.password && (
-                      <p className="text-red-500 text-sm">{errors.password}</p>
-                    )}
-
-                    {/* Toggle Password Requirements */}
-                    {passwordFocused && (
-                      <ul className="mt-2 text-sm list-disc pl-5">
-                        <li
-                          className={
-                            passwordRequirements.minLength
-                              ? "text-green-600"
-                              : "text-red-500"
-                          }
-                        >
-                          At least 8 characters long
-                        </li>
-                        <li
-                          className={
-                            passwordRequirements.hasUppercase
-                              ? "text-green-600"
-                              : "text-red-500"
-                          }
-                        >
-                          Contains at least 1 uppercase letter
-                        </li>
-                        <li
-                          className={
-                            passwordRequirements.hasLowercase
-                              ? "text-green-600"
-                              : "text-red-500"
-                          }
-                        >
-                          Contains at least 1 lowercase letter
-                        </li>
-                        <li
-                          className={
-                            passwordRequirements.hasLetter
-                              ? "text-green-600"
-                              : "text-red-500"
-                          }
-                        >
-                          Contains at least 1 letter
-                        </li>
-                        <li
-                          className={
-                            passwordRequirements.hasNumber
-                              ? "text-green-600"
-                              : "text-red-500"
-                          }
-                        >
-                          Contains at least 1 number
-                        </li>
-                      </ul>
-                    )}
-                    {areAllRequirementsMet && (
-                      <p className="text-green-600 mt-2">
-                        Password requirements met!
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Confirm Password */}
-                  <div>
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      placeholder="Repeat Password"
-                      value={formValues.confirmPassword}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                    />
-                    {errors.confirmPassword && (
-                      <p className="text-red-500 text-sm">
-                        {errors.confirmPassword}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Terms of Service */}
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="agreeToTerms"
-                      checked={formValues.agreeToTerms}
-                      onChange={handleChange}
-                      className="h-4 w-4 text-green-500"
-                    />
-                    <label className="ml-2 text-sm text-gray-600">
-                      I agree to the{" "}
-                      <a href="#" className="text-green-600 underline">
-                        Terms of Service
-                      </a>
-                    </label>
-                  </div>
-                  {errors.agreeToTerms && (
-                    <p className="text-red-500 text-sm">{errors.agreeToTerms}</p>
+                {/* Password */}
+                <div>
+                  <input
+                    type="password"
+                    name="password"
+                    placeholder="Password"
+                    value={formValues.password}
+                    onChange={handleChange}
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={() => setPasswordFocused(false)}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                  />
+                  {errors.password && (
+                    <p className="text-red-500 text-sm">{errors.password}</p>
                   )}
 
-                  {/* Sign Up Button */}
-                  <button
-                    type="submit"
-                    disabled={!isFormValid}
-                    className={`w-full py-2 ${
-                      isFormValid
-                        ? "bg-gradient-to-r from-green-500 to-lime-500"
-                        : "bg-gray-300"
-                    } text-white font-bold rounded-lg hover:opacity-90`}
-                  >
-                    Sign Up
-                  </button>
-                </form>
+                  {/* Toggle Password Requirements */}
+                  {passwordFocused && (
+                    <ul className="mt-2 text-sm list-disc pl-5">
+                      <li
+                        className={
+                          passwordRequirements.minLength
+                            ? "text-green-600"
+                            : "text-red-500"
+                        }
+                      >
+                        At least 8 characters long
+                      </li>
+                      <li
+                        className={
+                          passwordRequirements.hasUppercase
+                            ? "text-green-600"
+                            : "text-red-500"
+                        }
+                      >
+                        Contains at least 1 uppercase letter
+                      </li>
+                      <li
+                        className={
+                          passwordRequirements.hasLowercase
+                            ? "text-green-600"
+                            : "text-red-500"
+                        }
+                      >
+                        Contains at least 1 lowercase letter
+                      </li>
+                      <li
+                        className={
+                          passwordRequirements.hasLetter
+                            ? "text-green-600"
+                            : "text-red-500"
+                        }
+                      >
+                        Contains at least 1 letter
+                      </li>
+                      <li
+                        className={
+                          passwordRequirements.hasNumber
+                            ? "text-green-600"
+                            : "text-red-500"
+                        }
+                      >
+                        Contains at least 1 number
+                      </li>
+                    </ul>
+                  )}
+                  {areAllRequirementsMet && (
+                    <p className="text-green-600 mt-2">
+                      Password requirements met!
+                    </p>
+                  )}
+                </div>
 
-                <p className="mt-4 text-center text-sm text-gray-500">
-                  Already have an account?{" "}
-                  <a href="/login" className="text-green-600 font-bold">
-                    Sign In
-                  </a>
-                </p>
-              </>
-            )}
-          </div>
+                {/* Confirm Password */}
+                <div>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    placeholder="Repeat Password"
+                    value={formValues.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                  />
+                  {errors.confirmPassword && (
+                    <p className="text-red-500 text-sm">
+                      {errors.confirmPassword}
+                    </p>
+                  )}
+                </div>
+
+                {/* Terms of Service */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="agreeToTerms"
+                    checked={formValues.agreeToTerms}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-green-500"
+                  />
+                  <label className="ml-2 text-sm text-gray-600 dark:text-gray-300">
+                    I agree to the{" "}
+                    <a href="#" className="text-green-600 underline">
+                      Terms of Service
+                    </a>
+                  </label>
+                </div>
+                {errors.agreeToTerms && (
+                  <p className="text-red-500 text-sm">{errors.agreeToTerms}</p>
+                )}
+
+                {/* Sign Up Button */}
+                <button
+                  type="submit"
+                  disabled={!isFormValid}
+                  className={`w-full py-2 ${
+                    isFormValid
+                      ? "bg-gradient-to-r from-green-500 to-lime-500"
+                      : "bg-gray-300"
+                  } text-white font-bold rounded-lg hover:opacity-90 transition`}
+                >
+                  Sign Up
+                </button>
+              </form>
+
+              <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                Already have an account?{" "}
+                <a href="/login" className="text-green-600 font-bold">
+                  Sign In
+                </a>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -32,6 +32,14 @@ export default function Footer() {
               Terms of Service
             </a>
           </li>
+          <li>
+            <a
+              href="/helpandsupport"
+              className="hover:underline hover:text-gray-200"
+            >
+              Help & Support
+            </a>
+          </li>
         </ul>
       </div>
     </footer>

@@ -19,6 +19,7 @@ import { JobPostHistory } from "./pages/JobPostHistory";
 import { SearchJobPost } from "./pages/SearchJobPost";
 import { ViewMoreDetails } from "./pages/ViewMoreDetails";
 import { JobPostDetails } from "./pages/JobPostDetails";
+import { HelpAndSupport } from "./pages/HelpandSupport";
 import Data from "./pages/Data";
 import Profile from "./pages/Profile";
 import { useLocation } from "react-router-dom";
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/myJob/:jobId" element={<ViewMoreDetails />} />
           <Route path="/job/:jobId" element={<JobPostDetails />} />
           <Route path="/users/:userId" element={<UserProfile />} />
+          <Route path="/helpandsupport" element={<HelpAndSupport />} />
         </Routes>
       </div>
       <Footer />
