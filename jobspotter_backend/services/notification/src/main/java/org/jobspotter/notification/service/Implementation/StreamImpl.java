@@ -30,6 +30,9 @@ public class StreamImpl implements StreamService {
 
     /**
      * Stream notifications to the user using the userId
+     * On connection if the user is authenticated, return a Flux of ServerSentEvents containing the notifications
+     * Also returns a Flux of ServerSentEvents containing the older notifications as well
+     * if user has no notifications, return a ping event
      *
      * @param userId The userId of the user
      * @return A Flux of ServerSentEvents containing the notifications
@@ -37,23 +40,31 @@ public class StreamImpl implements StreamService {
     // Map to keep track of SseEmitters for each user.
     @Override
     public Flux<ServerSentEvent<Notification>> streamNotifications(UUID userId) {
-        // Fetch existing notifications for the user from the database.
-        Flux<Notification> existingNotifications = notificationRepository.findByDestinationUserId(userId);
+        // Create a Flux for the initial ping event.
+        Flux<ServerSentEvent<Notification>> pingEvent = Flux.just(ServerSentEvent.<Notification>builder()
+                .event("ping")
+                .data(null) // Ping event can have null data or a placeholder
+                .build());
 
-        // Create a Flux for new notifications that will be pushed via the sink.
-        Flux<Notification> newNotifications = Flux.create(emitter -> {
-            // Save the sink so that notifications can be pushed later.
-            sinks.put(userId, emitter);
-            // Remove the sink when the connection is closed to avoid memory leaks.
-            emitter.onDispose(() -> sinks.remove(userId));
-        });
-
-        // Combine existing notifications with new notifications into a single stream.
-        return Flux.concat(existingNotifications, newNotifications)
+        // Fetch existing notifications for the user from the database and map them to SSE events.
+        Flux<ServerSentEvent<Notification>> existingEvents = notificationRepository
+                .findAllByDestinationUserId(userId)
                 .map(notification -> ServerSentEvent.<Notification>builder()
                         .event("notification")
                         .data(notification)
                         .build());
+
+        // Create a Flux for new notifications that will be pushed via the sink and map them to SSE events.
+        Flux<ServerSentEvent<Notification>> newEvents = Flux.<Notification>create(emitter -> {
+            sinks.put(userId, emitter);
+            emitter.onDispose(() -> sinks.remove(userId));
+        }).map(notification -> ServerSentEvent.<Notification>builder()
+                .event("notification")
+                .data(notification)
+                .build());
+
+        // Combine all SSE streams into one continuous stream.
+        return Flux.concat(pingEvent, existingEvents, newEvents);
     }
 
     /**

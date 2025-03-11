@@ -1,4 +1,4 @@
-package org.jobspotter.notification.Listener;
+package org.jobspotter.notification.listener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
