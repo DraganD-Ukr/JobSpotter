@@ -34,7 +34,9 @@ public class SecurityConfig {
 
                                 "/api/v1/users/v3/api-docs", // Service specific documentation paths
                                 "/api/v1/job-posts/v3/api-docs",
-                                "/api/v1/reviews/v3/api-docs").permitAll()
+                                "/api/v1/reviews/v3/api-docs",
+                                "/api/v1/reports/v3/api-docs"
+                        ).permitAll()
 
                         .pathMatchers("/api/v1/users/auth/**").permitAll()
                         .pathMatchers("/eureka/**").permitAll()

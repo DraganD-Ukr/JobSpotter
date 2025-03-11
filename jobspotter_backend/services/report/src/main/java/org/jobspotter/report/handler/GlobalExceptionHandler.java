@@ -129,21 +129,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
-//    /**
-//     * Handles ResourceAlreadyExistsException. Thrown when the requested resource already exists.
-//     * @param e ResourceAlreadyExistsException
-//     * @return ResponseEntity with the error message.
-//     */
-//    @ExceptionHandler(ResourceAlreadyExistsException.class)
-//    public ResponseEntity<ErrorResponse> handleResourceAlreadyExistsException(ResourceAlreadyExistsException e) {
-//        ErrorResponse errorResponse = new ErrorResponse(
-//                LocalDateTime.now(),
-//                "CONFLICT",
-//                HttpStatus.CONFLICT.value(),
-//                e.getMessage()
-//        );
-//        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-//    }
+    /**
+     * Handles ResourceAlreadyExistsException. Thrown when the requested resource already exists.
+     * @param e ResourceAlreadyExistsException
+     * @return ResponseEntity with the error message.
+     */
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleResourceAlreadyExistsException(ResourceAlreadyExistsException e) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                "CONFLICT",
+                HttpStatus.CONFLICT.value(),
+                e.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
 
     /**
      * Handles UnauthorizedException. Thrown when the user is not authorized to perform an action.

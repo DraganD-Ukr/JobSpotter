@@ -61,3 +61,5 @@ springdoc:
           url: /api/v1/job-posts/v3/api-docs
       -   name: review-service
           url: /api/v1/reviews/v3/api-docs
+      -   name: report-service
+          url: /api/v1/reports/v3/api-docs

@@ -1,6 +1,9 @@
 package org.jobspotter.report.model;
 
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "The report statuses")
 public enum ReportStatus {
 
     OPEN,          // Report has been submitted and is awaiting review.
