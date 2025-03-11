@@ -22,6 +22,17 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public void generateReport(UUID reporterId, ReportRequest reportRequest) {
 
+        if (reportRepository.existsByReporterIdAndReportedUserIdAndReportedJobPostIdAndReportedApplicantIdAndReportedReviewId(
+                reporterId,
+                reportRequest.getReportedUserId(),
+                reportRequest.getReportedJobPostId(),
+                reportRequest.getReportedApplicantId(),
+                reportRequest.getReportedReviewId()
+        )) {
+            log.error("Report already exists for reporter: {}", reporterId);
+            throw new IllegalArgumentException("Report already exists");
+        }
+
         Report report = Report.builder()
                 .reporterId(reporterId)
                 .reportedUserId(reportRequest.getReportedUserId())
