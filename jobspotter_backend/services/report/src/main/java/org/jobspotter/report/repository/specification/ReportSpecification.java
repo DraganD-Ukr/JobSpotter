@@ -5,12 +5,16 @@ import org.jobspotter.report.model.ReportTag;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.util.CollectionUtils;
+import org.bson.Document;
+import lombok.extern.slf4j.Slf4j; // ADD SLF4J LOGGER
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 
+@Slf4j // ADD SLF4J LOGGER ANNOTATION
 public class ReportSpecification {
-
 
     public static Query createQuery(
             Set<ReportTag> tags,
@@ -21,52 +25,67 @@ public class ReportSpecification {
             Long reportedApplicantId,
             Long reportedReviewId
     ) {
-        Criteria criteria = combineCriteria(
-                filterByTags(tags),
-                filterByStatus(status),
-                filterByReporterId(reporterId),
-                filterByReportedUserId(reportedUserId),
-                filterByReportedJobPostId(reportedJobPostId),
-                filterByReportedApplicantId(reportedApplicantId),
-                filterByReportedReviewId(reportedReviewId)
-        );
+        List<Document> criteriaDocuments = new ArrayList<>();
+
+        Document tagsCriteriaDoc = logAndGetDocument("Tags Criteria", filterByTags(tags));
+        if (tagsCriteriaDoc != null) criteriaDocuments.add(tagsCriteriaDoc);
+
+        Document statusCriteriaDoc = logAndGetDocument("Status Criteria", filterByStatus(status));
+        if (statusCriteriaDoc != null) criteriaDocuments.add(statusCriteriaDoc);
+
+        Document reporterIdCriteriaDoc = logAndGetDocument("Reporter ID Criteria", filterByReporterId(reporterId));
+        if (reporterIdCriteriaDoc != null) criteriaDocuments.add(reporterIdCriteriaDoc);
+
+        Document reportedUserIdCriteriaDoc = logAndGetDocument("Reported User ID Criteria", filterByReportedUserId(reportedUserId));
+        if (reportedUserIdCriteriaDoc != null) criteriaDocuments.add(reportedUserIdCriteriaDoc);
+
+        Document reportedJobPostIdCriteriaDoc = logAndGetDocument("Reported Job Post ID Criteria", filterByReportedJobPostId(reportedJobPostId));
+        if (reportedJobPostIdCriteriaDoc != null) criteriaDocuments.add(reportedJobPostIdCriteriaDoc);
+
+        Document reportedApplicantIdCriteriaDoc = logAndGetDocument("Reported Applicant ID Criteria", filterByReportedApplicantId(reportedApplicantId));
+        if (reportedApplicantIdCriteriaDoc != null) criteriaDocuments.add(reportedApplicantIdCriteriaDoc);
+
+        Document reportedReviewIdCriteriaDoc = logAndGetDocument("Reported Review ID Criteria", filterByReportedReviewId(reportedReviewId));
+        if (reportedReviewIdCriteriaDoc != null) criteriaDocuments.add(reportedReviewIdCriteriaDoc);
+
 
         Query query = new Query();
-        if (criteria != null) { // Only add criteria if it's not null (meaning at least one filter is applied)
-            query.addCriteria(criteria);
+        if (!criteriaDocuments.isEmpty()) {
+            query.addCriteria(Criteria.where("$and").is(criteriaDocuments));
         }
+
+        log.info("Final criteriaDocuments List Size: {}", criteriaDocuments.size()); // LOG LIST SIZE
+        log.info("Final criteriaDocuments List: {}", criteriaDocuments); // LOG LIST CONTENT
+
         return query;
     }
 
-    private static Criteria combineCriteria(Criteria... criteriaList) {
-        Criteria combinedCriteria = new Criteria();
-        boolean criteriaAdded = false;
-
-        for (Criteria criteria : criteriaList) {
-            if (criteria != null) {
-                if (!criteriaAdded) {
-                    combinedCriteria = criteria; // First criteria becomes the base
-                    criteriaAdded = true;
-                } else {
-                    combinedCriteria.andOperator(criteria); // Subsequent criteria are ANDed
-                }
-            }
+    // Helper method to convert Criteria to BSON Document and log it
+    private static Document logAndGetDocument(String criteriaName, Criteria criteria) {
+        if (criteria != null) {
+            Document document = criteria.getCriteriaObject();
+            log.info("Criteria Document for {}: {}", criteriaName, document.toJson()); // LOG EACH CRITERIA
+            return document;
+        } else {
+            log.info("Criteria Document for {}: null (no criteria)", criteriaName); // LOG NULL CRITERIA
+            return null;
         }
-
-        return criteriaAdded ? combinedCriteria : null; // Return null if no criteria were added
     }
 
 
     private static Criteria filterByTags(Set<ReportTag> tags) {
         if (!CollectionUtils.isEmpty(tags)) {
-            return Criteria.where("reportTags").in(tags);
+            return Criteria.where("reportTags").in(
+                    tags.stream().map(Enum::name).toList() // Convert enums to their string values
+            );
         }
         return null;
     }
 
+
     private static Criteria filterByStatus(ReportStatus status) {
         if (status != null) {
-            return Criteria.where("type").is(status); // Assuming your Report entity has 'type' field for status, if not change to 'status' if that's the field name
+            return Criteria.where("reportStatus").is(status.toString());
         }
         return null;
     }
@@ -105,5 +124,4 @@ public class ReportSpecification {
         }
         return null;
     }
-
 }

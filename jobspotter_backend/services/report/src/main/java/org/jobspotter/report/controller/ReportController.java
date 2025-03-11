@@ -1,5 +1,10 @@
 package org.jobspotter.report.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.report.authUtils.JWTUtils;
@@ -40,19 +45,18 @@ public class ReportController {
     }
 
 
-    @GetMapping
+    @GetMapping("/search") // Changed endpoint path to /search for clarity
     public ResponseEntity<Page<Report>> searchReports(
             @RequestHeader("Authorization") String accessToken,
-
-            @RequestParam(value = "tags", required = false)Set<ReportTag> tags,
-            @RequestParam(value = "status", required = false) ReportStatus status,
-            @RequestParam(value = "reporterId", required = false) UUID reporterId,
-            @RequestParam(value = "reportedUserId", required = false) UUID reportedUserId,
-            @RequestParam(value = "reportedJobPostId", required = false) Long reportedJobPostId,
-            @RequestParam(value = "reportedApplicantId", required = false) Long reportedApplicantId,
-            @RequestParam(value = "reportedReviewId", required = false) Long reportedReviewId,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size
+            @RequestParam(value = "tags", required = false) Set<@Valid ReportTag> tags, // Valid for enum values if provided
+            @RequestParam(value = "status", required = false) @Valid ReportStatus status, // Valid for enum values if provided
+            @RequestParam(value = "reporterId", required = false) @Pattern(regexp = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", message = "Invalid UUID format provided for reporterId") String reporterId, // Validate UUID format if provided
+            @RequestParam(value = "reportedUserId", required = false) @Pattern(regexp = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", message = "Invalid UUID format provided for reportedUserId") String reportedUserId, // Validate UUID format if provided
+            @RequestParam(value = "reportedJobPostId", required = false) @Positive(message = "reportedJobPostId must be a positive number") Long reportedJobPostId, // Must be positive if provided
+            @RequestParam(value = "reportedApplicantId", required = false) @Positive(message = "reportedApplicantId must be a positive number") Long reportedApplicantId, // Must be positive if provided
+            @RequestParam(value = "reportedReviewId", required = false) @Positive(message = "reportedReviewId must be a positive number") Long reportedReviewId, // Must be positive if provided
+            @RequestParam(value = "page", defaultValue = "0") @Min(value = 0,message = "Page number must be positive(including 0)") int page, // Page must be non-negative
+            @RequestParam(value = "size", defaultValue = "10") @Positive(message = "Size must be positive(including 0)") @Max(value = 100, message = "Max value for size is 100") int size // Size must be positive and max 100 (adjust max as needed)
     ) throws Exception {
 
         jwtUtils.hasAdminRole(accessToken);
@@ -61,8 +65,8 @@ public class ReportController {
 
         Page<Report> reports = reportService.searchReports(tags,
                 status,
-                reporterId,
-                reportedUserId,
+                reporterId == null ? null : UUID.fromString(reporterId) ,
+                reportedUserId == null ? null : UUID.fromString(reportedUserId),
                 reportedJobPostId,
                 reportedApplicantId,
                 reportedReviewId,

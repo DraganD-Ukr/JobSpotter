@@ -8,13 +8,14 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Document(collection = "report")// MongoDB Collection
+@Document(collection = "report")
 @Getter
 @Builder
 @Data
@@ -32,22 +33,19 @@ public class Report {
     @NotNull
     private UUID reportedUserId;
 
-
     private Long reportedJobPostId;
-
     private Long reportedApplicantId;
-
     private Long reportedReviewId;
 
     @Size(min = 5, max = 150)
     private String reportMessage;
 
+    @Field("reportTags") // ADD @Field ANNOTATION HERE - Field name in MongoDB will be "reportTags"
     private Set<ReportTag> reportTags = new HashSet<>();
 
+    @Field("reportStatus") // ADD @Field ANNOTATION HERE - Field name in MongoDB will be "reportStatus"
     private ReportStatus reportStatus;
 
-    @CreatedDate // Automatically set when document is created
+    @CreatedDate
     private LocalDateTime createdAt;
-
-
 }

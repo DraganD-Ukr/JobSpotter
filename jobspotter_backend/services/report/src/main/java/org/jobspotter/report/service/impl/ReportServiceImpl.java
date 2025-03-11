@@ -4,6 +4,7 @@ package org.jobspotter.report.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.report.dto.ReportRequest;
+import org.jobspotter.report.exception.ResourceAlreadyExistsException;
 import org.jobspotter.report.model.Report;
 import org.jobspotter.report.model.ReportStatus;
 import org.jobspotter.report.model.ReportTag;
@@ -42,7 +43,7 @@ public class ReportServiceImpl implements ReportService {
                 reportRequest.getReportedReviewId()
         )) {
             log.error("Report already exists for reporter: {}", reporterId);
-            throw new IllegalArgumentException("Report already exists");
+            throw new ResourceAlreadyExistsException("Report already exists!");
         }
 
         Report report = Report.builder()
@@ -75,6 +76,7 @@ public class ReportServiceImpl implements ReportService {
                 reportedReviewId
         );
 
+        log.info("MongoDB Query JSON: {}", query.getQueryObject().toJson());
         long totalCount = mongoTemplate.count(query, Report.class);
         query.skip(pageable.getOffset());
         query.limit(pageable.getPageSize());
