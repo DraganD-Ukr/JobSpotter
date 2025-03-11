@@ -2,6 +2,7 @@ import { ThemeProvider } from "./components/ThemeContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Notification from "./components/Notification";
+import HelpAndSupport from "./pages/HelpandSupport";
 import { Routes, Route } from "react-router-dom";
 
 import { Home } from "./pages/Home";
@@ -19,11 +20,11 @@ import { JobPostHistory } from "./pages/JobPostHistory";
 import { SearchJobPost } from "./pages/SearchJobPost";
 import { ViewMoreDetails } from "./pages/ViewMoreDetails";
 import { JobPostDetails } from "./pages/JobPostDetails";
-import { HelpAndSupport } from "./pages/HelpandSupport";
 import Data from "./pages/Data";
 import Profile from "./pages/Profile";
 import { useLocation } from "react-router-dom";
 import UserProfile from './pages/UserProfile';
+import {Dashboard} from "./pages/Dashboard";
 
 
 export default function App() {
@@ -36,6 +37,7 @@ export default function App() {
       <div className={`p-4 min-h-screen ${isJobPostPage ? "mx-20" : "container mx-auto"}`}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/notification" element={<Notification />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
@@ -53,8 +55,10 @@ export default function App() {
           <Route path="/ViewMoreDetails" element={<ViewMoreDetails />} />
           <Route path="/myJob/:jobId" element={<ViewMoreDetails />} />
           <Route path="/job/:jobId" element={<JobPostDetails />} />
-          <Route path="/users/:userId" element={<UserProfile />} />
           <Route path="/helpandsupport" element={<HelpAndSupport />} />
+          <Route path="/users/:userId" element={<UserProfile />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+
         </Routes>
       </div>
       <Footer />

@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { FaQuestionCircle, FaEnvelope, FaPhone } from "react-icons/fa";
 
-export function HelpAndSupport() {
+export default function HelpAndSupport() {
   const faqs = [
     {
       question: "How do I create an account?",
       answer: (
         <>
-          Creating an account is easy—simply click on the{" "}
-          <a href="/register" className="text-green-600 underline">
+          Creating an account is easy simply click on the{" "}
+          <a href="/register" className="text-green-600 dark:text-green-400 underline">
             Register
           </a>{" "}
           button at the top and fill out the registration form with your details.
@@ -40,9 +40,6 @@ export function HelpAndSupport() {
         <h1 className="text-5xl font-extrabold text-white mb-2 tracking-wide drop-shadow-lg">
           Help & Support
         </h1>
-        <p className="text-xl text-white opacity-90 max-w-lg text-center drop-shadow-md">
-          We're here to help you every step of the way.
-        </p>
       </div>
 
       {/* Support Overview */}
