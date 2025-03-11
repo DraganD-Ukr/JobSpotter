@@ -16,6 +16,7 @@ import org.jobspotter.report.authUtils.JWTUtils;
 import org.jobspotter.report.dto.ErrorResponse;
 import org.jobspotter.report.dto.ReportRequest;
 import org.jobspotter.report.model.Report;
+import org.jobspotter.report.model.ReportSortByField;
 import org.jobspotter.report.model.ReportStatus;
 import org.jobspotter.report.model.ReportTag;
 import org.jobspotter.report.service.ReportService;
@@ -98,7 +99,9 @@ public class ReportController {
             @RequestParam(value = "reportedApplicantId", required = false) @Schema(description = "Reported Applicant Id") @Positive(message = "reportedApplicantId must be a positive number") Long reportedApplicantId, // Must be positive if provided
             @RequestParam(value = "reportedReviewId", required = false) @Schema(description = "Reported Review Id") @Positive(message = "reportedReviewId must be a positive number") Long reportedReviewId, // Must be positive if provided
             @RequestParam(value = "page", defaultValue = "0") @Schema(description = "Page of results") @Min(value = 0,message = "Page number must be positive(including 0)") int page, // Page must be non-negative
-            @RequestParam(value = "size", defaultValue = "10") @Schema(description = "Number of results to return on page") @Positive(message = "Size must be positive(including 0)") @Max(value = 100, message = "Max value for size is 100") int size // Size must be positive and max 100 (adjust max as needed)
+            @RequestParam(value = "size", defaultValue = "10") @Schema(description = "Number of results to return on page") @Positive(message = "Size must be positive(including 0)") @Max(value = 100, message = "Max value for size is 100") int size, // Size must be positive and max 100 (adjust max as needed),
+            @RequestParam(value = "sort", required = false, defaultValue = "createdAt") ReportSortByField sortBy,
+            @RequestParam(value = "isAsc", required = false, defaultValue = "true") boolean sortDirection
     ) throws Exception {
 
         jwtUtils.hasAdminRole(accessToken);
@@ -113,7 +116,9 @@ public class ReportController {
                 reportedApplicantId,
                 reportedReviewId,
                 page,
-                size);
+                size,
+                sortBy,
+                sortDirection);
 
         return ResponseEntity.ok(reports);
     }
