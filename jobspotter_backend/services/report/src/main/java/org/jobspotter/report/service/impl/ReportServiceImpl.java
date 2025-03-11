@@ -10,6 +10,8 @@ import org.jobspotter.report.repository.ReportRepository;
 import org.jobspotter.report.service.ReportService;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -18,10 +20,10 @@ public class ReportServiceImpl implements ReportService {
     private final ReportRepository reportRepository;
 
     @Override
-    public void generateReport(ReportRequest reportRequest) {
+    public void generateReport(UUID reporterId, ReportRequest reportRequest) {
 
         Report report = Report.builder()
-                .reporterId(reportRequest.getReporterId())
+                .reporterId(reporterId)
                 .reportedUserId(reportRequest.getReportedUserId())
                 .reportedJobPostId(reportRequest.getReportedJobPostId())
                 .reportedApplicantId(reportRequest.getReportedApplicantId())
@@ -31,10 +33,10 @@ public class ReportServiceImpl implements ReportService {
                 .reportStatus(ReportStatus.OPEN)
                 .build();
 
-        log.info("Saving report: {}, reporter: {}", report, reportRequest.getReporterId());
+        log.info("Saving report: {}, reporter: {}", report, reporterId);
         reportRepository.save(report);
 
-        log.info("Report from user with id {} saved successfully (Report id: {})", reportRequest.getReporterId(), report.getReportId());
+        log.info("Report from user with id {} saved successfully (Report id: {})", reporterId, report.getReportId());
     }
 
 

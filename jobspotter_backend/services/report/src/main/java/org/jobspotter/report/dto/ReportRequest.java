@@ -18,9 +18,6 @@ public class ReportRequest {
 
 
     @NotNull
-    private UUID reporterId;
-
-    @NotNull
     private UUID reportedUserId;
 
     private Long reportedJobPostId;
