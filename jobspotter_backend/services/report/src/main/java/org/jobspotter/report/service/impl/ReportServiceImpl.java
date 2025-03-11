@@ -6,15 +6,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.report.dto.ReportRequest;
 import org.jobspotter.report.exception.ResourceAlreadyExistsException;
 import org.jobspotter.report.model.Report;
+import org.jobspotter.report.model.ReportSortByField;
 import org.jobspotter.report.model.ReportStatus;
 import org.jobspotter.report.model.ReportTag;
 import org.jobspotter.report.repository.ReportRepository;
 import org.jobspotter.report.repository.specification.ReportSpecification;
 import org.jobspotter.report.service.ReportService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
@@ -64,7 +62,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public Page<Report> searchReports(Set<ReportTag> tags, ReportStatus status, UUID reporterId, UUID reportedUserId, Long reportedJobPostId, Long reportedApplicantId, Long reportedReviewId, int page, int size) {
+    public Page<Report> searchReports(Set<ReportTag> tags, ReportStatus status, UUID reporterId, UUID reportedUserId, Long reportedJobPostId, Long reportedApplicantId, Long reportedReviewId, int page, int size, ReportSortByField sortBy, boolean isAsc) {
         Pageable pageable = PageRequest.of(page, size);
         Query query = ReportSpecification.createQuery(
                 tags,
@@ -76,10 +74,16 @@ public class ReportServiceImpl implements ReportService {
                 reportedReviewId
         );
 
+        // Implement Sorting if sortBy is provided
+        if (sortBy != null) {
+            Sort sort = Sort.by(isAsc ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy.name()); // Default to DESC order, can be changed or made dynamic
+            pageable = PageRequest.of(page, size, sort); // Create Pageable with Sort
+        }
+
         log.info("MongoDB Query JSON: {}", query.getQueryObject().toJson());
         long totalCount = mongoTemplate.count(query, Report.class);
-        query.skip(pageable.getOffset());
-        query.limit(pageable.getPageSize());
+
+        query.with(pageable); // Apply pageable which now includes sorting
 
         List<Report> reportList = mongoTemplate.find(query, Report.class);
 
