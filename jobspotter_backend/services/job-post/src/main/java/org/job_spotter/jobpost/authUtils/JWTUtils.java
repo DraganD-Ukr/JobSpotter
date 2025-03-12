@@ -78,7 +78,7 @@ public class JWTUtils {
         }
 
         log.warn("User does not have admin role!");
-        throw new Exception("User does not have admin role!");
+        return false;
     }
 
 

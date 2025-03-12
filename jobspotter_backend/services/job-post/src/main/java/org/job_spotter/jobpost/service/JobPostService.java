@@ -11,9 +11,10 @@ import java.util.UUID;
 public interface JobPostService {
 
     //Job Post View Queries
-    JobPostDetailedResponse getJobPostById(Long id);
+    JobPostDetailedResponse getJobPostById(Long jobPostId);
 
-    MyJobPostDetailedResponse getMyJobPostDetails(UUID userId, Long jobPostId);
+    MyJobPostDetailedResponse getMyJobPostDetails(String accessToken, Long jobPostId) throws Exception;
+
 
     //Job Post Search Queries
     Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize);
@@ -23,16 +24,24 @@ public interface JobPostService {
     Page<JobPostsUserWorkedOnSearchResponse> searchJobsUserWorkedOn(UUID userId, String title, String status, String sortBy, String sortDirection, int page, int size);
 
     //Job Post Operations
-    Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken);
+    Long createJobPost(String accessToken, JobPostPostRequest jobPostPostRequest);
 
-    HttpStatus applyToJobPost(UUID userId, Long id, JobPostApplyRequest jobPostApplyRequest);
+    void updateJobPost(String accessToken, Long jobPostId, JobPostPatchRequest jobPostPatchRequest) throws Exception;
+
+    void deleteJobPost(String accessToken, Long jobPostId) throws Exception;
+
+    HttpStatus applyToJobPost(UUID userId, Long jobPostId, JobPostApplyRequest jobPostApplyRequest);
 
     JobPost takeApplicantsAction(UUID userId, Long jobPostId, List<ApplicantActionRequest> applicantsActionRequest);
 
-    HttpStatus startJobPost(UUID userId, Long jobPostId);
+    void updateApplicantMessage(String accessToken, Long jobPostId, Long applicantId, String message) throws Exception;
 
-    HttpStatus cancelJobPost(UUID userId, Long jobPostId);
+    void deleteApplicant(String accessToken, Long jobPostId, Long applicantId) throws Exception;
 
-    HttpStatus finishJobPost(UUID userId, Long id);
+    HttpStatus startJobPost(UUID userId, Long jobPostId) ;
+
+    HttpStatus cancelJobPost(String accessToken, Long jobPostId) throws Exception;
+
+    HttpStatus finishJobPost(UUID userId, Long jobPostId);
 
 }

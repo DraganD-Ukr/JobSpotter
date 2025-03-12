@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class JobPostImpl implements JobPostService {
 
+    private final JWTUtils jwtUtils;
     private final JobPostRepository jobPostRepository;
     private final UserServiceClient userServiceClient;
     private final ApplicantRepository applicantRepository;
@@ -48,15 +49,14 @@ public class JobPostImpl implements JobPostService {
     /**
      * Get a job post by its ID
      *
-     * @param id The ID of the job post
+     * @param jobPostId The ID of the job post
      * @return The job post with the given ID
      */
     @Override
-    public JobPostDetailedResponse getJobPostById(Long id) {
+    public JobPostDetailedResponse getJobPostById(Long jobPostId) {
 
 //        Fetch the job post from the repository
-        JobPost jobPost = jobPostRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + id));
+        JobPost jobPost = getJobPostByID(jobPostId);
 
 
 //        Create the JobPostResponse object
@@ -78,14 +78,23 @@ public class JobPostImpl implements JobPostService {
 
     }
 
-    @Override
-    public MyJobPostDetailedResponse getMyJobPostDetails(UUID userId, Long jobPostId) {
-        JobPost jobPost = jobPostRepository.findById(jobPostId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + jobPostId));
+    /**
+     * Get a job post by its ID and return a detailed response
+     * Containing all the applicants and their details as well as the job post details
+     * Only the job poster or an admin can view the detailed response
+     *
+     * @param jobPostId The ID of the job post
+     * @return The job post with the given ID
+     */
 
-        if(!jobPost.getJobPosterId().equals(userId)){
-            throw new UnauthorizedException("You are not authorized to view this job post.");
-        }
+    @Override
+    public MyJobPostDetailedResponse getMyJobPostDetails(String accessToken, Long jobPostId) throws Exception {
+
+        // Fetch the job post from the repository
+        JobPost jobPost = getJobPostByID(jobPostId);
+
+        // Check if the user is the job poster or an admin
+        checkIfUserIsJobPosterOrAdmin(accessToken, jobPost);
 
         return MyJobPostDetailedResponse.builder()
                 .jobPostId(jobPost.getJobPostId())
@@ -279,7 +288,7 @@ public class JobPostImpl implements JobPostService {
     //----------------------------------------------------------------------------------------------------------------
 
     @Override
-    public Long createJobPost(JobPostPostRequest jobPostPostRequest, String accessToken) {
+    public Long createJobPost(String accessToken, JobPostPostRequest jobPostPostRequest) {
 
         try {
             ResponseEntity<AddressResponse> response = userServiceClient.getAddressById(accessToken, jobPostPostRequest.getAddressId());
@@ -353,17 +362,79 @@ public class JobPostImpl implements JobPostService {
 
     }
 
+    /**
+     * Update a job post by its ID
+     * Only the job poster and admins can update a job post
+     * The job post status must be OPEN if the user is not an admin
+     *
+     * @param accessToken Access token of the user to check if they are an admin or job poster
+     * @param jobPostId The ID of the job post to update
+     * @param jobPostPatchRequest The fields to update
+     * @throws Exception If the user is not an admin or job poster, or job post status is not OPEN
+     */
+    @Override
+    public void updateJobPost(String accessToken, Long jobPostId, JobPostPatchRequest jobPostPatchRequest) throws Exception {
+//        Get the job post from the database
+        JobPost jobPost = getJobPostByID(jobPostId);
+
+//       Check if the user is an admin also saves weather it is an admin or not
+        boolean isAdmin = checkIfUserIsJobPosterOrAdmin(accessToken, jobPost);
+
+//       check if the job post status is OPEN if the user is not an admin
+        if (!isAdmin){
+            checkJobPostStatus(jobPost, JobStatus.OPEN);
+        }
+
+        // Update the job post fields
+        Optional.ofNullable(jobPostPatchRequest.getTags())
+                .ifPresent(tags -> jobPost.setTags(convertTagsFromDto(tags)));
+
+        Optional.ofNullable(jobPostPatchRequest.getTitle())
+                .ifPresent(jobPost::setTitle);
+
+        Optional.ofNullable(jobPostPatchRequest.getDescription())
+                .ifPresent(jobPost::setDescription);
+
+        if (jobPostPatchRequest.getMaxApplicants() != 0) {
+            jobPost.setMaxApplicants(jobPostPatchRequest.getMaxApplicants());
+        }
+
+        // Save the updated job post
+        jobPostRepository.save(jobPost);
+        log.info("Job post updated successfully");
+    }
+
+    /**
+     * Delete a job post by its ID
+     * Only the job poster and admins can delete a job post
+     *
+     * @param accessToken Access token of the user to check if they are an admin or job poster
+     * @param jobPostId The ID of the job post to delete
+     * @throws Exception If the user is not an admin or job poster, or job post status is not OPEN
+     */
+    @Transactional
+    @Override
+    public void deleteJobPost(String accessToken, Long jobPostId) throws Exception {
+        // Find the job post
+        JobPost jobPost = getJobPostByID(jobPostId);
+
+        // Check if the user is an admin
+        checkIfUserIsAdmin(accessToken);
+
+        // Delete the job post
+        jobPostRepository.delete(jobPost);
+
+        log.info("Job post deleted successfully");
+    }
+
     @Override
     public HttpStatus applyToJobPost(UUID userId, Long jobPostId, JobPostApplyRequest jobPostApplyRequest) {
 
-        JobPost jobPost = jobPostRepository.findById(jobPostId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + jobPostId));
+        // Find the job post
+        JobPost jobPost = getJobPostByID(jobPostId);
 
-
-        if (jobPost.getStatus() != JobStatus.OPEN) {
-            log.warn("Could not apply applicant to JobPost: Job post is not open for applications");
-            throw new ForbiddenException("Job post is not open for applications.");
-        }
+        // Check if job post status is open
+        checkJobPostStatus(jobPost, JobStatus.OPEN);
 
         if (jobPost.getJobPosterId().equals(userId)) {
             log.warn("Could not apply applicant to JobPost: User cannot apply to own job post");
@@ -424,20 +495,15 @@ public class JobPostImpl implements JobPostService {
 //        TODO: Refactor for readability and efficiency
 
         // Find the job post
-        JobPost jobPost = jobPostRepository.findById(jobPostId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job post not found with id " + jobPostId));
-
-        // Check if job post status is open
-        if (jobPost.getStatus() != JobStatus.OPEN) {
-            log.warn("Could not process applicants: Job post is not open for applications");
-            throw new ForbiddenException("Job post is not open for applications.");
-        }
+        JobPost jobPost = getJobPostByID(jobPostId);
 
         // Check if the user is the job poster
-        if (!jobPost.getJobPosterId().equals(userId)) {
-            log.warn("Could not process applicants: User is not the job poster");
-            throw new UnauthorizedException("You are not authorized to take actions on this job post.");
-        }
+        checkIfUserIsJobPoster(userId, jobPost);
+
+        // Check if job post status is open
+        checkJobPostStatus(jobPost, JobStatus.OPEN);
+
+
 
         // Count the number of accepted applicants (before processing the action request)
         long acceptedApplicantsCount = jobPost.getApplicants().stream()
@@ -451,10 +517,7 @@ public class JobPostImpl implements JobPostService {
             ApplicantStatus requestedStatus = applicantActionRequest.getStatus();  // Get the requested status (ACCEPTED, REJECTED)
 
             // Find the applicant in the job post applicants set
-            Applicant applicant = jobPost.getApplicants().stream()
-                    .filter(a -> a.getApplicantId().equals(applicantId))
-                    .findFirst()
-                    .orElseThrow(() -> new ResourceNotFoundException("Applicant not found with id " + applicantId));
+            Applicant applicant = getApplicantById(jobPost, applicantId);
 
             // Check if the status is valid and handle it
             if (requestedStatus == ApplicantStatus.ACCEPTED) {
@@ -513,24 +576,98 @@ public class JobPostImpl implements JobPostService {
         return jobPost; // Optionally return the updated job post
     }
 
+    private static void checkJobPostStatus(JobPost jobPost, JobStatus jobStatus) {
+        if (jobPost.getStatus() != jobStatus) {
+            log.warn("Could not process applicants: Job post is not open for applications");
+            throw new ForbiddenException("Job post is not open for applications.");
+        }
+    }
+
+    /**
+     * Update the message of an applicant using the job post ID and applicant ID
+     * Only the admins and applicants can update the message
+     * The job post status must be OPEN if the user is not an admin
+     * The applicant must exist in the job post applicants set
+     * The message must be a non-empty string
+     *
+     * @param accessToken Access token of the user to check if they are an admin or job poster
+     * @param jobPostId The ID of the job post to check where the applicant exists
+     * @param applicantId The ID of the applicant to update the message
+     * @param message The new message to update
+     * @throws Exception If the user is not an admin or job poster, job post status is not OPEN, applicant does not exist, or message is empty
+     */
+
+    @Override
+    public void updateApplicantMessage(String accessToken, Long jobPostId, Long applicantId, String message) throws Exception{
+//        Get the job post from the database
+        JobPost jobPost = getJobPostByID(jobPostId);
+
+//       Check if the user is an admin or applicant
+        boolean isAdmin = checkIfUserIsApplicantOrAdmin(accessToken, jobPost, applicantId);
+
+        // If the user is not an admin, check if the job post status is OPEN
+        if (!isAdmin) {
+            checkJobPostStatus(jobPost, JobStatus.OPEN);
+        }
+
+        // Find the applicant in the job post applicants set
+        Applicant applicant = getApplicantById(jobPost, applicantId);
+
+        // Update the applicant message
+        applicant.setMessage(message);
+
+        // Save the updated applicant
+        applicantRepository.save(applicant);
+
+        log.info("Applicant message updated successfully");
+    }
+
+    /**
+     * Delete an applicant from a job post using the job post ID and applicant ID
+     * Only the job poster and admins can delete an applicant
+     * The job post status must be OPEN
+     * The applicant must exist in the job post applicants set
+     *
+     * @param accessToken Access token of the user to check if they are an admin or job poster
+     * @param jobPostId The ID of the job post to check where the applicant exists
+     * @param applicantId The ID of the applicant to delete
+     * @throws Exception If the user is not an admin or job poster, job post status is not OPEN, or applicant does not exist
+     */
+    @Transactional
+    @Override
+    public void deleteApplicant(String accessToken, Long jobPostId, Long applicantId) throws Exception {
+//        Get the job post from the database
+        JobPost jobPost = getJobPostByID(jobPostId);
+
+//       Check if the user is an admin
+        checkIfUserIsAdmin(accessToken);
+
+//       check if the job post status is OPEN
+        checkJobPostStatus(jobPost, JobStatus.OPEN);
+
+        // Find the applicant in the job post applicants set
+        Applicant applicant = getApplicantById(jobPost, applicantId);
+
+        // Remove the applicant from the job post applicants set
+        jobPost.getApplicants().remove(applicant);
+
+        // Save the the updated job post
+        jobPostRepository.save(jobPost);
+
+        log.info("Applicant deleted successfully");
+    }
+
     @Transactional
     @Override
     public HttpStatus startJobPost(UUID userId, Long jobPostId) {
-
-        JobPost jobPost = jobPostRepository.findById(jobPostId)
-                .orElseThrow( () -> {
-                    log.warn("Could not start job post: Job post not found with id {}", jobPostId);
-                    return new ResourceNotFoundException("Job post not found with id " + jobPostId);
-                });
+//        Get the job post from the database
+        JobPost jobPost = getJobPostByID(jobPostId);
 
 //        Check if the user is the job poster
         checkIfUserIsJobPoster(userId, jobPost);
 
 //        Check if the job post status is OPEN
-        if (jobPost.getStatus() != JobStatus.OPEN) {
-            log.warn("Could not start job post: Job post status is not OPEN");
-            throw new ForbiddenException("Job post status is not OPEN.");
-        }
+        checkJobPostStatus(jobPost, JobStatus.OPEN);
 
 //        Get all applicants for the job post
         Set<Applicant> applicants = jobPost.getApplicants();
@@ -586,21 +723,17 @@ public class JobPostImpl implements JobPostService {
 
     @Transactional
     @Override
-    public HttpStatus cancelJobPost(UUID userId, Long jobPostId) {
+    public HttpStatus cancelJobPost(String accessToken, Long jobPostId) throws Exception {
 
-        JobPost jobPost = jobPostRepository.findById(jobPostId)
-                .orElseThrow( () -> {
-                    log.warn("Could not cancel job post: Job post not found with id {}", jobPostId);
-                    return new ResourceNotFoundException("Job post not found with id " + jobPostId);
-                });
+//      Get the job post from the database
+        JobPost jobPost = getJobPostByID(jobPostId);
 
-//        Check if the user is the job poster
-        checkIfUserIsJobPoster(userId, jobPost);
+//      Check if the user is the job poster or an admin
+        boolean isAdmin = checkIfUserIsJobPosterOrAdmin(accessToken, jobPost);
 
-//        Check if the job post status is OPEN
-        if (jobPost.getStatus() != JobStatus.OPEN) {
-            log.warn("Could not cancel job post: Job post status is not OPEN");
-            throw new ForbiddenException("Job post status is not OPEN.");
+//      if the user is not an admin, check if the job post status is OPEN
+        if(!isAdmin){
+            checkJobPostStatus(jobPost, JobStatus.OPEN);
         }
 
 //        Set the status of all applicants to REJECTED
@@ -626,14 +759,12 @@ public class JobPostImpl implements JobPostService {
         return HttpStatus.NO_CONTENT;
     }
 
-    @Override
-    public HttpStatus finishJobPost(UUID userId, Long id) {
 
-        JobPost jobPost = jobPostRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Could not finish job post: Job post not found with id {}", id);
-                    return new ResourceNotFoundException("Job post not found with id " + id);
-                });
+
+    @Override
+    public HttpStatus finishJobPost(UUID userId, Long jobPostId) {
+
+        JobPost jobPost = getJobPostByID(jobPostId);
 
         checkIfUserIsJobPoster(userId, jobPost);
 
@@ -675,13 +806,54 @@ public class JobPostImpl implements JobPostService {
 //                                              Helper methods
 //----------------------------------------------------------------------------------------------------------------
 
+
+// User Validation Methods
+//----------------------------------------------------------------------------------------------------------------
+    private boolean checkIfUserIsJobPosterOrAdmin(String accessToken, JobPost jobPost) throws Exception {
+        boolean isJobPoster = jobPost.getJobPosterId().equals(jwtUtils.getUserIdFromToken(accessToken));
+        boolean isAdmin = jwtUtils.hasAdminRole(accessToken);
+
+        if (!isJobPoster && !isAdmin) {
+            log.warn("Could not process applicants: User is not the job poster or an admin");
+            throw new UnauthorizedException("You are not authorized to take actions on this job post.");
+        }
+
+        return isAdmin;
+    }
+    private boolean checkIfUserIsApplicantOrAdmin(String accessToken, JobPost jobPost, Long applicantId) throws Exception {
+        boolean isApplicant = getApplicantById(jobPost, applicantId).getUserId().equals(jwtUtils.getUserIdFromToken(accessToken));
+        boolean isAdmin = jwtUtils.hasAdminRole(accessToken);
+
+        if (!isApplicant && !isAdmin) {
+            log.warn("Could not process applicants: User is not an applicant or an admin");
+            throw new UnauthorizedException("You are not authorized to take actions on this job post.");
+        }
+
+        return isAdmin;
+    }
+
+    private void checkIfUserIsAdmin(String accessToken) throws Exception {
+        if (!jwtUtils.hasAdminRole(accessToken)) {
+            log.warn("Could not process applicants: User is not an admin");
+            throw new UnauthorizedException("You are not authorized to take actions on this job post.");
+        }
+    }
+
+    private void checkIfUserIsApplicant(UUID userId, JobPost jobPost, Long applicantId) {
+        if (!getApplicantById(jobPost, applicantId).getUserId().equals(userId)) {
+            log.warn("Could not process applicants: User is not the applicant");
+            throw new UnauthorizedException("You are not authorized to take actions on this job post.");
+        }
+    }
+
     private void checkIfUserIsJobPoster(UUID userId, JobPost jobPost) {
         if (!jobPost.getJobPosterId().equals(userId)) {
             log.warn("Could not process applicants: User is not the job poster");
             throw new UnauthorizedException("You are not authorized to take actions on this job post.");
         }
     }
-
+//  Logging Methods
+//----------------------------------------------------------------------------------------------------------------
     private static void logAddressClientException(FeignClientException e) {
         log.error("(job-posts): Error getting address from user-service: {}, {}", e.getMessage(), e.status());
     }
@@ -690,6 +862,8 @@ public class JobPostImpl implements JobPostService {
         log.error("(job-posts): Error getting users(basic infos) from user-service: {}, {}", e.getMessage(), e.status());
     }
 
+// Converters
+//----------------------------------------------------------------------------------------------------------------
     private List<String> covertTagsToListFromString(String tags) {
         return (tags != null && !tags.isEmpty())
                 ? Arrays
@@ -717,6 +891,26 @@ public class JobPostImpl implements JobPostService {
             tagSet.add(tag);
         }
         return tagSet;
+    }
+
+//Get Methods
+//----------------------------------------------------------------------------------------------------------------
+    private JobPost getJobPostByID(Long jobPostId) {
+        return jobPostRepository.findById(jobPostId)
+                .orElseThrow(() -> {
+                    log.warn("Job post not found with id {}", jobPostId);
+                    return new ResourceNotFoundException("Job post not found with id " + jobPostId);
+                });
+    }
+
+    private Applicant getApplicantById(JobPost jobPost, Long applicantId) {
+        return jobPost.getApplicants().stream()
+                .filter(applicant -> applicant.getApplicantId().equals(applicantId))
+                .findFirst()
+                .orElseThrow(() -> {
+                    log.warn("Applicant not found with id {}", applicantId);
+                    return new ResourceNotFoundException("Applicant not found with id " + applicantId);
+                });
     }
 
     private String getErrorMessageFromFeignException(FeignException ex) {
