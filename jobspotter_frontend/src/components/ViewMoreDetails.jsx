@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useCallback } from "react"; // Import useCallback
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
   FaExclamationTriangle,
@@ -12,8 +12,8 @@ import {
 } from "react-icons/fa";
 import { useSpring, animated } from "react-spring";
 import { BeatLoader } from "react-spinners";
-import { ThemeContext } from "../components/ThemeContext";
-import ApplicantsManagementPopup from "../components/ApplicantsManagementPopup";
+import { ThemeContext } from "./ThemeContext";
+import ApplicantsManagementPopup from "./ApplicantsManagementPopup";
 
 export function ViewMoreDetails() {
   const { jobId } = useParams();
@@ -311,7 +311,6 @@ export function ViewMoreDetails() {
     setAutoStartMessage("");
   };
 
- 
   const handleSaveChanges = async () => {
     setActionMessage("Saving changes...");
     try {
@@ -321,9 +320,9 @@ export function ViewMoreDetails() {
       }));
       console.log("Applicants to update:", applicantsToUpdate);
       const response = await fetch(
-        `/api/v1/job-posts/my-job-posts/${jobId}/applicants/approve-reject`, // Changed to match your doc
+        `/api/v1/job-posts/my-job-posts/${jobId}/applicants/approve-reject`,
         {
-          method: "POST", // doc says "POST" for the /approve-reject endpoint
+          method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
@@ -338,7 +337,6 @@ export function ViewMoreDetails() {
         throw new Error(message);
       }
 
-      // Removed response.json() call since no JSON is expected
       console.log("Applicant statuses updated successfully");
 
       setActionMessage("Changes saved successfully!");
@@ -348,16 +346,27 @@ export function ViewMoreDetails() {
       refreshJobDetails();
     } catch (error) {
       console.error("Error saving applicant status updates:", error);
-      // Error message is already set by setActionMessage in the try block.
     }
   };
 
   if (loading) {
     return (
-      <div className="main-content min-h-screen px-20 py-15 my-15 p-6 bg-gray-50 dark:bg-gray-900 flex gap-8 border-1 rounded-4xl">
+      <div
+        className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${
+          darkMode
+            ? "bg-gray-900 text-white border-gray-700"
+            : "bg-gray-50 text-gray-900 border-gray-200"
+        } flex gap-8`}
+      >
         {/* LEFT: Job Details Skeleton */}
-        <div className="flex-1 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-6 animate-pulse bg-gray-300 dark:bg-gray-700 rounded w-3/4 h-8"></h1>
+        <div
+          className={`flex-1 p-6 rounded-lg shadow-md border transition-all ease-in-out duration-500 ${
+            darkMode
+              ? "bg-gray-800 border-gray-700 text-white"
+              : "bg-white border-gray-200 text-gray-900"
+          }`}
+        >
+          <h1 className="text-3xl font-bold mb-6 animate-pulse bg-gray-300 dark:bg-gray-700 rounded w-3/4 h-8"></h1>
           <div className="space-y-3">
             <div className="animate-pulse bg-gray-300 dark:bg-gray-700 h-4 rounded w-1/2"></div>
             <div className="animate-pulse bg-gray-300 dark:bg-gray-700 h-8 rounded w-3/4"></div>
@@ -375,8 +384,14 @@ export function ViewMoreDetails() {
         </div>
 
         {/* RIGHT: Applicants Sidebar Skeleton */}
-        <div className="w-120 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md flex flex-col">
-          <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100 animate-pulse bg-gray-300 dark:bg-gray-700 rounded w-1/2 h-6"></h2>
+        <div
+          className={`w-60 p-6 rounded-lg shadow-md border transition-all ease-in-out duration-500 ${
+            darkMode
+              ? "bg-gray-800 border-gray-700 text-white"
+              : "bg-white border-gray-200 text-gray-900"
+          } flex flex-col`}
+        >
+          <h2 className="text-xl font-bold mb-6 animate-pulse bg-gray-300 dark:bg-gray-700 rounded w-1/2 h-6"></h2>
           <div className="space-y-4">
             <div className="animate-pulse bg-gray-300 dark:bg-gray-700 h-20 rounded"></div>
             <div className="animate-pulse bg-gray-300 dark:bg-gray-700 h-20 rounded"></div>
@@ -389,7 +404,13 @@ export function ViewMoreDetails() {
 
   if (errorMessage) {
     return (
-      <div className="main-content min-h-screen px-20 py-15 my-15 p-6 bg-gray-50 dark:bg-gray-900 flex gap-8 border-1 rounded-4xl">
+      <div
+        className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${
+          darkMode
+            ? "bg-gray-900 text-white border-gray-700"
+            : "bg-gray-50 text-gray-900 border-gray-200"
+        } flex gap-8`}
+      >
         <animated.div
           style={errorBoxAnimation}
           className="mb-8 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md flex items-center"
@@ -401,26 +422,29 @@ export function ViewMoreDetails() {
             <p>{errorMessage}</p>
           </div>
         </animated.div>
-        <h1 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Error Loading Job Details</h1>
-        <p className="text-red-500 dark:text-red-400">{errorMessage}</p>
+        <h1 className="text-2xl font-bold mb-4">Error Loading Job Details</h1>
+        <p className="text-red-500">{errorMessage}</p>
       </div>
     );
   }
 
   if (!job) {
     return (
-      <div className="main-content min-h-screen px-20 py-15 my-15 p-6 bg-gray-50 dark:bg-gray-900 flex gap-8 border-1 rounded-4xl">
-        <h1 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Job Not Found</h1>
-        <p className="text-gray-600 dark:text-gray-400">No job data found for ID: {jobId}</p>
+      <div
+        className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${
+          darkMode
+            ? "bg-gray-900 text-white border-gray-700"
+            : "bg-gray-50 text-gray-900 border-gray-200"
+        } flex gap-8`}
+      >
+        <h1 className="text-2xl font-bold mb-4">Job Not Found</h1>
+        <p>No job data found for ID: {jobId}</p>
       </div>
     );
   }
 
   // Determine button disabled states based on job status
   const isJobOpen = job.status === "OPEN";
-  const isJobInProgress = job.status === "IN_PROGRESS";
-  const isJobFinished = job.status === "COMPLETED";
-  const isJobCancelled = job.status === "CANCELLED";
 
   // Pagination Calculations
   const indexOfLastApplicant = currentPage * applicantsPerPage;
@@ -433,7 +457,9 @@ export function ViewMoreDetails() {
     : 0;
 
   const pendingApplicants = Array.isArray(localApplicants)
-    ? localApplicants.filter((app) => app.status !== "APPROVED" && app.status !== "REJECTED")
+    ? localApplicants.filter(
+        (app) => app.status !== "APPROVED" && app.status !== "REJECTED"
+      )
     : [];
   const approvedApplicants = Array.isArray(localApplicants)
     ? localApplicants.filter((app) => app.status === "APPROVED")
@@ -442,16 +468,35 @@ export function ViewMoreDetails() {
     ? localApplicants.filter((app) => app.status === "REJECTED")
     : [];
 
-  const currentPendingApplicants = pendingApplicants.slice(indexOfFirstApplicant, indexOfLastApplicant);
-  const currentApprovedApplicants = approvedApplicants.slice(indexOfFirstApplicant, indexOfLastApplicant);
-  const currentRejectedApplicants = rejectedApplicants.slice(indexOfFirstApplicant, indexOfLastApplicant);
+  const currentPendingApplicants = pendingApplicants.slice(
+    indexOfFirstApplicant,
+    indexOfLastApplicant
+  );
+  const currentApprovedApplicants = approvedApplicants.slice(
+    indexOfFirstApplicant,
+    indexOfLastApplicant
+  );
+  const currentRejectedApplicants = rejectedApplicants.slice(
+    indexOfFirstApplicant,
+    indexOfLastApplicant
+  );
 
   return (
     <div
-      className={`main-content min-h-screen px-20 py-15 my-15 p-6 bg-gray-50 dark:bg-gray-900 flex gap-8 border-1 rounded-4xl`}
+      className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${
+        darkMode
+          ? "bg-gray-900 text-white border-gray-700"
+          : "bg-gray-50 text-gray-900 border-gray-200"
+      } flex gap-8`}
     >
       {/* LEFT: Job Details */}
-      <div className="flex-1 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+      <div
+        className={`flex-1 p-6 rounded-lg shadow-md border transition-all ease-in-out duration-500 ${
+          darkMode
+            ? "bg-gray-800 border-gray-700 text-white"
+            : "bg-white border-gray-200 text-gray-900"
+        }`}
+      >
         <h1
           className={`text-2xl sm:text-3xl font-bold mb-2 ${
             darkMode ? "text-green-400" : "text-green-600"
@@ -480,37 +525,27 @@ export function ViewMoreDetails() {
         )}
 
         <div className="mb-4">
-          <strong className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Job ID:
-          </strong>
-          <span className="text-gray-600 dark:text-gray-400">{job.jobPostId}</span>
+          <strong className="block font-medium mb-1">Job ID:</strong>
+          <span>{job.jobPostId}</span>
         </div>
         <div className="mb-4">
-          <strong className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Title:
-          </strong>
-          <span className="text-gray-600 dark:text-gray-400 text-xl">{job.title}</span>
+          <strong className="block font-medium mb-1">Title:</strong>
+          <span className="text-xl">{job.title}</span>
         </div>
         <div className="mb-6">
-          <strong className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Description:
-          </strong>
-          <p className="text-gray-600 dark:text-gray-400">{job.description}</p>
+          <strong className="block font-medium mb-1">Description:</strong>
+          <p>{job.description}</p>
         </div>
         <div className="mb-4">
-          <strong className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Status:
-          </strong>
-          <span className="inline-block px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold text-sm">
+          <strong className="block font-medium mb-1">Status:</strong>
+          <span className="inline-block px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700 text-black dark:text-white font-semibold text-sm">
             {job.status}
           </span>
         </div>
 
         {job.tags && job.tags.length > 0 && (
           <div className="mb-4">
-            <strong className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Tags:
-            </strong>
+            <strong className="block font-medium mb-1">Tags:</strong>
             <div className="flex flex-wrap gap-2">
               {job.tags.map((tag, index) => (
                 <span
@@ -527,20 +562,14 @@ export function ViewMoreDetails() {
 
         {job.address && (
           <div className="mb-4">
-            <strong className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Address:
-            </strong>
-            <span className="text-gray-600 dark:text-gray-400">{job.address}</span>
+            <strong className="block font-medium mb-1">Address:</strong>
+            <span>{job.address}</span>
           </div>
         )}
         {job.datePosted && (
           <div>
-            <strong className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Date Posted:
-            </strong>
-            <span className="text-gray-600 dark:text-gray-400">
-              {new Date(job.datePosted).toLocaleDateString()}
-            </span>
+            <strong className="block font-medium mb-1">Date Posted:</strong>
+            <span>{new Date(job.datePosted).toLocaleDateString()}</span>
           </div>
         )}
 
@@ -548,36 +577,33 @@ export function ViewMoreDetails() {
         <div className="mt-8 flex gap-4 justify-start">
           <button
             onClick={handleStartJob}
-            className={`px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
-              ${
-                job.status !== "OPEN"
-                  ? "opacity-50 cursor-not-allowed bg-gray-300 hover:bg-gray-300 text-gray-500 border border-gray-400 focus:ring-0 focus:outline-none"
-                  : ""
-              }`}
+            className={`px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${
+              job.status !== "OPEN"
+                ? "opacity-50 cursor-not-allowed bg-gray-300 hover:bg-gray-300 text-gray-500 border border-gray-400"
+                : ""
+            }`}
             disabled={job.status !== "OPEN"}
           >
             Start
           </button>
           <button
             onClick={handleFinishJob}
-            className={`px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50
-              ${
-                job.status !== "IN_PROGRESS"
-                  ? "opacity-50 cursor-not-allowed bg-gray-300 hover:bg-gray-300 text-gray-500 border border-gray-400 focus:ring-0 focus:outline-none"
-                  : ""
-              }`}
+            className={`px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 ${
+              job.status !== "IN_PROGRESS"
+                ? "opacity-50 cursor-not-allowed bg-gray-300 hover:bg-gray-300 text-gray-500 border border-gray-400"
+                : ""
+            }`}
             disabled={job.status !== "IN_PROGRESS"}
           >
             Finish
           </button>
           <button
             onClick={handleCancelJob}
-            className={`px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50
-              ${
-                job.status !== "OPEN"
-                  ? "opacity-50 cursor-not-allowed bg-gray-300 hover:bg-gray-300 text-gray-500 border border-gray-400 focus:ring-0 focus:outline-none"
-                  : ""
-              }`}
+            className={`px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 ${
+              job.status !== "OPEN"
+                ? "opacity-50 cursor-not-allowed bg-gray-300 hover:bg-gray-300 text-gray-500 border border-gray-400"
+                : ""
+            }`}
             disabled={job.status !== "OPEN"}
           >
             Cancel
@@ -586,13 +612,17 @@ export function ViewMoreDetails() {
       </div>
 
       {/* RIGHT: Applicants Sidebar */}
-      <div className="w-60 h-40 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md flex flex-col">
-        <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-gray-100 flex items-center">
-          Applicants
-        </h2>
+      <div
+        className={`w-60 p-6 rounded-lg shadow-md border transition-all ease-in-out duration-500 ${
+          darkMode
+            ? "bg-gray-800 border-gray-700 text-white"
+            : "bg-white border-gray-200 text-gray-900"
+        } flex flex-col`}
+      >
+        <h2 className="text-xl font-bold mb-6">Applicants</h2>
         <button
           onClick={handleOpenApplicantsPopup}
-          className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm"
+          className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm"
         >
           Manage Applicants
         </button>
@@ -600,7 +630,7 @@ export function ViewMoreDetails() {
         {Array.isArray(job.applicants) && job.applicants.length > 0 ? (
           <div className="space-y-4"></div>
         ) : (
-          <p className="text-gray-600 dark:text-gray-400">No applicants found for this job.</p>
+          <p className="mt-4">No applicants found for this job.</p>
         )}
       </div>
 
@@ -624,7 +654,7 @@ export function ViewMoreDetails() {
         currentPage={currentPage}
         totalPages={totalPages}
         job={job}
-        isJobOpen={job.status === "OPEN"} // pass isJobOpen as 'job.status === "OPEN"'
+        isJobOpen={job.status === "OPEN"}
       />
     </div>
   );

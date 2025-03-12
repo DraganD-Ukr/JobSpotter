@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function Footer() {
   return (
     <footer className="footer lava-lamp-background py-6">
@@ -7,38 +9,38 @@ export default function Footer() {
         </p>
         <ul className="flex gap-4 text-white text-sm">
           <li>
-            <a href="/about" className="hover:underline hover:text-gray-200">
+            <Link to="/about" className="hover:underline hover:text-gray-200">
               About
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="/contact" className="hover:underline hover:text-gray-200">
+            <Link to="/contact" className="hover:underline hover:text-gray-200">
               Contact
-            </a>
+            </Link>
           </li>
           <li>
-            <a
-              href="/privacypolicy"
+            <Link
+              to="/privacypolicy"
               className="hover:underline hover:text-gray-200"
             >
               Privacy Policy
-            </a>
+            </Link>
           </li>
           <li>
-            <a
-              href="/termsofservice"
+            <Link
+              to="/termsofservice"
               className="hover:underline hover:text-gray-200"
             >
               Terms of Service
-            </a>
+            </Link>
           </li>
           <li>
-            <a
-              href="/helpandsupport"
+            <Link
+              to="/helpandsupport"
               className="hover:underline hover:text-gray-200"
             >
               Help & Support
-            </a>
+            </Link>
           </li>
         </ul>
       </div>

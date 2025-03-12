@@ -18,13 +18,16 @@ import { MyJobs } from "./pages/MyJobs";
 import { Settings } from "./pages/Settings";
 import { JobPostHistory } from "./pages/JobPostHistory";
 import { SearchJobPost } from "./pages/SearchJobPost";
-import { ViewMoreDetails } from "./pages/ViewMoreDetails";
+import { ViewMoreDetails } from "./components/ViewMoreDetails";
 import { JobPostDetails } from "./pages/JobPostDetails";
 import Data from "./pages/Data";
 import Profile from "./pages/Profile";
 import { useLocation } from "react-router-dom";
 import UserProfile from './pages/UserProfile';
 import {Dashboard} from "./pages/Dashboard";
+import AdminReportManagementPopup from "./components/AdminReportManagementPopup";
+import {SearchReport} from "./pages/SearchReport";
+import {UserReportFormPopup } from "./components/UserReportFormPopup";
 
 
 export default function App() {
@@ -58,6 +61,9 @@ export default function App() {
           <Route path="/helpandsupport" element={<HelpAndSupport />} />
           <Route path="/users/:userId" element={<UserProfile />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/adminreportmanagementpopup" element={<AdminReportManagementPopup/>} />
+          <Route path="/searchreport" element={<SearchReport />} />
+          <Route path="/userreportformpopup" element={<UserReportFormPopup />} />
 
         </Routes>
       </div>

@@ -81,7 +81,7 @@ export function About() {
 
       {/* CTA / Join Us */}
       <div className="mt-12 mb-20 text-center">
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-200 mb-4">
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-lime-600 mb-4">
           Ready to join us?
         </h3>
         <p className="text-gray-900 dark:text-gray-300 max-w-xl mx-auto mb-6">

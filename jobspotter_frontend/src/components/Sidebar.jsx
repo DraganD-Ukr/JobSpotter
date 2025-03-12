@@ -1,10 +1,15 @@
 import { useEffect, useState, useContext } from "react";
-import thanosImage from "../assets/thanos.jpg";
 import { ThemeContext } from "../components/ThemeContext";
+import { Link } from "react-router-dom";
+import ProfilePicture from "../components/ProfilePicture";
 
 export default function Sidebar() {
-  const [user, setUser] = useState({});
-  const { setDarkMode } = useContext(ThemeContext);
+  const [userId, setUserId] = useState("");
+  const [firstName, setFirstName] = useState("Guest");
+  const [lastName, setLastName] = useState("User");
+  const [userType, setUserType] = useState("User");
+
+  const { darkMode, setDarkMode } = useContext(ThemeContext);
 
   useEffect(() => {
     fetch("/api/v1/users/me", {
@@ -12,12 +17,22 @@ export default function Sidebar() {
       headers: { "Content-Type": "application/json" },
       credentials: "include",
     })
-      .then((res) => res.json())
-      .then((data) => setUser(data))
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch user info");
+        return res.json();
+      })
+      .then((data) => {
+        console.log("Sidebar user data:", data);
+        // Set each piece of data like in the Navbar
+        setUserId(data.userId || "");
+        setFirstName(data.firstName || "Guest");
+        setLastName(data.lastName || "User");
+        setUserType(data.userType || "User");
+      })
       .catch((err) => console.error("Error fetching user data:", err));
-  }, []);
+  }, [setDarkMode]);
 
-  // Logout function added for Sign Out link
+  // Logout function for Sign Out link
   const handleLogout = async () => {
     try {
       const response = await fetch("/api/v1/users/auth/logout", {
@@ -37,44 +52,39 @@ export default function Sidebar() {
   return (
     <aside>
       <div className="flex items-center gap-3 mb-6">
-        <img
-          src={user.profileImage || thanosImage}
-          alt="Profile"
-          className="w-14 h-14 rounded-full object-cover"
-        />
+        {/* Use ProfilePicture just like in Navbar, passing userId and darkMode */}
+        <ProfilePicture userId={userId} darkMode={darkMode} />
         <div>
           <h3 className="text-lg font-semibold">
-            {user.firstName || "Guest"} {user.lastName || "User"}
+            {firstName} {lastName}
           </h3>
-          <p className="text-sm">
-            {user.userType || "User"}
-          </p>
+          <p className="text-sm">{userType}</p>
         </div>
       </div>
 
       <nav className="space-y-3">
-        <a href="/Profile" className="block text-sm hover:text-green-400">
+        <Link to="/Profile" className="block text-sm hover:text-green-400">
           Profile
-        </a>
-        <a href="#" className="block text-sm hover:text-green-400">
+        </Link>
+        <Link to="#" className="block text-sm hover:text-green-400">
           Job Preferences
-        </a>
-        <a href="#" className="block text-sm hover:text-green-400">
+        </Link>
+        <Link to="#" className="block text-sm hover:text-green-400">
           Account Settings
-        </a>
-        <a href="/Address" className="block text-sm hover:text-green-400">
+        </Link>
+        <Link to="/Address" className="block text-sm hover:text-green-400">
           Manage Address
-        </a>
-        <a href="#" className="block text-sm hover:text-green-400">
+        </Link>
+        <Link to="#" className="block text-sm hover:text-green-400">
           Notifications
-        </a>
-        <a
-          href="#"
+        </Link>
+        <Link
+          to="#"
           onClick={handleLogout}
           className="block text-sm hover:text-green-400"
         >
           Sign Out
-        </a>
+        </Link>
       </nav>
     </aside>
   );

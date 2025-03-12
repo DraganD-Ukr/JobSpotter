@@ -80,7 +80,7 @@ export function Contact() {
 
       {/* CTA Section */}
       <div className="mt-12 mb-20 text-center transition-all duration-1000">
-        <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+        <h3 className="text-2xl font-bold text-gray-800 dark:text-lime-600 mb-4">
           We’d Love to Hear From You
         </h3>
         <p className="text-gray-600 dark:text-gray-300 max-w-xl mx-auto mb-6">
