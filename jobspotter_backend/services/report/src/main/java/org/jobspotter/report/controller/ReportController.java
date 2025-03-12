@@ -41,10 +41,10 @@ public class ReportController {
     private final JWTUtils jwtUtils;
     private final ReportService reportService;
 
-    //Search job posts using query parameters 'title', 'tag' , 'latitude' , 'longitude' , 'radius' and 'page' and 'size'
+
     @Operation(
             summary = "Create report",
-            description = "Create a report for a user, job post, applicant or review"
+            description = "Create a report for a user, job post, applicant or review."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Report created successfully", content = {@Content}),
@@ -72,7 +72,7 @@ public class ReportController {
 
     //Search job posts using query parameters 'title', 'tag' , 'latitude' , 'longitude' , 'radius' and 'page' and 'size'
     @Operation(
-            summary = "Search reports",
+            summary = "Search reports, only for ADMIN USE",
             description = "Search reports using query parameters 'tags', 'status', 'reporterId', 'reportedUserId', 'reportedJobPostId', 'reportedApplicantId', 'reportedReviewId', 'page' and 'size'"
     )
     @ApiResponses(value = {
@@ -129,7 +129,7 @@ public class ReportController {
 
 
     @Operation(
-            summary = "Update report status",
+            summary = "Update report status, only for ADMIN USE",
             description = "Update the status of a report. Both enum name and display name of report status are accepted"
     )
     @ApiResponses(value = {
@@ -170,7 +170,7 @@ public class ReportController {
 
 
     @Operation(
-            summary = "Get report tags",
+            summary = "Get report tags, only for ADMIN USE",
             description = "Get all possible report tags"
     )
     @ApiResponses(value = {
