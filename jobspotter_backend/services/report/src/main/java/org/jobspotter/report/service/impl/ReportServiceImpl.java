@@ -90,5 +90,20 @@ public class ReportServiceImpl implements ReportService {
         return new PageImpl<>(reportList, pageable, totalCount);
     }
 
+    @Override
+    public void updateReportStatus(String reportId, ReportStatus status) {
+
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> {
+                    log.error("Report with id: {} not found", reportId);
+                    return new IllegalArgumentException("Report not found");
+                });
+
+        report.setReportStatus(status);
+        reportRepository.save(report);
+
+        log.info("Report status updated for report: {}", reportId);
+    }
+
 
 }

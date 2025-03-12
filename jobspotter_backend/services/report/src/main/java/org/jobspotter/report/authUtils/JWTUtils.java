@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.jobspotter.report.exception.UnauthorizedException;
 import org.springframework.stereotype.Service;
 
 import java.security.KeyFactory;
@@ -78,7 +79,7 @@ public class JWTUtils {
         }
 
         log.warn("User does not have admin role!");
-        throw new Exception("User does not have admin role!");
+        throw new UnauthorizedException("Unauthorized access");
     }
 
 
