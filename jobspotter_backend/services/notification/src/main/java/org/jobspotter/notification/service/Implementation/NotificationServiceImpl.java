@@ -22,7 +22,7 @@ public class NotificationServiceImpl implements NotificationService {
 //                                           Notification update methods
 //---------------------------------------------------------------------------------------------------------
     /**
-     * Mark a notification as unread using the notificationId
+     * Mark a notification as read using the notificationId
      * Check if the notification exists, then mark it as unread
      * Return a Mono error if the notification does not exist or the user is not authorized
      *
@@ -32,13 +32,18 @@ public class NotificationServiceImpl implements NotificationService {
      */
     // Mark a notification as unread
     @Override
-    public Mono<Void> markNotificationAsRead(UUID userId, String notificationId) {
+    public Mono<Void> markNotificationAsReadOrUnread(UUID userId, String notificationId) {
         return verifyNotificationAndAuthorization(notificationId, userId)
                 .flatMap(notification -> {
+                    if(notification.isRead()) {
+                        notification.setRead(false);
+                        return notificationRepository.save(notification).then();
+                    }
                     notification.setRead(true);
                     return notificationRepository.save(notification).then();
                 });
     }
+
 //---------------------------------------------------------------------------------------------------------
 //                                                Helper methods
 //---------------------------------------------------------------------------------------------------------

@@ -25,8 +25,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -37,10 +41,10 @@ public class ReportController {
     private final JWTUtils jwtUtils;
     private final ReportService reportService;
 
-    //Search job posts using query parameters 'title', 'tag' , 'latitude' , 'longitude' , 'radius' and 'page' and 'size'
+
     @Operation(
             summary = "Create report",
-            description = "Create a report for a user, job post, applicant or review"
+            description = "Create a report for a user, job post, applicant or review."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Report created successfully", content = {@Content}),
@@ -68,7 +72,7 @@ public class ReportController {
 
     //Search job posts using query parameters 'title', 'tag' , 'latitude' , 'longitude' , 'radius' and 'page' and 'size'
     @Operation(
-            summary = "Search reports",
+            summary = "Search reports, only for ADMIN USE",
             description = "Search reports using query parameters 'tags', 'status', 'reporterId', 'reportedUserId', 'reportedJobPostId', 'reportedApplicantId', 'reportedReviewId', 'page' and 'size'"
     )
     @ApiResponses(value = {
@@ -98,7 +102,7 @@ public class ReportController {
             @RequestParam(value = "reportedJobPostId", required = false) @Schema(description = "Reported Job Post Id") @Positive(message = "reportedJobPostId must be a positive number") Long reportedJobPostId, // Must be positive if provided
             @RequestParam(value = "reportedApplicantId", required = false) @Schema(description = "Reported Applicant Id") @Positive(message = "reportedApplicantId must be a positive number") Long reportedApplicantId, // Must be positive if provided
             @RequestParam(value = "reportedReviewId", required = false) @Schema(description = "Reported Review Id") @Positive(message = "reportedReviewId must be a positive number") Long reportedReviewId, // Must be positive if provided
-            @RequestParam(value = "page", defaultValue = "0") @Schema(description = "Page of results") @Min(value = 0,message = "Page number must be positive(including 0)") int page, // Page must be non-negative
+            @RequestParam(value = "page", defaultValue = "0") @Schema(description = "Page of results") @Min(value = 0, message = "Page number must be positive(including 0)") int page, // Page must be non-negative
             @RequestParam(value = "size", defaultValue = "10") @Schema(description = "Number of results to return on page") @Positive(message = "Size must be positive(including 0)") @Max(value = 100, message = "Max value for size is 100") int size, // Size must be positive and max 100 (adjust max as needed),
             @RequestParam(value = "sort", required = false, defaultValue = "createdAt") ReportSortByField sortBy,
             @RequestParam(value = "isAsc", required = false, defaultValue = "true") boolean sortDirection
@@ -110,7 +114,7 @@ public class ReportController {
 
         Page<Report> reports = reportService.searchReports(tags,
                 status,
-                reporterId == null ? null : UUID.fromString(reporterId) ,
+                reporterId == null ? null : UUID.fromString(reporterId),
                 reportedUserId == null ? null : UUID.fromString(reportedUserId),
                 reportedJobPostId,
                 reportedApplicantId,
@@ -124,6 +128,72 @@ public class ReportController {
     }
 
 
+    @Operation(
+            summary = "Update report status, only for ADMIN USE",
+            description = "Update the status of a report. Both enum name and display name of report status are accepted"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Report status updated successfully", content = {@Content}),
+            @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Report not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping("/{reportId}")
+    public ResponseEntity<HttpStatus> updateReportStatus(
+            @RequestHeader("Authorization") String accessToken,
+            @PathVariable("reportId") String reportId,
+            @RequestParam("status") @Schema(implementation = ReportStatus.class) String status
+    ) throws Exception {
 
+
+        jwtUtils.hasAdminRole(accessToken);
+
+        ReportStatus reportStatus;
+
+        try {
+            reportStatus = ReportStatus.fromString(status);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid report status provided: {}", status);
+            return ResponseEntity.badRequest().build();
+        }
+
+
+
+
+        log.info("Updating report status for report: {}", reportId);
+
+        reportService.updateReportStatus(reportId, reportStatus);
+
+        return ResponseEntity.noContent().build();
+    }
+
+
+    @Operation(
+            summary = "Get report tags, only for ADMIN USE",
+            description = "Get all possible report tags"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved report tags",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ReportTag.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/report-tags")
+    public ResponseEntity<Map<String, String>> getReportStatuses(
+            @RequestHeader("Authorization") String accessToken
+    ) throws Exception {
+        jwtUtils.hasAdminRole(accessToken);
+        Map<String, String> reportStatuses = Arrays.stream(ReportStatus.values())
+                .collect(Collectors.toMap(ReportStatus::name, ReportStatus::getDisplayName));
+
+        return ResponseEntity.ok(reportStatuses);
+
+    }
 
 }

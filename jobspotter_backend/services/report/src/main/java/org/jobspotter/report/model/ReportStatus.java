@@ -1,26 +1,40 @@
 package org.jobspotter.report.model;
 
-
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "The report statuses")
+import java.util.stream.Stream;
+
+@Schema(description = "The status of a report")
 public enum ReportStatus {
+    OPEN("Open"),
+    UNDER_REVIEW("Under Review"),
+    PENDING_RESPONSE("Pending Response"),
+    RESOLVED("Resolved"),
+    REJECTED("Rejected"),
+    ACTION_TAKEN("Action Taken"),
+    ESCALATED("Escalated"),
+    ON_HOLD("On Hold"),
+    AUTO_RESOLVED("Auto Resolved");
 
-    OPEN,          // Report has been submitted and is awaiting review.
+    private final String displayName;
 
-    UNDER_REVIEW,  // Report is currently being investigated by a moderator/admin.
+    ReportStatus(String displayName) {
+        this.displayName = displayName;
+    }
 
-    PENDING_RESPONSE, // Report is waiting for further information or clarification, potentially from the reporter or reported user.
+    @JsonValue  // Serialize using display name in JSON responses
+    public String getDisplayName() {
+        return displayName;
+    }
 
-    RESOLVED,      // Report has been fully investigated and a resolution has been reached.
+    @JsonCreator  // Allow both enum name and display name in API input
+    public static ReportStatus fromString(String value) {
+        return Stream.of(ReportStatus.values())
+                .filter(status -> status.name().equalsIgnoreCase(value) || status.displayName.equalsIgnoreCase(value))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid ReportStatus: " + value));
+    }
 
-    REJECTED,      // Report has been reviewed and deemed invalid, frivolous, or not actionable.
-
-    ACTION_TAKEN,  //  Action has been taken as a result of the report (e.g., content removed, user warned, account suspended).
-
-    ESCALATED,     // Report has been escalated to a higher level of review or a specialized team.
-
-    ON_HOLD,       // Review is temporarily paused, pending external factors or information.
-
-    AUTO_RESOLVED  // Report was automatically resolved by system (e.g., spam filter).
 }

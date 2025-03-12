@@ -15,4 +15,6 @@ public interface ReportService {
     void generateReport(UUID reporterId, ReportRequest reportRequest);
 
     Page<Report> searchReports(Set<ReportTag> tags, ReportStatus status, UUID reporterId, UUID reportedUserId, Long reportedJobPostId, Long reportedApplicantId, Long reportedReviewId, int page, int size, ReportSortByField sortBy, boolean isAsc);
+
+    void updateReportStatus(String reportId, ReportStatus status);
 }

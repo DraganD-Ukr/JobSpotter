@@ -10,5 +10,6 @@ public interface NotificationService {
 
 
     //Notification update methods
-    Mono<Void> markNotificationAsRead(UUID userId, String notificationId);
+    Mono<Void> markNotificationAsReadOrUnread(UUID userId, String notificationId);
+
 }

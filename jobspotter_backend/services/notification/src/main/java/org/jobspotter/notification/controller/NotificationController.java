@@ -62,7 +62,7 @@ public class NotificationController {
 //------------------------------------------------------------------------------------------------------------------
 
     @Operation(
-            summary = "Mark a notification as read",
+            summary = "Mark a notification as read or unread",
             description = "Mark a notification as read using the notification ID" +
                     "The user must be authenticated to access this endpoint"
     )
@@ -78,15 +78,15 @@ public class NotificationController {
                     content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ErrorResponse.class)))
             }
     )
-    @GetMapping("/{notificationId}/mark-as-read")
+    @GetMapping("/{notificationId}/mark-read-or-unread")
     public Mono<ResponseEntity<Object>> markNotificationAsRead(
             @RequestHeader("Authorization") String accessToken,
             @PathVariable String notificationId
     ) throws Exception {
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
-        return notificationService.markNotificationAsRead(userId, notificationId)
-                .then(Mono.just(ResponseEntity.ok((Object)"Notification marked as unread.")))
+        return notificationService.markNotificationAsReadOrUnread(userId, notificationId)
+                .then(Mono.just(ResponseEntity.noContent().build()))
                 .onErrorResume(ResourceNotFoundException.class, e ->
                         Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND)
                                 .body(new ErrorResponse(e.getMessage()))))
