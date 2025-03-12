@@ -368,6 +368,54 @@ public class KeyCloakServiceImpl implements KeyCloakService {
 
     }
 
+    @Override
+    public void deleteUser(UUID userId) {
+        log.info("Attempting to delete user with ID: {}", userId);
+
+        String url = localHostPrefixUrl+"/admin/realms/JobSpotter/users/" + userId.toString();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(getAdminToken());
+
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Void> responseEntity =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.DELETE,
+                            requestEntity,
+                            Void.class
+                    );
+
+            log.info("Successfully deleted user with id {} in Keycloak", userId);
+
+        } catch (RestClientResponseException e) {
+
+            if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
+                log.error("(Keycloak)Bad request while deleting user with id {} - {}",userId, e.getResponseBodyAsString());
+                throw new InvalidRequestException("Invalid request body for one or more fields.");
+
+            } else if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                log.error("(Keycloak):Unauthorized request while deleting user user with id {} - {}", userId, e.getResponseBodyAsString());
+                throw new ServerException("Something went wrong on our end. Please try again later.");
+
+            } else if (e.getStatusCode().is5xxServerError()) {
+                log.error("(Keycloak): Error while deleting user user with id {} - {}", userId, e.getResponseBodyAsString());
+                throw new ServerException("Something went wrong on our end. Please try again later.");
+
+            } else {
+                log.error("(Keycloak)Unexpected error while deleting user: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+                throw new ServerException("Something went wrong on our end. Please try again later.");
+            }
+
+        } catch (Exception e) {
+            log.error("(Keycloak)Unexpected error during deleting user user user with id {} - {}", userId, e.getMessage(), e);
+            throw new ServerException("Something went wrong while refreshing the token. Please try again.");
+        }
+    }
+
     private static Map<String, String> reqBodyFromUserPutRequest(KeycloakUserPutRequest userPutRequest) {
         Map<String, String> formData = new HashMap<>();
 

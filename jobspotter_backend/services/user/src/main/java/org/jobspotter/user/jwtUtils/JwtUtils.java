@@ -82,7 +82,7 @@ public class JwtUtils {
         }
 
         log.warn("User does not have admin role!");
-        throw new UnauthorizedException("User does not have admin role!");
+        return false;
     }
 
 

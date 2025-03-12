@@ -274,6 +274,19 @@ public class UserController {
         return userService.deleteProfilePicture(userId);
     }
 
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<HttpStatus> deleteUser(
+            @PathVariable UUID userId,
+            @RequestHeader("Authorization") String accessToken
+    ) throws Exception {
+        log.info("Deleting user");
+        return userService.deleteUser(accessToken, userId);
+    }
+
+
+
+
     private void clearCookie(String name, HttpServletResponse response) {
         Cookie cookie = new Cookie(name, "");
         cookie.setMaxAge(0); // Expires immediately

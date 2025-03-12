@@ -14,7 +14,9 @@ import org.jobspotter.user.dto.*;
 import org.jobspotter.user.exception.InvalidFileExtensionException;
 import org.jobspotter.user.exception.ResourceAlreadyExistsException;
 import org.jobspotter.user.exception.ResourceNotFoundException;
+import org.jobspotter.user.exception.UnauthorizedException;
 import org.jobspotter.user.fileUtils.FileUtils;
+import org.jobspotter.user.jwtUtils.JwtUtils;
 import org.jobspotter.user.model.User;
 import org.jobspotter.user.model.UserType;
 import org.jobspotter.user.repository.UserRepository;
@@ -34,6 +36,7 @@ public class UserServiceImpl implements UserService {
     private final S3BucketService s3BucketService;
     private final KeyCloakService keyCloakService;
     private final UserRepository userRepository;
+    private final JwtUtils jwtUtils;
 
     @Override
     public ResponseEntity<HttpStatus> registerUser(UserRegisterRequest userRegisterRequest) {
@@ -220,6 +223,23 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
+    public ResponseEntity<HttpStatus> deleteUser(String accessToken, UUID userId) throws Exception {
+        authorizeUser(userId, accessToken);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
+
+        userRepository.delete(user);
+        log.info("User with Id: {} deleted successfully from user db", userId);
+
+        keyCloakService.deleteUser(userId);
+
+//        TODO: delete user from all other services(notify job-post service, applicants who applied to jobs, etc)
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
 
     private boolean updateUserFromPatch(User user, UserPatchRequest userPatchRequest){
         boolean updated = false;
@@ -263,6 +283,19 @@ public class UserServiceImpl implements UserService {
         }
 
         return updated;
+
+    }
+
+
+    private void authorizeUser(UUID resourceUserId, String accessToken) throws Exception {
+
+        UUID tokenUserId = JWTUtils.getUserIdFromToken(accessToken);
+
+
+        if (!tokenUserId.equals(resourceUserId) && !jwtUtils.hasAdminRole(accessToken)) {
+            log.warn("User with Id: {} is not authorized to access resource with Id: {}", tokenUserId, resourceUserId);
+            throw new UnauthorizedException("Unauthorized access");
+        }
 
     }
 
