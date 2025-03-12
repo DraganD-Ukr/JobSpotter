@@ -99,7 +99,7 @@ public class JobPostController {
             @ApiResponse(responseCode = "400", description = "Bad request",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
-            @ApiResponse(responseCode = "403", description = "Forbidden: User is not the job poster or an admin",
+            @ApiResponse(responseCode = "401", description = "Unauthorized: User is not the job poster or an admin",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
@@ -273,7 +273,7 @@ public class JobPostController {
             @ApiResponse(responseCode = "401", description = "Unauthorized:  User is not the job poster or an admin",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
-            @ApiResponse(responseCode = "403", description = "Forbidden: Job post is not open for job poster to make changes",
+            @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action.",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
@@ -315,7 +315,7 @@ public class JobPostController {
                     @ApiResponse(responseCode = "401", description = "Unauthorized:  User is not the admin",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
                     ),
-                    @ApiResponse(responseCode = "403", description = "Forbidden: Job post is not open for admin to Delete",
+                    @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action.",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
                     ),
                     @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
@@ -431,7 +431,7 @@ public class JobPostController {
                     @ApiResponse(responseCode = "401", description = "Unauthorized: User is not an applicant or an admin",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
                     ),
-                    @ApiResponse(responseCode = "403", description = "Forbidden: Job post is not open for applicants to make changes",
+                    @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action.",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
                     ),
                     @ApiResponse(responseCode = "404", description = "Not Found: Job post or applicant not found",
@@ -479,7 +479,7 @@ public class JobPostController {
                     @ApiResponse(responseCode = "401", description = "Unauthorized: User is not an admin",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
                     ),
-                    @ApiResponse(responseCode = "403", description = "Forbidden: Job post is not open for admin to make changes",
+                    @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action.",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
                     ),
                     @ApiResponse(responseCode = "404", description = "Not Found: Job post or applicant not found",
@@ -519,7 +519,7 @@ public class JobPostController {
             @ApiResponse(responseCode = "401", description = "Unauthorized: User is not the owner of the job post",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
-            @ApiResponse(responseCode = "403", description = "Forbidden: Job post is not open",
+            @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action.",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(responseCode = "500", description = "Internal server error",
@@ -558,7 +558,7 @@ public class JobPostController {
             @ApiResponse(responseCode = "401", description = "Unauthorized:  User is not the job poster or an admin",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
-            @ApiResponse(responseCode = "403", description = "Forbidden: Job post is not open",
+            @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action.",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
@@ -597,7 +597,7 @@ public class JobPostController {
             @ApiResponse(responseCode = "401", description = "Unauthorized: User is not the owner of the job post",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
-            @ApiResponse(responseCode = "403", description = "Forbidden: Job post is not in progress",
+            @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",

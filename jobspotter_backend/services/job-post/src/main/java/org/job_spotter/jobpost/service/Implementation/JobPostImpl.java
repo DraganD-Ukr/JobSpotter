@@ -372,6 +372,7 @@ public class JobPostImpl implements JobPostService {
      * @param jobPostPatchRequest The fields to update
      * @throws Exception If the user is not an admin or job poster, or job post status is not OPEN
      */
+    @Transactional
     @Override
     public void updateJobPost(String accessToken, Long jobPostId, JobPostPatchRequest jobPostPatchRequest) throws Exception {
 //        Get the job post from the database
@@ -576,12 +577,7 @@ public class JobPostImpl implements JobPostService {
         return jobPost; // Optionally return the updated job post
     }
 
-    private static void checkJobPostStatus(JobPost jobPost, JobStatus jobStatus) {
-        if (jobPost.getStatus() != jobStatus) {
-            log.warn("Could not process applicants: Job post is not open for applications");
-            throw new ForbiddenException("Job post is not open for applications.");
-        }
-    }
+
 
     /**
      * Update the message of an applicant using the job post ID and applicant ID
@@ -768,10 +764,7 @@ public class JobPostImpl implements JobPostService {
 
         checkIfUserIsJobPoster(userId, jobPost);
 
-        if (jobPost.getStatus() != JobStatus.IN_PROGRESS) {
-            log.warn("Could not finish job post: Job post status is not IN_PROGRESS");
-            throw new ForbiddenException("Job post status is not IN_PROGRESS.");
-        }
+        checkJobPostStatus(jobPost, JobStatus.IN_PROGRESS);
 
         jobPost.setStatus(JobStatus.COMPLETED);
 
@@ -807,7 +800,7 @@ public class JobPostImpl implements JobPostService {
 //----------------------------------------------------------------------------------------------------------------
 
 
-// User Validation Methods
+// Validation Methods
 //----------------------------------------------------------------------------------------------------------------
     private boolean checkIfUserIsJobPosterOrAdmin(String accessToken, JobPost jobPost) throws Exception {
         boolean isJobPoster = jobPost.getJobPosterId().equals(jwtUtils.getUserIdFromToken(accessToken));
@@ -815,7 +808,7 @@ public class JobPostImpl implements JobPostService {
 
         if (!isJobPoster && !isAdmin) {
             log.warn("Could not process applicants: User is not the job poster or an admin");
-            throw new UnauthorizedException("You are not authorized to take actions on this job post.");
+            throw new UnauthorizedException("You are not authorized to take actions.");
         }
 
         return isAdmin;
@@ -826,7 +819,7 @@ public class JobPostImpl implements JobPostService {
 
         if (!isApplicant && !isAdmin) {
             log.warn("Could not process applicants: User is not an applicant or an admin");
-            throw new UnauthorizedException("You are not authorized to take actions on this job post.");
+            throw new UnauthorizedException("You are not authorized to take actions .");
         }
 
         return isAdmin;
@@ -835,21 +828,28 @@ public class JobPostImpl implements JobPostService {
     private void checkIfUserIsAdmin(String accessToken) throws Exception {
         if (!jwtUtils.hasAdminRole(accessToken)) {
             log.warn("Could not process applicants: User is not an admin");
-            throw new UnauthorizedException("You are not authorized to take actions on this job post.");
+            throw new UnauthorizedException("You are not authorized to take actions.");
         }
     }
 
     private void checkIfUserIsApplicant(UUID userId, JobPost jobPost, Long applicantId) {
         if (!getApplicantById(jobPost, applicantId).getUserId().equals(userId)) {
             log.warn("Could not process applicants: User is not the applicant");
-            throw new UnauthorizedException("You are not authorized to take actions on this job post.");
+            throw new UnauthorizedException("You are not authorized to take actions.");
         }
     }
 
     private void checkIfUserIsJobPoster(UUID userId, JobPost jobPost) {
         if (!jobPost.getJobPosterId().equals(userId)) {
             log.warn("Could not process applicants: User is not the job poster");
-            throw new UnauthorizedException("You are not authorized to take actions on this job post.");
+            throw new UnauthorizedException("You are not authorized to take actions.");
+        }
+    }
+
+    private static void checkJobPostStatus(JobPost jobPost, JobStatus jobStatus) {
+        if (jobPost.getStatus() != jobStatus) {
+            log.warn("Could not process action: JobStatus is not {}", jobStatus);
+            throw new ForbiddenException("JobStatus does not allow for this action.");
         }
     }
 //  Logging Methods
