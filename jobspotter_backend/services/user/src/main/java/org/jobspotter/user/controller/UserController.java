@@ -35,7 +35,6 @@ public class UserController {
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
     private final UserService userService;
     private final KeyCloakServiceImpl keyCloakServiceImpl;
-    private final JWTUtils jwtUtils;
 
     @Operation(summary = "Register a new user")
      @ApiResponses(value = {
@@ -304,9 +303,9 @@ public class UserController {
             @RequestHeader("Authorization") String accessToken
     ) throws Exception {
 
-        jwtUtils.hasAdminRole(accessToken);
+
         log.info("Disabling user");
-        userService.disableUser(userId);
+        userService.disableUser(accessToken, userId);
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

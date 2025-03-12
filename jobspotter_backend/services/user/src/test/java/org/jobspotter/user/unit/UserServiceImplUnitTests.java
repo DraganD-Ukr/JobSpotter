@@ -6,7 +6,6 @@ import org.jobspotter.user.exception.InvalidCredentialsException;
 import org.jobspotter.user.exception.ResourceAlreadyExistsException;
 import org.jobspotter.user.exception.ResourceNotFoundException;
 import org.jobspotter.user.exception.UnauthorizedException;
-import org.jobspotter.user.jwtUtils.JwtUtils;
 import org.jobspotter.user.model.User;
 import org.jobspotter.user.model.UserType;
 import org.jobspotter.user.repository.UserRepository;
@@ -32,7 +31,7 @@ public class UserServiceImplUnitTests {
 
 
         @Mock
-        private JwtUtils jwtUtilsMocked;
+        private JWTUtils jwtUtilsMocked;
 
         @Mock
         private KeyCloakService keyCloakService;
@@ -324,5 +323,63 @@ public class UserServiceImplUnitTests {
         }
     }
 
+
+    @Test
+    void disableUser_success() throws Exception {
+        UUID userId = UUID.randomUUID();
+        String accessToken = "testToken";
+        User user = User.builder().userId(userId).username("testuser").build();
+
+
+            try {
+                when(jwtUtilsMocked.hasAdminRole(accessToken)).thenReturn(true);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            doNothing().when(keyCloakService).disableUser(userId);
+            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+            userService.disableUser(accessToken, userId);
+
+            verify(keyCloakService).disableUser(userId);
+
+    }
+
+    @Test
+    void disableUser_UserNotFound()  {
+        UUID userId = UUID.randomUUID();
+        String accessToken = "testToken";
+
+        try {
+            when(jwtUtilsMocked.hasAdminRole(accessToken)).thenReturn(true);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> userService.disableUser(accessToken, userId));
+
+        verify(keyCloakService, never()).deleteUser(userId);
+
+    }
+
+
+    @Test
+    void disableUser_Unauthorized()  {
+        UUID userId = UUID.randomUUID();
+        String accessToken = "testToken";
+
+        try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class)) {
+            jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(UUID.randomUUID());
+            when(jwtUtilsMocked.hasAdminRole(accessToken)).thenReturn(false);
+            assertThrows(UnauthorizedException.class, () -> userService.disableUser(accessToken, userId));
+            verify(keyCloakService, never()).disableUser(userId);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
+    }
 
     }

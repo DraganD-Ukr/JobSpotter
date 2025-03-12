@@ -16,7 +16,6 @@ import org.jobspotter.user.exception.ResourceAlreadyExistsException;
 import org.jobspotter.user.exception.ResourceNotFoundException;
 import org.jobspotter.user.exception.UnauthorizedException;
 import org.jobspotter.user.fileUtils.FileUtils;
-import org.jobspotter.user.jwtUtils.JwtUtils;
 import org.jobspotter.user.model.User;
 import org.jobspotter.user.model.UserType;
 import org.jobspotter.user.repository.UserRepository;
@@ -36,7 +35,7 @@ public class UserServiceImpl implements UserService {
     private final S3BucketService s3BucketService;
     private final KeyCloakService keyCloakService;
     private final UserRepository userRepository;
-    private final JwtUtils jwtUtils;
+    private final JWTUtils jwtUtils;
 
     @Override
     public ResponseEntity<HttpStatus> registerUser(UserRegisterRequest userRegisterRequest) {
@@ -101,15 +100,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<UserResponse> getUserById(UUID userId) throws Exception {
-        User user;
+    public ResponseEntity<UserResponse> getUserById(UUID userId) {
 
-
-
-        user = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
-
-
 
         return new ResponseEntity<>(UserResponse.builder()
                 .userId(user.getUserId())
@@ -241,7 +235,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void disableUser(UUID userId) {
+    public void disableUser(String accessToken, UUID userId) throws Exception {
+
+
+        if (!jwtUtils.hasAdminRole(accessToken)) {
+            log.warn("User with Id: {} is not authorized to disable user with Id: {}", JWTUtils.getUserIdFromToken(accessToken), userId);
+            throw new UnauthorizedException("Unauthorized access");
+        }
+
         userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
 
