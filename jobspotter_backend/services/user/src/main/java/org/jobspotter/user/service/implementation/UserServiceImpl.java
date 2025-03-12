@@ -249,6 +249,38 @@ public class UserServiceImpl implements UserService {
         log.info("User with Id: {} disabled successfully", userId);
     }
 
+    @Override
+    public ResponseEntity<UserResponse> updateUserById(String accessToken, UUID userId, UserPatchRequest userPatchRequest) throws Exception {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow( () -> new ResourceNotFoundException("User with id " + userId + " not found"));
+
+        authorizeUser(userId, accessToken);
+
+        if (!updateUserFromPatch(user, userPatchRequest)) {
+            log.info("Request to update user with id: {} was successful, however no changes detected", userId);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+
+        log.info("Updating user with id: {}", userId);
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(UserResponse.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .about(user.getAbout())
+                .createdAt(user.getCreatedAt())
+                .lastUpdatedAt(LocalDateTime.now())
+                .userType(user.getUserType())
+                .build()
+        );
+    }
+
 
     private boolean updateUserFromPatch(User user, UserPatchRequest userPatchRequest){
         boolean updated = false;

@@ -197,7 +197,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException e) {
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
-                "FORBIDDEN",
+                "UNAUTHORIZED",
                 HttpStatus.UNAUTHORIZED.value(),
                 e.getMessage()
         );

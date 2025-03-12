@@ -190,7 +190,7 @@ public class UserController {
 
 
 
-    @Operation(summary = "Update user details")
+    @Operation(summary = "Marked for removal, see (DELETE /api/v1/users/{userId}). Update user details")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User details updated",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponse.class))
@@ -215,6 +215,18 @@ public class UserController {
 
         log.info("Updating user details");
         return userService.updateUser(userId, userPatchRequest);
+
+    }
+
+    @PatchMapping("/{userId}")
+    public ResponseEntity<UserResponse> updateProfileById(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestBody @Valid UserPatchRequest userPatchRequest,
+            @PathVariable UUID userId
+    ) throws Exception {
+
+        log.info("Updating user details");
+        return userService.updateUserById(accessToken, userId, userPatchRequest);
 
     }
 

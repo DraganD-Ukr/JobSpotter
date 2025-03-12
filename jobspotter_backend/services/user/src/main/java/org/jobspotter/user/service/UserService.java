@@ -29,4 +29,6 @@ public interface UserService {
     ResponseEntity<HttpStatus> deleteUser(String accessToken, UUID userId) throws Exception;
 
     void disableUser(UUID userId);
+
+    ResponseEntity<UserResponse> updateUserById(String accessToken, UUID userId, UserPatchRequest userPatchRequest) throws Exception;
 }
