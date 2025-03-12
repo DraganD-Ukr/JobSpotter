@@ -27,4 +27,6 @@ public interface UserService {
     ResponseEntity<Map<UUID, UserBasicInfoResponse>> getAllByIds(List<UUID> userIds);
 
     ResponseEntity<HttpStatus> deleteUser(String accessToken, UUID userId) throws Exception;
+
+    void disableUser(UUID userId);
 }

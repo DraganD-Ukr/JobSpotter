@@ -240,6 +240,15 @@ public class UserServiceImpl implements UserService {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @Override
+    public void disableUser(UUID userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
+
+        keyCloakService.disableUser(userId);
+        log.info("User with Id: {} disabled successfully", userId);
+    }
+
 
     private boolean updateUserFromPatch(User user, UserPatchRequest userPatchRequest){
         boolean updated = false;

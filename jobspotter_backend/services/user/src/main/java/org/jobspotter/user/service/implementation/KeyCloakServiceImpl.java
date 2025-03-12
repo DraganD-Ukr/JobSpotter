@@ -252,6 +252,9 @@ public class KeyCloakServiceImpl implements KeyCloakService {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
                 log.warn("Login failed for user {}: Invalid credentials", loginRequest.getUsername());
                 throw new InvalidCredentialsException("Invalid username or password.");
+            } else if (e.getStatusCode() == HttpStatus.BAD_REQUEST && e.getResponseBodyAsString().contains("Account disabled")) {
+                log.warn("Login failed for user {}: Account disabled", loginRequest.getUsername());
+                throw new UnauthorizedException("Account disabled. Please contact support.");
             } else if (e.getStatusCode().is5xxServerError()) {
                 log.error("Keycloak server error while logging in user {}: {}", loginRequest.getUsername(), e.getStatusCode());
                 throw new ServerException("Authentication service is unavailable. Please try again later.");
@@ -412,6 +415,57 @@ public class KeyCloakServiceImpl implements KeyCloakService {
 
         } catch (Exception e) {
             log.error("(Keycloak)Unexpected error during deleting user user user with id {} - {}", userId, e.getMessage(), e);
+            throw new ServerException("Something went wrong while refreshing the token. Please try again.");
+        }
+    }
+
+    @Override
+    public void disableUser(UUID userId) {
+        log.info("Attempting to disable user with ID: {}", userId);
+
+        String url = localHostPrefixUrl+"/admin/realms/JobSpotter/users/" + userId.toString();
+
+        Map<String, String> reqBody = new HashMap<>();
+        reqBody.put("enabled", "false");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(getAdminToken());
+
+        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(reqBody, headers);
+
+        try {
+            ResponseEntity<Void> responseEntity =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.PUT,
+                            requestEntity,
+                            Void.class
+                    );
+
+            log.info("Successfully disabled user with id {} in Keycloak", userId);
+
+        } catch (RestClientResponseException e) {
+
+            if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
+                log.error("(Keycloak)Bad request while disabling user with id {} - {}",userId, e.getResponseBodyAsString());
+                throw new InvalidRequestException("Invalid request body for one or more fields.");
+
+            } else if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                log.error("(Keycloak):Unauthorized request while disabling user user with id {} - {}", userId, e.getResponseBodyAsString());
+                throw new ServerException("Something went wrong on our end. Please try again later.");
+
+            } else if (e.getStatusCode().is5xxServerError()) {
+                log.error("(Keycloak): Error while disabling user user with id {} - {}", userId, e.getResponseBodyAsString());
+                throw new ServerException("Something went wrong on our end. Please try again later.");
+
+            } else {
+                log.error("(Keycloak)Unexpected error while disabling user: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+                throw new ServerException("Something went wrong on our end. Please try again later.");
+            }
+
+        } catch (Exception e) {
+            log.error("(Keycloak)Unexpected error during disabling user user user with id {} - {}", userId, e.getMessage(), e);
             throw new ServerException("Something went wrong while refreshing the token. Please try again.");
         }
     }
