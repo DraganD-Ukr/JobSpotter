@@ -189,7 +189,7 @@ public class UserController {
 
 
 
-    @Operation(summary = "Update user details")
+    @Operation(summary = "Marked for removal, see (DELETE /api/v1/users/{userId}). Update user details")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User details updated",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponse.class))
@@ -214,6 +214,18 @@ public class UserController {
 
         log.info("Updating user details");
         return userService.updateUser(userId, userPatchRequest);
+
+    }
+
+    @PatchMapping("/{userId}")
+    public ResponseEntity<UserResponse> updateProfileById(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestBody @Valid UserPatchRequest userPatchRequest,
+            @PathVariable UUID userId
+    ) throws Exception {
+
+        log.info("Updating user details");
+        return userService.updateUserById(accessToken, userId, userPatchRequest);
 
     }
 
@@ -273,6 +285,33 @@ public class UserController {
         log.info("Deleting user profile image");
         return userService.deleteProfilePicture(userId);
     }
+
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<HttpStatus> deleteUser(
+            @PathVariable UUID userId,
+            @RequestHeader("Authorization") String accessToken
+    ) throws Exception {
+        log.info("Deleting user");
+        return userService.deleteUser(accessToken, userId);
+    }
+
+
+    @PutMapping("/{userId}/disable")
+    public ResponseEntity<HttpStatus> disableUser(
+            @PathVariable UUID userId,
+            @RequestHeader("Authorization") String accessToken
+    ) throws Exception {
+
+
+        log.info("Disabling user");
+        userService.disableUser(accessToken, userId);
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+
+
 
     private void clearCookie(String name, HttpServletResponse response) {
         Cookie cookie = new Cookie(name, "");

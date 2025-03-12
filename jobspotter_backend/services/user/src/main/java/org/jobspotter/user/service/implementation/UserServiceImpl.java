@@ -14,6 +14,7 @@ import org.jobspotter.user.dto.*;
 import org.jobspotter.user.exception.InvalidFileExtensionException;
 import org.jobspotter.user.exception.ResourceAlreadyExistsException;
 import org.jobspotter.user.exception.ResourceNotFoundException;
+import org.jobspotter.user.exception.UnauthorizedException;
 import org.jobspotter.user.fileUtils.FileUtils;
 import org.jobspotter.user.model.User;
 import org.jobspotter.user.model.UserType;
@@ -34,6 +35,7 @@ public class UserServiceImpl implements UserService {
     private final S3BucketService s3BucketService;
     private final KeyCloakService keyCloakService;
     private final UserRepository userRepository;
+    private final JWTUtils jwtUtils;
 
     @Override
     public ResponseEntity<HttpStatus> registerUser(UserRegisterRequest userRegisterRequest) {
@@ -98,15 +100,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<UserResponse> getUserById(UUID userId) throws Exception {
-        User user;
+    public ResponseEntity<UserResponse> getUserById(UUID userId) {
 
-
-
-        user = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
-
-
 
         return new ResponseEntity<>(UserResponse.builder()
                 .userId(user.getUserId())
@@ -220,6 +217,71 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
+    public ResponseEntity<HttpStatus> deleteUser(String accessToken, UUID userId) throws Exception {
+        authorizeUser(userId, accessToken);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
+
+        userRepository.delete(user);
+        log.info("User with Id: {} deleted successfully from user db", userId);
+
+        keyCloakService.deleteUser(userId);
+
+//        TODO: delete user from all other services(notify job-post service, applicants who applied to jobs, etc)
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @Override
+    public void disableUser(String accessToken, UUID userId) throws Exception {
+
+
+        if (!jwtUtils.hasAdminRole(accessToken)) {
+            log.warn("User with Id: {} is not authorized to disable user with Id: {}", JWTUtils.getUserIdFromToken(accessToken), userId);
+            throw new UnauthorizedException("Unauthorized access");
+        }
+
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
+
+        keyCloakService.disableUser(userId);
+        log.info("User with Id: {} disabled successfully", userId);
+    }
+
+    @Override
+    public ResponseEntity<UserResponse> updateUserById(String accessToken, UUID userId, UserPatchRequest userPatchRequest) throws Exception {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow( () -> new ResourceNotFoundException("User with id " + userId + " not found"));
+
+        authorizeUser(userId, accessToken);
+
+        if (!updateUserFromPatch(user, userPatchRequest)) {
+            log.info("Request to update user with id: {} was successful, however no changes detected", userId);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+
+        log.info("Updating user with id: {}", userId);
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(UserResponse.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .about(user.getAbout())
+                .createdAt(user.getCreatedAt())
+                .lastUpdatedAt(LocalDateTime.now())
+                .userType(user.getUserType())
+                .build()
+        );
+    }
+
 
     private boolean updateUserFromPatch(User user, UserPatchRequest userPatchRequest){
         boolean updated = false;
@@ -263,6 +325,19 @@ public class UserServiceImpl implements UserService {
         }
 
         return updated;
+
+    }
+
+
+    private void authorizeUser(UUID resourceUserId, String accessToken) throws Exception {
+
+        UUID tokenUserId = JWTUtils.getUserIdFromToken(accessToken);
+
+
+        if (!tokenUserId.equals(resourceUserId) && !jwtUtils.hasAdminRole(accessToken)) {
+            log.warn("User with Id: {} is not authorized to access resource with Id: {}", tokenUserId, resourceUserId);
+            throw new UnauthorizedException("Unauthorized access");
+        }
 
     }
 
