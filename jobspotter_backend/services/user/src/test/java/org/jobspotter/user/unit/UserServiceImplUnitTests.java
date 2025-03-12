@@ -5,6 +5,8 @@ import org.jobspotter.user.dto.*;
 import org.jobspotter.user.exception.InvalidCredentialsException;
 import org.jobspotter.user.exception.ResourceAlreadyExistsException;
 import org.jobspotter.user.exception.ResourceNotFoundException;
+import org.jobspotter.user.exception.UnauthorizedException;
+import org.jobspotter.user.jwtUtils.JwtUtils;
 import org.jobspotter.user.model.User;
 import org.jobspotter.user.model.UserType;
 import org.jobspotter.user.repository.UserRepository;
@@ -29,6 +31,8 @@ import static org.mockito.Mockito.*;
 public class UserServiceImplUnitTests {
 
 
+        @Mock
+        private JwtUtils jwtUtilsMocked;
 
         @Mock
         private KeyCloakService keyCloakService;
@@ -237,6 +241,88 @@ public class UserServiceImplUnitTests {
             assertTrue(response.getBody().containsKey(userIds.get(0)));
             assertTrue(response.getBody().containsKey(userIds.get(1)));
         }
+
+        @Test
+        void deleteUser_UserDeleteHimself_success()  {
+            String accessToken = "testToken";
+            UUID userId = UUID.randomUUID();
+
+            try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class)) {
+
+                jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
+                when(userRepository.findById(userId)).thenReturn(Optional.of(User.builder().userId(userId).username("testuser").build()));
+
+                ResponseEntity<HttpStatus> response = userService.deleteUser(accessToken, userId);
+
+                assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+                verify(keyCloakService).deleteUser(userId);
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+    @Test
+    void deleteUser_AdminDeletesUser_success()  {
+        String accessToken = "testToken";
+        UUID userId = UUID.randomUUID();
+
+        try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class)) {
+
+            jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(UUID.randomUUID());
+            when(jwtUtilsMocked.hasAdminRole(accessToken)).thenReturn(true);
+            when(userRepository.findById(userId)).thenReturn(Optional.of(User.builder().userId(userId).username("testuser").build()));
+
+            ResponseEntity<HttpStatus> response = userService.deleteUser(accessToken, userId);
+
+            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+            verify(keyCloakService).deleteUser(userId);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+
+    @Test
+    void deleteUser_UserNotFound()  {
+        String accessToken = "testToken";
+        UUID userId = UUID.randomUUID();
+
+        try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class)) {
+
+            jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(UUID.randomUUID());
+            when(jwtUtilsMocked.hasAdminRole(accessToken)).thenReturn(true);
+            when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class, () -> userService.deleteUser(accessToken, userId));
+            verify(keyCloakService, never()).deleteUser(userId);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    void deleteUser_Unauthorized()  {
+        String accessToken = "testToken";
+        UUID userId = UUID.randomUUID();
+
+        try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class)) {
+
+            jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(UUID.randomUUID());
+            when(jwtUtilsMocked.hasAdminRole(accessToken)).thenReturn(false);
+
+
+            assertThrows(UnauthorizedException.class, () -> userService.deleteUser(accessToken, userId));
+            verify(keyCloakService, never()).deleteUser(userId);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 
     }
