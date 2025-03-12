@@ -74,9 +74,8 @@ public class JobPostController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    //TODO: Return response based on the perspective of the applicant
     @GetMapping("/{id}")
-    public ResponseEntity<JobPostDetailedResponse> getJobPostById(
+    public ResponseEntity<JobPostDetailedResponse> getJobPostDetails(
             @PathVariable Long id
     ) {
         log.info("Getting job post by id: {}", id);
@@ -84,10 +83,13 @@ public class JobPostController {
         return ResponseEntity.ok(jobPostService.getJobPostById(id));
     }
 
+
     //Get job post details with JobPostId
     @Operation(
             summary = "Gets job post details with JobPostId",
-            description = "Get job post details with job post id given in path. "
+            description = "Get job post details with job post id given in path."
+                    + "Only Authorised users are allowed to view the job post."
+                    + "Both the job poster and the admin can view the job post."
                     + "This method Returns a detailed job post information. along with applicants information."
     )
     @ApiResponses(value = {
@@ -95,6 +97,12 @@ public class JobPostController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = MyJobPostSearchResponse.class))
             ),
             @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized: User is not the job poster or an admin",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(responseCode = "500", description = "Internal server error",
@@ -112,9 +120,8 @@ public class JobPostController {
             ) throws Exception {
 
         log.info("Getting my job post details");
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
-        return ResponseEntity.ok(jobPostService.getMyJobPostDetails(userId, id));
+        return ResponseEntity.ok(jobPostService.getMyJobPostDetails(accessToken, id));
     }
 
     //Search job posts using query parameters 'title', 'tag' , 'latitude' , 'longitude' , 'radius' and 'page' and 'size'
@@ -246,10 +253,92 @@ public class JobPostController {
             @RequestBody @Valid JobPostPostRequest jobPostPostRequest
     ) throws URISyntaxException {
         log.info("Creating job post");
-        Long id = jobPostService.createJobPost(jobPostPostRequest, accessToken);
+        Long id = jobPostService.createJobPost(accessToken, jobPostPostRequest);
         return ResponseEntity.created(new URI("/api/v1/job-posts/"+id)).build();
     }
 
+    @Operation(
+            summary = "Update job post",
+            description = "Update a job post. "
+                    + "Only Authorised users are allowed to update the job post."
+                    + "Both the job poster and the admin can update the job post."
+                    + "The job poster can only update the job post only if the job post is open."
+                    + "The admin can update the job post regardless of the job post status."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Successfully updated job post"),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized:  User is not the job poster or an admin",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action.",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<HttpStatus> updateJobPost(
+            @RequestHeader("Authorization") String accessToken,
+
+            @Parameter(description = "Job post id")
+            @PathVariable Long id,
+
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Job post update request")
+            @RequestBody @Valid JobPostPatchRequest jobPostPatchRequest
+    ) throws Exception {
+        log.info("Updating job post with id: {}", id);
+
+        jobPostService.updateJobPost(accessToken, id, jobPostPatchRequest);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Delete job post",
+            description = "Delete a job post. "
+                    + "Only authorized users are allowed to delete the job post."
+                    + "Only the admin can delete the job post only if the job post is open."
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "204", description = "Successfully deleted job post"),
+                    @ApiResponse(responseCode = "400", description = "Bad request",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized:  User is not the admin",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action.",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "500", description = "Internal server error",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    )
+            }
+    )
+    @DeleteMapping("/{id}")
+    public ResponseEntity<HttpStatus> deleteJobPost(
+            @RequestHeader("Authorization") String accessToken,
+
+            @Parameter(description = "Job post id")
+            @PathVariable Long id
+    ) throws Exception {
+        log.info("Deleting job post with id: {}", id);
+
+        jobPostService.deleteJobPost(accessToken, id);
+
+        return ResponseEntity.noContent().build();
+    }
 
     @Operation(
             summary = "Apply to job post",
@@ -325,6 +414,98 @@ public class JobPostController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(
+            summary = "Update applicant message",
+            description = "Update the message of an applicant. "
+                    + "Only authorized users are allowed to update the message."
+                    + "Both the applicant and admin can update the message."
+                    + "The applicant can update the message only if the job post is open."
+                    + "The admin can update the message regardless of the job post status."
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "204", description = "Successfully updated applicant message"),
+                    @ApiResponse(responseCode = "400", description = "Bad request",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized: User is not an applicant or an admin",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action.",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "404", description = "Not Found: Job post or applicant not found",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "500", description = "Internal server error",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    )
+            }
+    )
+    @PutMapping("/job-post-worked-on/{jobPostId}/applicants/{applicantId}/message")
+    public ResponseEntity<HttpStatus> updateApplicantMessage(
+            @RequestHeader("Authorization") String accessToken,
+
+            @Parameter(description = "Job post id")
+            @PathVariable Long jobPostId,
+
+            @Parameter(description = "Applicant id")
+            @PathVariable Long applicantId,
+
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Applicant message")
+            @RequestBody String message
+    ) throws Exception {
+        log.info("Updating applicant message");
+
+        jobPostService.updateApplicantMessage(accessToken, jobPostId, applicantId, message);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Delete applicant",
+            description = "Delete an applicant. "
+                    + "Only authorized users are allowed to delete the applicant."
+                    + "This endpoint can only be used by the admin"
+                    + "Removes the job poster from the list of applicants."
+                    + "The Admin can only Delete the applicant only if the job post is open."
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "204", description = "Successfully deleted applicant"),
+                    @ApiResponse(responseCode = "400", description = "Bad request",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized: User is not an admin",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action.",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "404", description = "Not Found: Job post or applicant not found",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(responseCode = "500", description = "Internal server error",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+                    )
+            }
+    )
+    @DeleteMapping("/my-job-posts/{jobPostId}/applicants/{applicantId}")
+    public ResponseEntity<HttpStatus> deleteApplicant(
+            @RequestHeader("Authorization") String accessToken,
+
+            @Parameter(description = "Job post id")
+            @PathVariable Long jobPostId,
+
+            @Parameter(description = "Applicant id")
+            @PathVariable Long applicantId
+    ) throws Exception {
+        log.info("Deleting applicant with id: {} from Job Post with id: {}", applicantId, jobPostId);
+
+        jobPostService.deleteApplicant(accessToken, jobPostId, applicantId);
+
+        return ResponseEntity.noContent().build();
+    }
 
     @Operation(
             summary = "Start job post. Will be marked as In Progress",
@@ -338,7 +519,7 @@ public class JobPostController {
             @ApiResponse(responseCode = "401", description = "Unauthorized: User is not the owner of the job post",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
-            @ApiResponse(responseCode = "403", description = "Forbidden: Job post is not open",
+            @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action.",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(responseCode = "500", description = "Internal server error",
@@ -364,17 +545,20 @@ public class JobPostController {
 
     @Operation(
             summary = "Cancel job post. Will be marked as CANCELLED",
-            description = "Cancel a job post. The job post to cancel needs to have status OPEN."
+            description = "Cancel a job post." +
+                    "Both the job poster and the admin can cancel the job post." +
+                    "A Job poster can only cancel the job post if the job post is open." +
+                    "The admin can cancel the job post regardless of the job post status."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Successfully cancelled jobPost"),
             @ApiResponse(responseCode = "400", description = "Bad request",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
-            @ApiResponse(responseCode = "401", description = "Unauthorized: User is not the owner of the job post",
+            @ApiResponse(responseCode = "401", description = "Unauthorized:  User is not the job poster or an admin",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
-            @ApiResponse(responseCode = "403", description = "Forbidden: Job post is not open",
+            @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action.",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
@@ -384,18 +568,17 @@ public class JobPostController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    @PutMapping("/my-job-posts/{id}/cancel")
+    @PutMapping("/my-job-posts/{jobPostId}/cancel")
     public ResponseEntity<HttpStatus> cancelJobPost(
             @RequestHeader("Authorization") String accessToken,
 
             @Parameter(description = "Job post id")
-            @PathVariable Long id
+            @PathVariable Long jobPostId
     ) throws Exception {
 
-        log.info("Cancelling job post");
+        log.info("Cancelling job post with id: {}", jobPostId);
 
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
-        jobPostService.cancelJobPost(userId, id);
+        jobPostService.cancelJobPost(accessToken, jobPostId);
 
         return ResponseEntity.noContent().build();
     }
@@ -414,7 +597,7 @@ public class JobPostController {
             @ApiResponse(responseCode = "401", description = "Unauthorized: User is not the owner of the job post",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
-            @ApiResponse(responseCode = "403", description = "Forbidden: Job post is not in progress",
+            @ApiResponse(responseCode = "403", description = "Forbidden: JobStatus does not allow for this action",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             ),
             @ApiResponse(responseCode = "404", description = "Not Found: Job post not found",
