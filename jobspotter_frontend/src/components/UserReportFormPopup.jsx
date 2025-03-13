@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { ThemeContext } from "./ThemeContext";
 import { FaExclamationTriangle, FaCheckCircle } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 export function UserReportFormPopup() {
   const { darkMode } = useContext(ThemeContext);
@@ -131,6 +132,21 @@ export function UserReportFormPopup() {
     }
   };
 
+
+  // 4: Redirect after success message is shown
+  const navigate = useNavigate();
+
+// Redirect after success message is shown
+useEffect(() => {
+  if (successMessage) {
+    const timer = setTimeout(() => {
+      navigate(-1); // Go back to the previous page
+    }, 2000);
+
+    return () => clearTimeout(timer); // Cleanup timeout on unmount
+  }
+}, [successMessage, navigate]);
+
   return (
     <div
       className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${
@@ -176,12 +192,12 @@ export function UserReportFormPopup() {
             type="text"
             id="reportedUserId"
             value={reportedUserId}
-            onChange={(e) => setReportedUserId(e.target.value)}
+            readOnly={reportedUserId !== ""} 
             className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
               darkMode
                 ? "bg-gray-800 border-gray-600 text-white"
                 : "bg-gray-100 border-gray-300 text-gray-900"
-            }`}
+            } ${reportedUserId !== "" ? "cursor-not-allowed bg-gray-300 text-gray-500" : ""}`}
           />
           {userDetails && (
             <div className="mt-2 text-sm text-gray-500">
@@ -210,12 +226,12 @@ export function UserReportFormPopup() {
             type="text"
             id="reportedJobPostId"
             value={reportedJobPostId}
-            onChange={(e) => setReportedJobPostId(e.target.value)}
+            readOnly={reportedJobPostId !== ""} 
             className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
               darkMode
                 ? "bg-gray-800 border-gray-600 text-white"
                 : "bg-gray-100 border-gray-300 text-gray-900"
-            }`}
+            } ${reportedUserId !== "" ? "cursor-not-allowed caret-transparent bg-gray-300 text-gray-500" : ""}`}
           />
         </div>
 
@@ -231,12 +247,12 @@ export function UserReportFormPopup() {
             type="text"
             id="reportedApplicantId"
             value={reportedApplicantId}
-            onChange={(e) => setReportedApplicantId(e.target.value)}
+            readOnly
             className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
               darkMode
                 ? "bg-gray-800 border-gray-600 text-white"
                 : "bg-gray-100 border-gray-300 text-gray-900"
-            }`}
+            } ${reportedUserId !== "" ? "cursor-not-allowed caret-transparent bg-gray-300 text-gray-500" : ""}`}
           />
         </div>
 
@@ -249,12 +265,12 @@ export function UserReportFormPopup() {
             type="text"
             id="reportedReviewId"
             value={reportedReviewId}
-            onChange={(e) => setReportedReviewId(e.target.value)}
+            readOnly
             className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
               darkMode
                 ? "bg-gray-800 border-gray-600 text-white"
                 : "bg-gray-100 border-gray-300 text-gray-900"
-            }`}
+            } ${reportedUserId !== "" ? "cursor-not-allowed caret-transparent  bg-gray-300 text-gray-500" : ""}`}
           />
         </div>
 
