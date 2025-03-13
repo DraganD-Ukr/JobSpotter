@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import NotificationPopup from "./NotificationPopup";
 
@@ -6,30 +6,46 @@ function Notification() {
   // Controls whether the popup is visible
   const [isPopupVisible, setIsPopupVisible] = useState(false);
 
-  const [notifications, setNotifications] = useState([
-    {
-      title: "Welcome to JobSpotter!",
-      message: "Thanks for joining us!",
-      time: "2 min ago"
-    },
-    {
-      title: "Job Alert",
-      message: "A new job post matches your skills.",
-      time: "5 min ago"
-    }
-  ]);
+  const [notifications, setNotifications] = useState([]);
 
-  // Toggle popup
+  useEffect(() => {
+    // Initialize the EventSource connection to listen for notifications
+    const eventSource = new EventSource("/api/v1/notifications/stream", {
+      withCredentials: true, // Ensure cookies are sent with the request if necessary
+    });
+
+    eventSource.onopen = () => {
+      console.log("Connection to notification stream established.");
+    };
+
+    eventSource.addEventListener("notification", (event) => {
+      const newNotification = JSON.parse(event.data); // Parse the incoming notification data
+      setNotifications((prevNotifications) => [...prevNotifications, newNotification]); // Add the new notification to the state
+    });
+
+    // Handle any errors during the connection
+    eventSource.onerror = (err) => {
+      console.error("EventSource failed:", err);
+      eventSource.close();
+    };
+
+    // Clean up when the component is unmounted
+    return () => {
+      eventSource.close();
+    };
+  }, []);
+
+  // Toggle popup visibility
   const togglePopup = () => {
     setIsPopupVisible((prev) => !prev);
   };
 
-  // Close popup
+  // Close the notification popup
   const handleCloseNotificationPopup = () => {
     setIsPopupVisible(false);
   };
 
-  // Mark all as read 
+  // Mark all notifications as read
   const handleMarkAllRead = () => {
     setNotifications([]);
   };
@@ -48,8 +64,8 @@ function Notification() {
       <NotificationPopup
         isNotificationPopupVisible={isPopupVisible}
         notifications={notifications}
-        errorMessage=""               
-        errorBoxAnimation={{}}        
+        errorMessage=""
+        errorBoxAnimation={{}}
         handleCloseNotificationPopup={handleCloseNotificationPopup}
         handleMarkAllRead={handleMarkAllRead}
       />
