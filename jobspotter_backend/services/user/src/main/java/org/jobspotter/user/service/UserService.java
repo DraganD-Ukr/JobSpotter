@@ -25,4 +25,10 @@ public interface UserService {
     ResponseEntity<HttpStatus> deleteProfilePicture(UUID userId) throws Exception;
 
     ResponseEntity<Map<UUID, UserBasicInfoResponse>> getAllByIds(List<UUID> userIds);
+
+    ResponseEntity<HttpStatus> deleteUser(String accessToken, UUID userId) throws Exception;
+
+    void disableUser(String accessToken, UUID userId) throws Exception;
+
+    ResponseEntity<UserResponse> updateUserById(String accessToken, UUID userId, UserPatchRequest userPatchRequest) throws Exception;
 }

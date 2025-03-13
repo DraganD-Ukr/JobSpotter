@@ -22,4 +22,8 @@ public interface KeyCloakService {
     HttpStatus logoutUser(UUID userId);
 
     HttpStatus updateUser(KeycloakUserPutRequest userPutRequest, UUID userId);
+
+    void deleteUser(UUID userId);
+
+    void disableUser(UUID userId);
 }
