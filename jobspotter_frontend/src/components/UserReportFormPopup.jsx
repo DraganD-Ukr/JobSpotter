@@ -93,16 +93,10 @@ export function UserReportFormPopup() {
 
     // Build payload
     const payload = {
-      reportedUserId: reportedUserId ? parseInt(reportedUserId, 10) : undefined,
-      reportedJobPostId: reportedJobPostId
-        ? parseInt(reportedJobPostId, 10)
-        : undefined,
-      reportedApplicantId: reportedApplicantId
-        ? parseInt(reportedApplicantId, 10)
-        : undefined,
-      reportedReviewId: reportedReviewId
-        ? parseInt(reportedReviewId, 10)
-        : undefined,
+      reportedUserId,
+      reportedJobPostId,
+      reportedApplicantId,
+      reportedReviewId,
       reportMessage,
       reportTags,
     };
@@ -234,7 +228,7 @@ export function UserReportFormPopup() {
             reportedApplicantId
           </label>
           <input
-            type="number"
+            type="text"
             id="reportedApplicantId"
             value={reportedApplicantId}
             onChange={(e) => setReportedApplicantId(e.target.value)}
@@ -252,7 +246,7 @@ export function UserReportFormPopup() {
             reportedReviewId
           </label>
           <input
-            type="number"
+            type="text"
             id="reportedReviewId"
             value={reportedReviewId}
             onChange={(e) => setReportedReviewId(e.target.value)}

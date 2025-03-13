@@ -33,7 +33,7 @@ console.log("jobpostid",jobPostId)
     e.preventDefault();
     e.stopPropagation();
     if (isJobOpen && localStatus !== 'REJECTED') {
-      handleApplicantAction(applicant.applicantId, "reject");
+      handleApplicantAction(applicant.applicantId, "rejected");
       setLocalStatus('REJECTED');
     }
   };
