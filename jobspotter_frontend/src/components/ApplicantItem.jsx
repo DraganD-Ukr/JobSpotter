@@ -10,11 +10,12 @@ const ApplicantItem = React.memo(({
   handleApplicantAction,
   isJobOpen,
   applicantCounts,
-  jobMaxApplicants
+  jobMaxApplicants,
+  jobPostId
 }) => {
   const { darkMode } = useContext(ThemeContext);
   const [localStatus, setLocalStatus] = useState(applicant.status);
-
+console.log("jobpostid",jobPostId)
   // Modified functions: Added event parameter to prevent navigation when buttons are clicked.
   const onApprove = (e) => {
     e.preventDefault();
@@ -100,6 +101,16 @@ const ApplicantItem = React.memo(({
             </>
           )}
         </div>
+        <div className="flex justify-end mt-2">
+                        <Link 
+                          to={`/userreportformpopup?jobId=${jobPostId }&reportedUserId=${applicant.userId }&applicantId=${applicant.applicantId}`}
+                          className="text-red-500 hover:text-red-700"
+                          title="Report this job post"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <FaTimesCircle size={20} />
+                        </Link>
+                      </div>
       </Link>
     </div>
   );

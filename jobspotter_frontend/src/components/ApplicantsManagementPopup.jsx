@@ -25,10 +25,11 @@ const ApplicantsManagementPopup = React.memo(({
     currentPage,
     totalPages,
     job, 
-    isJobOpen
+    isJobOpen,
+    jobPostId
 }) => {
     const { darkMode } = useContext(ThemeContext);
-
+console.log("jobpostid",jobPostId)
     if (!isApplicantsPopupVisible) {
         return null;
     }
@@ -86,6 +87,7 @@ const ApplicantsManagementPopup = React.memo(({
                                         isJobOpen={isJobOpen}
                                         applicantCounts={applicantCounts}
                                         jobMaxApplicants={job?.maxApplicants}
+                                        jobPostId={jobPostId}
                                     />
                                 ))}
                             </div>
@@ -105,6 +107,7 @@ const ApplicantsManagementPopup = React.memo(({
                                         isJobOpen={isJobOpen}
                                         applicantCounts={applicantCounts}
                                         jobMaxApplicants={job?.maxApplicants}
+                                        jobPostId={jobPostId}
                                     />
                                 ))}
                             </div>
@@ -124,6 +127,7 @@ const ApplicantsManagementPopup = React.memo(({
                                         isJobOpen={isJobOpen}
                                         applicantCounts={applicantCounts}
                                         jobMaxApplicants={job?.maxApplicants}
+                                        jobPostId={jobPostId}
                                     />
                                 ))}
                             </div>

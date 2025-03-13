@@ -1,22 +1,28 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { ThemeContext } from "./ThemeContext"; 
+import { ThemeContext } from "./ThemeContext";
 import { FaExclamationTriangle, FaCheckCircle } from "react-icons/fa";
 
 export function UserReportFormPopup() {
   const { darkMode } = useContext(ThemeContext);
   const location = useLocation();
 
-  // Form fields
-  const [reportSubjectType, setReportSubjectType] = useState("");
-  const [reportSubjectId, setReportSubjectId] = useState("");
+  // Fields for the report
   const [reportedUserId, setReportedUserId] = useState("");
-  const [reviewId, setReviewId] = useState("");
-  const [reviewMessage, setReviewMessage] = useState("");
+  const [reportedJobPostId, setReportedJobPostId] = useState("");
+  const [reportedApplicantId, setReportedApplicantId] = useState("");
+  const [reportedReviewId, setReportedReviewId] = useState("");
   const [reportMessage, setReportMessage] = useState("");
   const [reportTags, setReportTags] = useState([]);
 
-  // Possible tags (adjust as needed)
+  // UI feedback
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Fetched user details
+  const [userDetails, setUserDetails] = useState(null);
+
+  // Possible tags
   const possibleTags = [
     "IMPERSONATION",
     "SPAM",
@@ -26,33 +32,60 @@ export function UserReportFormPopup() {
     "OTHER",
   ];
 
-  // UI feedback
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-
-  // On mount, parse query params (jobId, creatorId, etc.) and lock them in
+  // 1) Parse query params
   useEffect(() => {
     const params = new URLSearchParams(location.search);
+
     const jobId = params.get("jobId");
-    const creatorId = params.get("creatorId");
+    const userId = params.get("reportedUserId"); // must be exactly ?reportedUserId=...
+    const applicantId = params.get("applicantId");
+    const reviewId = params.get("reviewId");
 
-    // If we're reporting a job post, set these fields:
-    setReportSubjectType("JOB_POST");  // locked to "JOB_POST"
-    if (jobId) setReportSubjectId(jobId);
-    if (creatorId) setReportedUserId(creatorId);
+    console.log("Parsed reportedUserId:", userId);
 
+    if (jobId) setReportedJobPostId(jobId);
+    if (userId) setReportedUserId(userId);
+    if (applicantId) setReportedApplicantId(applicantId);
+    if (reviewId) setReportedReviewId(reviewId);
   }, [location]);
 
-  // Toggle tags in state
+  // 2) Fetch user info
+  useEffect(() => {
+    if (!reportedUserId) {
+      setUserDetails(null);
+      return;
+    }
+
+    fetch(`/api/v1/users/${reportedUserId}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Error fetching user details.");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setUserDetails(data);
+      })
+      .catch((error) => {
+        console.error(error);
+        setUserDetails(null);
+      });
+  }, [reportedUserId]);
+
+  // Toggle selected tags
   const handleTagChange = (tag) => {
-    setReportTags((prevTags) =>
-      prevTags.includes(tag)
-        ? prevTags.filter((t) => t !== tag)
-        : [...prevTags, tag]
+    setReportTags((prev) =>
+      prev.includes(tag)
+        ? prev.filter((t) => t !== tag)
+        : [...prev, tag]
     );
   };
 
-  // Submit form
+  // 3) Submit => POST /api/v1/reports
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
@@ -60,20 +93,27 @@ export function UserReportFormPopup() {
 
     // Build payload
     const payload = {
-      reportSubjectType,
-      reportSubjectId: reportSubjectId ? parseInt(reportSubjectId, 10) : undefined,
       reportedUserId: reportedUserId ? parseInt(reportedUserId, 10) : undefined,
-      reviewId: reviewId ? parseInt(reviewId, 10) : undefined,
-      reviewMessage,
+      reportedJobPostId: reportedJobPostId
+        ? parseInt(reportedJobPostId, 10)
+        : undefined,
+      reportedApplicantId: reportedApplicantId
+        ? parseInt(reportedApplicantId, 10)
+        : undefined,
+      reportedReviewId: reportedReviewId
+        ? parseInt(reportedReviewId, 10)
+        : undefined,
       reportMessage,
       reportTags,
     };
 
     try {
+      const token = localStorage.getItem("token") || "";
       const response = await fetch("/api/v1/reports", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
         },
         credentials: "include",
         body: JSON.stringify(payload),
@@ -83,12 +123,11 @@ export function UserReportFormPopup() {
         throw new Error(`Error creating report: ${response.statusText}`);
       }
 
-      // Clear the form upon success
-      setReportSubjectType("");
-      setReportSubjectId("");
+      // Clear fields
       setReportedUserId("");
-      setReviewId("");
-      setReviewMessage("");
+      setReportedJobPostId("");
+      setReportedApplicantId("");
+      setReportedReviewId("");
       setReportMessage("");
       setReportTags([]);
       setSuccessMessage("Report created successfully!");
@@ -134,104 +173,101 @@ export function UserReportFormPopup() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* reportSubjectType - locked to "JOB_POST" */}
+        {/* reportedUserId */}
         <div>
-          <label className="block font-medium mb-1" htmlFor="reportSubjectType">
-            Report Subject Type
+          <label className="block font-medium mb-1" htmlFor="reportedUserId">
+            reported UserId
           </label>
           <input
             type="text"
-            id="reportSubjectType"
-            value={reportSubjectType}
-            readOnly // user can't edit
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
-              darkMode
-                ? "bg-gray-800 border-gray-600 text-white"
-                : "bg-gray-100 border-gray-300 text-gray-900"
-            }`}
-          />
-        </div>
-
-        {/* reportSubjectId - readOnly */}
-        <div>
-          <label className="block font-medium mb-1" htmlFor="reportSubjectId">
-            Report Subject ID (Job Post ID)
-          </label>
-          <input
-            type="number"
-            id="reportSubjectId"
-            value={reportSubjectId}
-            readOnly // user can't edit
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
-              darkMode
-                ? "bg-gray-800 border-gray-600 text-white"
-                : "bg-gray-100 border-gray-300 text-gray-900"
-            }`}
-            placeholder="Job ID"
-          />
-        </div>
-
-        {/* reportedUserId - readOnly */}
-        <div style={{ display: "none" }}>
-          <label className="block font-medium mb-1" htmlFor="reportedUserId">
-            Job Creator ID (cannot change)
-          </label>
-          <input
-            type="number"
             id="reportedUserId"
             value={reportedUserId}
-            readOnly // user can't edit
+            onChange={(e) => setReportedUserId(e.target.value)}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
               darkMode
                 ? "bg-gray-800 border-gray-600 text-white"
                 : "bg-gray-100 border-gray-300 text-gray-900"
             }`}
-            placeholder="Creator ID"
           />
+          {userDetails && (
+            <div className="mt-2 text-sm text-gray-500">
+              <p>
+                <strong>First Name:</strong> {userDetails.firstName || "N/A"}
+              </p>
+              <p>
+                <strong>Last Name:</strong> {userDetails.lastName || "N/A"}
+              </p>
+              <p>
+                <strong>Username:</strong> {userDetails.username || "N/A"}
+              </p>
+              <p>
+                <strong>Email:</strong> {userDetails.email || "N/A"}
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* reviewId (optional) */}
-        <div style={{ display: "none" }}>
-          <label className="block font-medium mb-1" htmlFor="reviewId">
-            Review ID (Optional)
+        {/* reportedJobPostId */}
+        <div>
+          <label className="block font-medium mb-1" htmlFor="reportedJobPostId">
+            reportedJobPostId
           </label>
           <input
-            type="number"
-            id="reviewId"
-            value={reviewId}
-            onChange={(e) => setReviewId(e.target.value)}
+            type="text"
+            id="reportedJobPostId"
+            value={reportedJobPostId}
+            onChange={(e) => setReportedJobPostId(e.target.value)}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
               darkMode
                 ? "bg-gray-800 border-gray-600 text-white"
-                : "bg-white border-gray-300 text-gray-900"
+                : "bg-gray-100 border-gray-300 text-gray-900"
             }`}
-            placeholder="If applicable"
           />
         </div>
 
-        {/* reviewMessage (optional) */}
-        <div style={{ display: "none" }}>
-          <label className="block font-medium mb-1" htmlFor="reviewMessage">
-            Review Message (Optional)
+        {/* reportedApplicantId */}
+        <div>
+          <label
+            className="block font-medium mb-1"
+            htmlFor="reportedApplicantId"
+          >
+            reportedApplicantId
           </label>
-          <textarea
-            id="reviewMessage"
-            value={reviewMessage}
-            onChange={(e) => setReviewMessage(e.target.value)}
-            rows={3}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none resize-none ${
+          <input
+            type="number"
+            id="reportedApplicantId"
+            value={reportedApplicantId}
+            onChange={(e) => setReportedApplicantId(e.target.value)}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
               darkMode
                 ? "bg-gray-800 border-gray-600 text-white"
-                : "bg-white border-gray-300 text-gray-900"
+                : "bg-gray-100 border-gray-300 text-gray-900"
             }`}
-            placeholder="Paste the review content or summary here (if relevant)"
+          />
+        </div>
+
+        {/* reportedReviewId */}
+        <div>
+          <label className="block font-medium mb-1" htmlFor="reportedReviewId">
+            reportedReviewId
+          </label>
+          <input
+            type="number"
+            id="reportedReviewId"
+            value={reportedReviewId}
+            onChange={(e) => setReportedReviewId(e.target.value)}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
+              darkMode
+                ? "bg-gray-800 border-gray-600 text-white"
+                : "bg-gray-100 border-gray-300 text-gray-900"
+            }`}
           />
         </div>
 
         {/* reportMessage */}
         <div>
           <label className="block font-medium mb-1" htmlFor="reportMessage">
-            Report Message
+            reportMessage
           </label>
           <textarea
             id="reportMessage"
@@ -243,16 +279,12 @@ export function UserReportFormPopup() {
                 ? "bg-gray-800 border-gray-600 text-white"
                 : "bg-white border-gray-300 text-gray-900"
             }`}
-            placeholder="Explain why you are creating this report..."
-            required
           />
         </div>
 
         {/* reportTags */}
         <div>
-          <span className="block font-medium mb-1">
-            Report Tags (select any that apply):
-          </span>
+          <label className="block font-medium mb-1">reportTags</label>
           <div className="flex flex-wrap gap-2">
             {possibleTags.map((tag) => (
               <label

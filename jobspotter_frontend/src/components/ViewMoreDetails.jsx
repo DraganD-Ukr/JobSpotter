@@ -655,6 +655,7 @@ export function ViewMoreDetails() {
         totalPages={totalPages}
         job={job}
         isJobOpen={job.status === "OPEN"}
+        jobPostId={job.jobPostId} 
       />
     </div>
   );

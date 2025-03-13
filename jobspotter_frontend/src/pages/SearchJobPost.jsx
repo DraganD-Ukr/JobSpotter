@@ -661,8 +661,8 @@ export function SearchJobPost() {
 
 
                       <div className="flex justify-end mt-2">
-                        <Link
-                          to={`/userreportformpopup?jobId=${job.jobPostId || ""}&creatorId=${job.creator?.id || ""}&applicantId=${job.applicant?.id || ""}&reviewId=${job.review?.id || ""}`}
+                        <Link 
+                          to={`/userreportformpopup?jobId=${job.jobPostId || ""}&reportedUserId=${job.jobPosterId }`}
                           className="text-red-500 hover:text-red-700"
                           title="Report this job post"
                           onClick={(e) => e.stopPropagation()}
