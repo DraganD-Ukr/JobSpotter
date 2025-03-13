@@ -33,7 +33,6 @@ public class Notification {
 
     private boolean isRead;
 
-    @CreatedDate // Automatically set when document is created
     private LocalDateTime createdAt;
 
     private NotificationType type;

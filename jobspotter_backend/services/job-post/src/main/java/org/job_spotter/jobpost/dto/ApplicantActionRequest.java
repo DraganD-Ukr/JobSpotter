@@ -30,7 +30,6 @@ public class ApplicantActionRequest {
     @Schema(description = "The status of the applicant", example = "CONFIRMED", allowableValues = {"CONFIRMED", "REJECTED"})
     @NotNull
     @Enumerated(EnumType.STRING)
-    @JsonDeserialize(using = ApplicantStatusDeserializer.class)
     private ApplicantStatus status;
 
 }

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -46,5 +47,7 @@ public class Notification {
      * The action to be performed by the user. E.g APPLY, VIEW
      */
     private String action;
+
+    private LocalDateTime createdAt;
 
 }

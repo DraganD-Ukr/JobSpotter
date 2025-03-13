@@ -27,6 +27,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -333,6 +334,7 @@ public class JobPostImpl implements JobPostService {
                     .jobPostId(jobPost.getJobPostId())
                     .actionUrl("/job-posts/my-job-posts/" + jobPost.getJobPostId())
                     .action("VIEW")
+                    .createdAt(LocalDateTime.now())
                     .build(), KafkaTopic.JOB_POST_CREATE);
 
             return jobPost.getJobPostId();
@@ -474,6 +476,7 @@ public class JobPostImpl implements JobPostService {
                 .jobPostId(jobPost.getJobPostId())
                 .actionUrl("/job-posts/" + jobPost.getJobPostId())
                 .action("VIEW")
+                .createdAt(LocalDateTime.now())
                 .build(), KafkaTopic.APPLICANT_APPLIED);
 
         notificationService.sendNotification(Notification.builder()
@@ -482,6 +485,7 @@ public class JobPostImpl implements JobPostService {
                 .jobPostId(jobPost.getJobPostId())
                 .actionUrl("/job-posts/my-job-posts/" + jobPost.getJobPostId())
                 .action("VIEW")
+                .createdAt(LocalDateTime.now())
                 .build(), KafkaTopic.APPLICANT_APPLIED);
 
         return HttpStatus.CREATED;
@@ -534,10 +538,12 @@ public class JobPostImpl implements JobPostService {
             } else if (requestedStatus == ApplicantStatus.REJECTED) {
                 // If the applicant is rejected, update their status
                 applicant.setStatus(ApplicantStatus.REJECTED);
-            } else {
+            } else if (requestedStatus == ApplicantStatus.PENDING) {
                 // If an invalid status is provided
-                log.error("Invalid applicant status in the action request: {}", requestedStatus);
-                throw new IllegalArgumentException("Invalid applicant status: " + requestedStatus);
+                applicant.setStatus(ApplicantStatus.PENDING);
+            } else {
+                log.warn("Could not process applicant action: Invalid status");
+                throw new InvalidRequestException("Invalid status provided.");
             }
         }
 
@@ -551,6 +557,7 @@ public class JobPostImpl implements JobPostService {
                     .jobPostId(jobPost.getJobPostId())
                     .actionUrl("/job-posts/my-job-posts/" + jobPost.getJobPostId())
                     .action("VIEW")
+                    .createdAt(LocalDateTime.now())
                     .build(), KafkaTopic.JOB_POST_START);
 
             jobPost.getApplicants().stream()
@@ -561,6 +568,7 @@ public class JobPostImpl implements JobPostService {
                             .jobPostId(jobPost.getJobPostId())
                             .actionUrl("/job-posts/" + jobPost.getJobPostId())
                             .action("VIEW")
+                            .createdAt(LocalDateTime.now())
                             .build(), KafkaTopic.APPLICANT_CONFIRMED)
                     );
 
@@ -700,6 +708,7 @@ public class JobPostImpl implements JobPostService {
                 .jobPostId(jobPost.getJobPostId())
                 .actionUrl("/job-posts/my-job-posts/" + jobPost.getJobPostId())
                 .action("VIEW")
+                .createdAt(LocalDateTime.now())
                 .build(), KafkaTopic.JOB_POST_START);
 
         applicants.stream()
@@ -710,6 +719,7 @@ public class JobPostImpl implements JobPostService {
                         .jobPostId(jobPost.getJobPostId())
                         .actionUrl("/job-posts/" + jobPost.getJobPostId())
                         .action("VIEW")
+                        .createdAt(LocalDateTime.now())
                         .build(), KafkaTopic.APPLICANT_CONFIRMED)
                 );
 
@@ -749,6 +759,7 @@ public class JobPostImpl implements JobPostService {
                 .jobPostId(jobPost.getJobPostId())
                 .actionUrl("/job-posts/my-job-posts/" + jobPost.getJobPostId())
                 .action("VIEW")
+                .createdAt(LocalDateTime.now())
                 .build(), KafkaTopic.JOB_POST_CANCEL);
 
         log.info("Job post cancelled successfully");
@@ -777,6 +788,7 @@ public class JobPostImpl implements JobPostService {
                 .jobPostId(jobPost.getJobPostId())
                 .actionUrl("/job-posts/my-job-posts/" + jobPost.getJobPostId())
                 .action("VIEW")
+                .createdAt(LocalDateTime.now())
                 .build(), KafkaTopic.JOB_POST_FINISH);
 
         jobPost.getApplicants().forEach(applicant -> notificationService.sendNotification(Notification.builder()
@@ -785,6 +797,7 @@ public class JobPostImpl implements JobPostService {
                 .jobPostId(jobPost.getJobPostId())
                 .actionUrl("/job-posts/" + jobPost.getJobPostId())
                 .action("VIEW")
+                .createdAt(LocalDateTime.now())
                 .build(), KafkaTopic.JOB_POST_FINISH)
         );
 
