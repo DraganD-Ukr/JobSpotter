@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import NotificationPopup from "./NotificationPopup";
+import axios from 'axios'; 
+
 
 function Notification() {
   // Controls whether the popup is visible
   const [isPopupVisible, setIsPopupVisible] = useState(false);
 
   const [notifications, setNotifications] = useState([]);
+
+  // Track unread notifications count
+  const unreadNotifications = notifications.filter(notif => !notif.read);
+  const unreadCount = unreadNotifications.length;
 
   useEffect(() => {
     // Initialize the EventSource connection to listen for notifications
@@ -38,6 +44,15 @@ function Notification() {
   // Toggle popup visibility
   const togglePopup = () => {
     setIsPopupVisible((prev) => !prev);
+    // Mark notifications as read when the user opens the popup
+    if (!isPopupVisible) {
+      setNotifications((prevNotifications) =>
+        prevNotifications.map((notification) => ({
+          ...notification,
+          read: true,
+        }))
+      );
+    }
   };
 
   // Close the notification popup
@@ -45,9 +60,23 @@ function Notification() {
     setIsPopupVisible(false);
   };
 
-  // Mark all notifications as read
-  const handleMarkAllRead = () => {
-    setNotifications([]);
+  // Mark notification as read and send an API request to update status
+  const handleMarkAsRead = async (notificationID) => {
+    console.log(notifications);
+
+    try {
+      // API request to mark the notification as read on the server
+      await axios.get(`/api/v1/notifications/${notificationID}/mark-read-or-unread`, {
+        read: true,
+      });
+
+      // Remove the notification from the state after marking as read
+      setNotifications((prevNotifications) =>
+        prevNotifications.filter((notification) => notification.notificationID !== notificationID)
+      );
+    } catch (error) {
+      console.error("Error marking notification as read", error);
+    }
   };
 
   return (
@@ -58,6 +87,12 @@ function Notification() {
         className="bg-gradient-to-r from-green-500 to-lime-500 p-2 rounded-full shadow hover:opacity-80 transition duration-300"
       >
         <Bell size={24} className="text-white" />
+        {/* Unread Notifications Badge */}
+        {unreadCount > 0 && (
+          <div className="absolute top-0 right-0 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
+            {unreadCount}
+          </div>
+        )}
       </button>
 
       {/* Notification Popup */}
@@ -67,7 +102,8 @@ function Notification() {
         errorMessage=""
         errorBoxAnimation={{}}
         handleCloseNotificationPopup={handleCloseNotificationPopup}
-        handleMarkAllRead={handleMarkAllRead}
+        handleMarkAllRead={() => setNotifications([])}
+        handleMarkAsRead={handleMarkAsRead}
       />
     </div>
   );

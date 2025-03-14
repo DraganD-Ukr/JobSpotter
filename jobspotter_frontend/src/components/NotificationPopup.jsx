@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { ThemeContext } from "./ThemeContext";
-import { FaExclamationTriangle, FaCheckCircle } from "react-icons/fa";
+import { FaExclamationTriangle, FaCheckCircle, FaTimes } from "react-icons/fa";
 import { animated } from "react-spring";
 
 function NotificationPopup({
@@ -9,8 +9,21 @@ function NotificationPopup({
   errorMessage,
   errorBoxAnimation,
   handleCloseNotificationPopup,
-  handleMarkAllRead
+  handleMarkAllRead,
+  handleMarkAsRead
 }) {
+
+  const getTimeAgo = (timestamp) => {
+    const now = new Date();
+    const createdAt = new Date(timestamp);
+    const diffInMinutes = Math.floor((now - createdAt) / (1000 * 60));
+
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes === 1) return "1 minute ago";
+    return `${diffInMinutes} minutes ago`;
+  };
+
+
   const { darkMode } = useContext(ThemeContext);
 
   if (!isNotificationPopupVisible) return null;
@@ -65,6 +78,10 @@ function NotificationPopup({
                   <div className="flex items-center gap-2">
                     <FaCheckCircle className="text-green-500" />
                     <div>
+                  {/* Timestamp */}
+                  <span className="text-sm text-neutral-400">
+                    {notif.createdAt ? getTimeAgo(notif.createdAt) : "Ooops, no date"}
+                  </span>
                       <p className="font-semibold text-gray-800 dark:text-gray-200">
                         {notif.title || "Notification Title"}
                       </p>
@@ -73,10 +90,13 @@ function NotificationPopup({
                       </p>
                     </div>
                   </div>
-                  {/* Example timestamp */}
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {notif.time || "Just now"}
-                  </span>
+                  {/* Mark as read button */}
+                  <button
+                    onClick={() => handleMarkAsRead(notif.notificationID)}
+                    className="text-sm text-gray-500 hover:text-gray-300 mr-2"
+                  >
+                    Mark as Read
+                  </button>
                 </div>
               ))}
             </div>
