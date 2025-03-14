@@ -11,7 +11,7 @@ function ReportActionsDropdown({ report, onActionSelect }) {
     onActionSelect(action); // Inform the parent component about the selected action
   };
 
-  console.log("ReportDropDown report:" + JSON.stringify(report));
+  
 
   return (
     <div className="my-6">
