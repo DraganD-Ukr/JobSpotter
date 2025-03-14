@@ -686,7 +686,7 @@ export function SearchReport() {
                     }`}
                   >
                     <h2 className="text-lg font-semibold mb-2">
-                      Report ID: {report.reportId}
+                      {report.reportTitle ? report.reportTitle : "No Title"}
                     </h2>
 
                     {/* Display the color-coded status */}

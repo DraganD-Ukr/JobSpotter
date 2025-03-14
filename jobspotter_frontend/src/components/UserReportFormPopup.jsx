@@ -14,6 +14,7 @@ export function UserReportFormPopup() {
   const [reportedApplicantId, setReportedApplicantId] = useState("");
   const [reportedReviewId, setReportedReviewId] = useState("");
   const [reportMessage, setReportMessage] = useState("");
+  const [reportTitle, setReportTitle] = useState("");
   const [reportTags, setReportTags] = useState([]);
 
   // UI feedback
@@ -99,6 +100,7 @@ export function UserReportFormPopup() {
       reportedApplicantId,
       reportedReviewId,
       reportMessage,
+      reportTitle,
       reportTags,
     };
 
@@ -274,10 +276,28 @@ useEffect(() => {
           />
         </div>
 
-        {/* reportMessage */}
+        {/* Report Title */}
         <div>
           <label className="block font-medium mb-1" htmlFor="reportMessage">
-            reportMessage
+            Report Title (Short description)
+          </label>
+          <textarea
+            id="reportTitle"
+            value={reportTitle}
+            onChange={(e) => setReportTitle(e.target.value)}
+            rows={4}
+            required
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none resize-none ${
+              darkMode
+                ? "bg-gray-800 border-gray-600 text-white"
+                : "bg-white border-gray-300 text-gray-900"
+            }`}
+          />
+        </div>
+        {/* Report message */}
+        <div>
+          <label className="block font-medium mb-1" htmlFor="reportMessage">
+            Report Message (Describe the issue)
           </label>
           <textarea
             id="reportMessage"
@@ -291,6 +311,8 @@ useEffect(() => {
             }`}
           />
         </div>
+
+        
 
         {/* reportTags */}
         <div>

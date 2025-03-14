@@ -16,6 +16,7 @@ export default function AdminReportManagementPopup() {
   // Additional state
   const [username, setUsername] = useState("");
   const [jobPostData, setJobPostData] = useState(null);
+  const [applicantData, setApplicantData] = useState(null); // New state for reported applicant
   const [reportTags, setReportTags] = useState([]);
   const [status, setStatus] = useState(""); // For updating the report’s status
 
@@ -33,7 +34,7 @@ export default function AdminReportManagementPopup() {
       createdAt: searchParams.get("createdAt"),
     };
     setReport(parsedReport);
-    setStatus(parsedReport.reportStatus?.toLowerCase() || "open");
+    setStatus(parsedReport.reportStatus || "open");
   }, [searchParams]);
 
   // 2) Fetch logged-in admin info
@@ -102,24 +103,83 @@ export default function AdminReportManagementPopup() {
       .catch((error) => console.error(error));
   }, []);
 
-  // 6) Update Report Status
-  function handleUpdateReportStatus() {
-    if (!report?.reportId || !status) return;
-    fetch(`/api/v1/reports/${report.reportId}?status=${status}`, {
+// 6) Update Report Status
+function handleUpdateReportStatus() {
+  if (!report?.reportId || !status) return;
+  fetch(`/api/v1/reports/${report.reportId}?status=${status.toUpperCase()}`, { // Assuming your backend expects uppercase status
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error("Failed to update report status");
+      // Backend doesn't return the updated report, so we update the frontend state directly
+      setReport((prevReport) => ({
+        ...prevReport,
+        reportStatus: status.toUpperCase(), // Use the 'status' from the dropdown
+      }));
+      setStatus(status.toUpperCase()); // Keep the local 'status' state in sync
+      console.log("Status updated successfully (frontend state updated).");
+      // You might want to show a success message to the user here
+    })
+    .catch((error) => {
+      console.error("Error updating report status:", error);
+      // Handle the error appropriately, e.g., show an error message to the user
+    });
+}
+
+  // 7)  Handle User Ban (Disable)
+  function handleUserBan() {
+    let userId = report?.reportedUserId;
+    if (!userId) return;
+    fetch(`/api/v1/users/${userId}/disable`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to update report status");
+        if (!res.ok) throw new Error("Failed to ban user");
         return res.json();
       })
-      .then((updatedReport) => {
-        console.log("Status updated:", updatedReport);
+      .then(() => {
+        console.log("Disabled(banned) user:", userId);
       })
       .catch((error) => console.error(error));
   }
 
+  // 8) Fetch reported review if reportedReviewId is present
+  useEffect(() => {
+    if (report?.reportedReviewId) {
+      fetch(`/api/v1/reviews/${report.reportedReviewId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch reported review");
+          return res.json();
+        })
+        .then((data) => setReportedReview(data))
+        .catch((error) => console.error(error));
+    }
+  }, [report.reportedReviewId]);
+
+  // 9) Fetch reported applicant if reportedApplicantId is present
+  useEffect(() => {
+    if (report?.reportedApplicantId) {
+      fetch(`/api/v1/job-posts/applicants/${report.reportedApplicantId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch reported applicant");
+          return res.json();
+        })
+        .then((data) => setApplicantData(data))
+        .catch((error) => console.error(error));
+    }
+  }, [report.reportedApplicantId]);
 
 
   // Status colors
@@ -128,40 +188,50 @@ export default function AdminReportManagementPopup() {
     let statusColor = "text-gray-400";
     let statusText = "N/A";
     let StatusIcon = FaCircle; // Default icon
-  
+
     switch (reportStatus) {
+      case "OPEN":
       case "Open":
         statusColor = "text-green-500";
         statusText = "Open";
         break;
+      case "UNDER_REVIEW":
       case "Under Review":
+      case "under_review":
         statusColor = "text-yellow-500";
         statusText = "Under Review";
         break;
+      case "PENDING_RESPONSE":
       case "Pending Response":
         statusColor = "text-orange-500";
         statusText = "Pending Response";
         break;
+      case "RESOLVED":
       case "Resolved":
         statusColor = "text-blue-500";
         statusText = "Resolved";
         break;
+      case "REJECTED":
       case "Rejected":
         statusColor = "text-red-500";
         statusText = "Rejected";
         break;
+      case "ACTION_TAKEN":
       case "Action Taken":
         statusColor = "text-green-600";
         statusText = "Action Taken";
         break;
+      case "ESCALATED":
       case "Escalated":
         statusColor = "text-purple-500";
         statusText = "Escalated";
         break;
+      case "ON_HOLD":
       case "On Hold":
         statusColor = "text-indigo-500";
         statusText = "On Hold";
         break;
+      case "AUTO_RESOLVED":
       case "Auto Resolved":
         statusColor = "text-teal-500";
         statusText = "Auto Resolved";
@@ -170,7 +240,7 @@ export default function AdminReportManagementPopup() {
         statusColor = "text-gray-400";
         statusText = "N/A";
     }
-  
+
     return { statusColor, statusText, StatusIcon };
   }
   const { statusColor, statusText, StatusIcon } = getReportStatusInfo(report.reportStatus);
@@ -203,26 +273,30 @@ export default function AdminReportManagementPopup() {
 
       <div
         className={`p-6 rounded-xl transition-all ease-in-out duration-500 shadow-md ${darkMode
-            ? "bg-gray-800 border border-gray-700"
-            : "bg-white border border-gray-200"
+          ? "bg-gray-800 border border-gray-700"
+          : "bg-white border border-gray-200"
           }`}
       >
 
         {/* Report Current Status */}
-          
-        <div className="flex items-start mb-4">
-                    <p className="flex items-center text-md mb-2">
-                      <strong className="mr-1">Status:</strong>
-                      <StatusIcon className={`${statusColor} mr-1`} />
-                      <span className={`${statusColor}`}>{statusText}</span>
-                    </p>
+
+        <div className="mb-4">
+          <p className="flex items-center text-md mb-2">
+            <strong className="mr-1">Status:</strong>
+            <StatusIcon className={`${statusColor} mr-1`} />
+            <span className={`${statusColor}`}>{statusText}</span>
+          </p>
+          {/* Created at */}
+          <p className="text-sm text-gray-500">
+            <strong>Created At:</strong> {createdAtReadable}
+          </p>
         </div>
 
         <div className="justify-items-center">
           <h1
             className={`w-full font-bold rounded p-2 mb-10 focus:outline-none `}
             style={{ textAlign: 'center' }}
-          > {report?.reportMessage || "N/A"}</h1>
+          > {report?.reportMessage || "No Title"}</h1>
         </div>
 
         {/* Title */}
@@ -245,8 +319,8 @@ export default function AdminReportManagementPopup() {
           {jobPostData && (
             <div
               className={`rounded p-4 ${darkMode
-                  ? "border border-gray-700 bg-gray-900"
-                  : "border border-gray-300 bg-gray-50"
+                ? "border border-gray-700 bg-gray-900"
+                : "border border-gray-300 bg-gray-50"
                 }`}
             >
               <h2 className="font-bold mb-2">Details Of JobPost</h2>
@@ -267,8 +341,8 @@ export default function AdminReportManagementPopup() {
           {/* RIGHT BOX: Reported User & Report Data */}
           <div
             className={`rounded p-4 ${darkMode
-                ? "border border-gray-700 bg-gray-900"
-                : "border border-gray-300 bg-gray-50"
+              ? "border border-gray-700 bg-gray-900"
+              : "border border-gray-300 bg-gray-50"
               }`}
           >
             <h2 className="font-bold mb-2">Details of reported user</h2>
@@ -296,10 +370,11 @@ export default function AdminReportManagementPopup() {
               <p className="text-sm mb-2">No user data found.</p>
             )}
 
-          
+
 
             <div className="flex justify-start mt-2">
-              <button className="bg-red-500 text-white px-4 py-2 rounded hover:opacity-90 transition">
+              <button className="bg-red-500 text-white px-4 py-2 rounded hover:opacity-90 transition"
+                onClick={handleUserBan} >
                 Ban
               </button>
             </div>
@@ -307,7 +382,76 @@ export default function AdminReportManagementPopup() {
         </div>
         {/* Two-box layout  */}
 
-        
+        {/* Display Reported Review if ID is present */}
+        {report?.reportedReviewId && reportedReview && (
+          <div
+            className={`rounded p-4 mt-4 ${darkMode ? "border border-gray-700 bg-gray-900" : "border border-gray-300 bg-gray-50"
+              }`}
+          >
+            <h2 className="font-bold mb-2">Details of Reported Review</h2>
+            <p className="text-sm mb-2">
+              <strong>Review ID:</strong> {reportedReview.reviewId || "N/A"}
+              <br />
+              <strong>Content:</strong> {reportedReview.content || "N/A"}
+              <br />
+              {/* Add other relevant review details here */}
+              {reportedReview.rating && <strong>Rating:</strong>} {reportedReview.rating || "N/A"}
+              {reportedReview.createdAt && (
+                <>
+                  <br />
+                  <strong>Created At:</strong>{" "}
+                  {new Date(reportedReview.createdAt).toLocaleString()}
+                </>
+              )}
+              {reportedReview.updatedAt && (
+                <>
+                  <br />
+                  <strong>Updated At:</strong>{" "}
+                  {new Date(reportedReview.updatedAt).toLocaleString()}
+                </>
+              )}
+            </p>
+            {/* Add any actions related to the review here */}
+          </div>
+        )}
+
+        {/* Display Reported Applicant if ID is present */}
+        {report?.reportedApplicantId && applicantData && (
+          <div
+            className={`rounded p-4 mt-4 ${darkMode ? "border border-gray-700 bg-gray-900" : "border border-gray-300 bg-gray-50"
+              }`}
+          >
+            <h2 className="font-bold mb-2">Details of Reported Applicant</h2>
+            <p className="text-sm mb-2">
+              <strong>Applicant ID:</strong> {applicantData.applicantId || "N/A"}
+              <br />
+
+              <strong>Applicant Message:</strong> {applicantData.message || "N/A"}
+              <br />
+
+              <strong>Applicant Status:</strong> {applicantData.status || "N/A"}
+
+              {/* Add other relevant applicant details here */}
+              {applicantData.dateApplied && (
+                <>
+                  <br />
+                  <strong>Created At:</strong>{" "}
+                  {new Date(applicantData.dateApplied).toLocaleString()}
+                </>
+              )}
+              {applicantData.dateUpdated && (
+                <>
+                  <br />
+                  <strong>Updated At:</strong>{" "}
+                  {new Date(applicantData.dateUpdated).toLocaleString()}
+                </>
+              )}
+            </p>
+            {/* Add any actions related to the applicant here */}
+          </div>
+        )}
+
+
 
         {/* Manage / Drop actions */}
         <div className="flex items-center justify-between mt-6">
@@ -334,8 +478,8 @@ export default function AdminReportManagementPopup() {
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             className={`rounded w-full px-3 py-2 focus:outline-none ${darkMode
-                ? "bg-gray-900 border border-gray-700 text-white"
-                : "bg-white border border-gray-300"
+              ? "bg-gray-900 border border-gray-700 text-white"
+              : "bg-white border border-gray-300"
               }`}
           >
             <option value="open">Open</option>
