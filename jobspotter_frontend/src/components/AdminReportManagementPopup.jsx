@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ThemeContext } from "./ThemeContext";
+import { FaCircle } from "react-icons/fa";
 
 export default function AdminReportManagementPopup() {
   const { darkMode } = useContext(ThemeContext);
@@ -104,11 +105,10 @@ export default function AdminReportManagementPopup() {
   // 6) Update Report Status
   function handleUpdateReportStatus() {
     if (!report?.reportId || !status) return;
-    fetch(`/api/v1/reports/${report.reportId}`, {
+    fetch(`/api/v1/reports/${report.reportId}?status=${status}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ status }),
     })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to update report status");
@@ -120,6 +120,63 @@ export default function AdminReportManagementPopup() {
       .catch((error) => console.error(error));
   }
 
+
+
+  // Status colors
+  // Helper function to determine icon/color/text for each report status
+  function getReportStatusInfo(reportStatus) {
+    let statusColor = "text-gray-400";
+    let statusText = "N/A";
+    let StatusIcon = FaCircle; // Default icon
+  
+    switch (reportStatus) {
+      case "Open":
+        statusColor = "text-green-500";
+        statusText = "Open";
+        break;
+      case "Under Review":
+        statusColor = "text-yellow-500";
+        statusText = "Under Review";
+        break;
+      case "Pending Response":
+        statusColor = "text-orange-500";
+        statusText = "Pending Response";
+        break;
+      case "Resolved":
+        statusColor = "text-blue-500";
+        statusText = "Resolved";
+        break;
+      case "Rejected":
+        statusColor = "text-red-500";
+        statusText = "Rejected";
+        break;
+      case "Action Taken":
+        statusColor = "text-green-600";
+        statusText = "Action Taken";
+        break;
+      case "Escalated":
+        statusColor = "text-purple-500";
+        statusText = "Escalated";
+        break;
+      case "On Hold":
+        statusColor = "text-indigo-500";
+        statusText = "On Hold";
+        break;
+      case "Auto Resolved":
+        statusColor = "text-teal-500";
+        statusText = "Auto Resolved";
+        break;
+      default:
+        statusColor = "text-gray-400";
+        statusText = "N/A";
+    }
+  
+    return { statusColor, statusText, StatusIcon };
+  }
+  const { statusColor, statusText, StatusIcon } = getReportStatusInfo(report.reportStatus);
+
+
+
   // Convert createdAt to a human-readable format
   const createdAtReadable = report?.createdAt
     ? new Date(report.createdAt).toLocaleString()
@@ -128,13 +185,14 @@ export default function AdminReportManagementPopup() {
   const jobTitle = jobPostData?.title || "N/A";
   const jobDescription = jobPostData?.description || "N/A";
   const jobStatus = jobPostData?.status || "N/A";
- 
+
+
+
 
   return (
     <div
-      className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${
-        darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
-      }`}
+      className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
+        }`}
     >
       <h1 className="text-4xl font-extrabold mb-4 tracking-wide">
         REPORT MANAGER
@@ -144,43 +202,74 @@ export default function AdminReportManagementPopup() {
       </p>
 
       <div
-        className={`p-6 rounded-xl transition-all ease-in-out duration-500 shadow-md ${
-          darkMode
+        className={`p-6 rounded-xl transition-all ease-in-out duration-500 shadow-md ${darkMode
             ? "bg-gray-800 border border-gray-700"
             : "bg-white border border-gray-200"
-        }`}
+          }`}
       >
+
+        {/* Report Current Status */}
+          
+        <div className="flex items-start mb-4">
+                    <p className="flex items-center text-md mb-2">
+                      <strong className="mr-1">Status:</strong>
+                      <StatusIcon className={`${statusColor} mr-1`} />
+                      <span className={`${statusColor}`}>{statusText}</span>
+                    </p>
+        </div>
+
+        <div className="justify-items-center">
+          <h1
+            className={`w-full font-bold rounded p-2 mb-10 focus:outline-none `}
+            style={{ textAlign: 'center' }}
+          > {report?.reportMessage || "N/A"}</h1>
+        </div>
+
+        {/* Title */}
+        <div className="">
+          <h1
+            className={`w-full font-semibold rounded p-2 mb-10 focus:outline-none `}
+            style={{ textAlign: 'left' }}
+          > User report message: {report && report.reportMessage ? report.reportMessage : 'No message provided'}
+          </h1>
+        </div>
+
+
         {/* Two-box layout */}
         <div className="grid grid-cols-2 gap-4">
-          {/* LEFT BOX: Poster Info */}
-          <div
-            className={`rounded p-4 ${
-              darkMode
-                ? "border border-gray-700 bg-gray-900"
-                : "border border-gray-300 bg-gray-50"
-            }`}
-          >
-            <h2 className="font-bold mb-2">Details Of JobPoster</h2>
-            <p className="text-sm mb-2">
-              {/* Removed Poster Name, Poster User ID, and Type */}
-              <strong>Title:</strong> {jobTitle}
-              <br />
-              <strong>Description:</strong> {jobDescription}
-              <br />
-              <strong>Status:</strong> {jobStatus}
-              <br />
-              <strong>Job Post ID:</strong>{" "}
-              {jobPostData?.jobPostId ?? "N/A"}
-            </p>
-          </div>
+
+          {/* Check if Job post data present and display */}
+          {/* LEFT BOX: Job Post Info */}
+
+
+          {jobPostData && (
+            <div
+              className={`rounded p-4 ${darkMode
+                  ? "border border-gray-700 bg-gray-900"
+                  : "border border-gray-300 bg-gray-50"
+                }`}
+            >
+              <h2 className="font-bold mb-2">Details Of JobPost</h2>
+              <p className="text-sm mb-2">
+                {/* Removed Poster Name, Poster User ID, and Type */}
+                <strong>Title:</strong> {jobTitle}
+                <br />
+                <strong>Description:</strong> {jobDescription}
+                <br />
+                <strong>Status:</strong> {jobStatus}
+                <br />
+                <strong>Job Post ID:</strong>{" "}
+                {jobPostData?.jobPostId ?? "N/A"}
+              </p>
+            </div>
+          )}
 
           {/* RIGHT BOX: Reported User & Report Data */}
           <div
-            className={`rounded p-4 ${
-              darkMode
+            className={`rounded p-4 ${darkMode
                 ? "border border-gray-700 bg-gray-900"
                 : "border border-gray-300 bg-gray-50"
-            }`}
+              }`}
           >
             <h2 className="font-bold mb-2">Details of reported user</h2>
 
@@ -207,20 +296,7 @@ export default function AdminReportManagementPopup() {
               <p className="text-sm mb-2">No user data found.</p>
             )}
 
-            <p className="text-sm mb-2">
-              <strong>Report ID:</strong> {report?.reportId || "N/A"}
-              <br />
-              <strong>Status:</strong> {report?.reportStatus || "N/A"}
-              <br />
-              <strong>Tags:</strong>{" "}
-              {report?.reportTags?.length
-                ? report.reportTags.join(", ")
-                : "None"}
-              <br />
-              <strong>Created At:</strong> {createdAtReadable}
-              <br />
-              <strong>Message:</strong> {report?.reportMessage || "N/A"}
-            </p>
+          
 
             <div className="flex justify-start mt-2">
               <button className="bg-red-500 text-white px-4 py-2 rounded hover:opacity-90 transition">
@@ -231,46 +307,20 @@ export default function AdminReportManagementPopup() {
         </div>
         {/* Two-box layout  */}
 
-        {/* Additional fields for editing the report itself */}
-        <div className="mt-6">
-          <label className="block mb-2 font-semibold">Report Title</label>
-          <input
-            type="text"
-            defaultValue={"Title"}
-            className={`w-full rounded p-2 mb-4 focus:outline-none ${
-              darkMode
-                ? "bg-gray-900 border border-gray-700 text-white"
-                : "bg-white border border-gray-300"
-            }`}
-            placeholder="Enter the report title"
-          />
-
-          <label className="block mb-2 font-semibold">Report message</label>
-          <textarea
-            rows={4}
-            defaultValue={report?.reportMessage}
-            className={`w-full rounded p-2 focus:outline-none ${
-              darkMode
-                ? "bg-gray-900 border border-gray-700 text-white"
-                : "bg-white border border-gray-300"
-            }`}
-          />
-        </div>
+        
 
         {/* Manage / Drop actions */}
         <div className="flex items-center justify-between mt-6">
           <div className="space-x-2">
             <button
-              className={`px-4 py-2 rounded hover:opacity-90 transition ${
-                darkMode ? "bg-green-700 text-white" : "bg-gray-300 text-black"
-              }`}
+              className={`px-4 py-2 rounded hover:opacity-90 transition ${darkMode ? "bg-green-700 text-white" : "bg-gray-300 text-black"
+                }`}
             >
               Managed Report
             </button>
             <button
-              className={`px-4 py-2 rounded hover:opacity-90 transition ${
-                darkMode ? "bg-gray-700 text-white" : "bg-gray-300 text-black"
-              }`}
+              className={`px-4 py-2 rounded hover:opacity-90 transition ${darkMode ? "bg-gray-700 text-white" : "bg-gray-300 text-black"
+                }`}
             >
               Drop Report
             </button>
@@ -283,11 +333,10 @@ export default function AdminReportManagementPopup() {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className={`rounded w-full px-3 py-2 focus:outline-none ${
-              darkMode
+            className={`rounded w-full px-3 py-2 focus:outline-none ${darkMode
                 ? "bg-gray-900 border border-gray-700 text-white"
                 : "bg-white border border-gray-300"
-            }`}
+              }`}
           >
             <option value="open">Open</option>
             <option value="under_review">Under Review</option>
@@ -302,9 +351,8 @@ export default function AdminReportManagementPopup() {
 
           <button
             onClick={handleUpdateReportStatus}
-            className={`mt-2 px-4 py-2 rounded hover:opacity-90 transition ${
-              darkMode ? "bg-blue-600 text-white" : "bg-blue-500 text-white"
-            }`}
+            className={`mt-2 px-4 py-2 rounded hover:opacity-90 transition ${darkMode ? "bg-blue-600 text-white" : "bg-blue-500 text-white"
+              }`}
           >
             Update Status
           </button>

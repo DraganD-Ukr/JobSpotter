@@ -662,7 +662,7 @@ export function SearchReport() {
 
                 // Get status color/icon
                 const { statusColor, statusText, StatusIcon } = getReportStatusInfo(report);
-console.log("reportedUserId", report.reportedUserId);
+                
                 // Build query params for the "Manage" link
                 const queryParams = new URLSearchParams({
                   reportId: report.reportId?.toString() || "",
@@ -672,7 +672,7 @@ console.log("reportedUserId", report.reportedUserId);
                   reportedReviewId: report.reportedReviewId?.toString() || "",
                   reportMessage: report.reportMessage || "",
                   reportTags: report.reportTags ? report.reportTags.join(",") : "",
-                  reportStatus: report.status || "",
+                  reportStatus: report.reportStatus || "",
                   createdAt: report.createdAt || "",
                 }).toString();
 
