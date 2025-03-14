@@ -41,6 +41,11 @@ public class ReportRequest {
     @Max(value = Long.MAX_VALUE, message = "The review id is too large")
     private Long reportedReviewId;
 
+    @Schema(description = "The title of the report, optional", example = "This is a report title")
+    @NotNull(message = "The report title is required")
+    @Size(min = 5, max = 50, message = "The report title must be between 5 and 50 characters")
+    private String reportTitle;
+
     @Schema(description = "The message of the report, optional", example = "This is a report message")
     @Size(min = 5, max = 150, message = "The report message must be between 5 and 150 characters")
     private String reportMessage;

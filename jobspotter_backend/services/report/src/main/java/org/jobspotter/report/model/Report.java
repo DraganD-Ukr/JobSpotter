@@ -46,7 +46,11 @@ public class Report {
     @Schema(description = "Reported Review ID, optional", example = "662fdc3e-937b-4042-96e5-358de745695c")
     private Long reportedReviewId;
 
-    @Size(min = 5, max = 150)
+    @Schema(description = "Report title", example = "Inappropriate content")
+    @Size(min = 5, max = 50, message = "Report title must be between 5 and 50 characters")
+    private String reportTitle;
+
+    @Size(min = 5, max = 150, message = "Report message must be between 5 and 150 characters")
     @Schema(description = "Report message", example = "This user is posting inappropriate content.")
     private String reportMessage;
 

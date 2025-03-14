@@ -39,6 +39,7 @@ public class ReportServiceImpl implements ReportService {
                 .reportedJobPostId(reportRequest.getReportedJobPostId())
                 .reportedApplicantId(reportRequest.getReportedApplicantId())
                 .reportedReviewId(reportRequest.getReportedReviewId())
+                .reportTitle(reportRequest.getReportTitle())
                 .build();
 
         Example<Report> example = Example.of(existingReport);
@@ -54,6 +55,7 @@ public class ReportServiceImpl implements ReportService {
                 .reportedJobPostId(reportRequest.getReportedJobPostId())
                 .reportedApplicantId(reportRequest.getReportedApplicantId())
                 .reportedReviewId(reportRequest.getReportedReviewId())
+                .reportTitle(reportRequest.getReportTitle())
                 .reportMessage(reportRequest.getReportMessage())
                 .reportTags(reportRequest.getReportTags())
                 .reportStatus(ReportStatus.OPEN)
