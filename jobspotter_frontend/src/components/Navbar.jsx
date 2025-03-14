@@ -59,7 +59,7 @@ export default function Navbar() {
     }
   }
 
-  // Clicking a search result → navigate to “Jobs Available”
+  // Clicking a search result  navigate to “Jobs Available”
   function handleResultClick(job) {
     window.location.href = `/SearchJobPost?jobId=${job.jobPostId}`;
   }
@@ -189,7 +189,7 @@ export default function Navbar() {
                 </Link>
 
                  <Link
-                  to="/UserReviewRatingHistory"
+                  to="/SearchReviews"
                   className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   View Rating Review History

@@ -125,12 +125,10 @@ export default function AdminReportManagementPopup() {
     ? new Date(report.createdAt).toLocaleString()
     : "N/A";
 
-  // Example job post fields
   const jobTitle = jobPostData?.title || "N/A";
   const jobDescription = jobPostData?.description || "N/A";
   const jobStatus = jobPostData?.status || "N/A";
-  // If your schema has a `creator` object, you can still reference it if needed:
-  // const creator = jobPostData?.creator;
+ 
 
   return (
     <div
@@ -152,7 +150,7 @@ export default function AdminReportManagementPopup() {
             : "bg-white border border-gray-200"
         }`}
       >
-        {/* --- START: Two-box layout --- */}
+        {/* Two-box layout */}
         <div className="grid grid-cols-2 gap-4">
           {/* LEFT BOX: Poster Info */}
           <div
@@ -231,7 +229,7 @@ export default function AdminReportManagementPopup() {
             </div>
           </div>
         </div>
-        {/* --- END: Two-box layout --- */}
+        {/* Two-box layout  */}
 
         {/* Additional fields for editing the report itself */}
         <div className="mt-6">

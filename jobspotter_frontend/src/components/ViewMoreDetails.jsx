@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import {
   FaExclamationTriangle,
   FaTrophy,
@@ -14,6 +14,9 @@ import { useSpring, animated } from "react-spring";
 import { BeatLoader } from "react-spinners";
 import { ThemeContext } from "./ThemeContext";
 import ApplicantsManagementPopup from "./ApplicantsManagementPopup";
+
+// Import UserReviewPopup for review submission
+import UserReviewPopup from "./UserReviewPopup";
 
 export function ViewMoreDetails() {
   const { jobId } = useParams();
@@ -32,8 +35,14 @@ export function ViewMoreDetails() {
   });
   const [localApplicants, setLocalApplicants] = useState([]);
 
+  // For review popup
+  const [isReviewPopupVisible, setIsReviewPopupVisible] = useState(false);
+
   const { darkMode } = useContext(ThemeContext);
   const [tagMapping, setTagMapping] = useState(new Map());
+
+  // Store current user (job poster) info
+  const [currentUser, setCurrentUser] = useState(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -54,22 +63,34 @@ export function ViewMoreDetails() {
   });
 
   useEffect(() => {
-    if (errorMessage) {
-      setErrorBoxOpacity(1);
-    } else {
-      setErrorBoxOpacity(0);
-    }
+    setErrorBoxOpacity(errorMessage ? 1 : 0);
   }, [errorMessage]);
 
   useEffect(() => {
-    if (actionMessage) {
-      setSuccessBoxOpacity(1);
-    } else {
-      setSuccessBoxOpacity(0);
-    }
+    setSuccessBoxOpacity(actionMessage ? 1 : 0);
   }, [actionMessage]);
 
-  // Fetch tag mapping from API
+  // Fetch current user (job poster)
+  useEffect(() => {
+    fetch("/api/v1/users/me", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include"
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch current user");
+        return res.json();
+      })
+      .then((data) => {
+        setCurrentUser(data);
+      })
+      .catch((err) => {
+        console.error("Error fetching current user:", err);
+        setErrorMessage(err.message);
+      });
+  }, []);
+
+  // Fetch tag mapping
   useEffect(() => {
     const fetchTags = async () => {
       try {
@@ -91,11 +112,9 @@ export function ViewMoreDetails() {
         console.error("Error fetching tags:", error);
       }
     };
-
     fetchTags();
   }, []);
 
-  // Helper to parse responses that might have no content (204)
   function parseNoContent(res) {
     if (!res.ok) throw new Error("Request failed");
     if (res.status === 204 || !res.headers.get("content-length")) {
@@ -110,7 +129,6 @@ export function ViewMoreDetails() {
       setLoading(false);
       return;
     }
-
     fetch(`/api/v1/job-posts/my-job-post/${jobId}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
@@ -131,7 +149,7 @@ export function ViewMoreDetails() {
           });
         }
         setJob(data);
-        updateApplicantCounts(data.applicants); // Initialize counts on job load
+        updateApplicantCounts(data.applicants);
       })
       .catch((err) => {
         console.error("Error fetching job details:", err);
@@ -162,7 +180,7 @@ export function ViewMoreDetails() {
           });
         }
         setJob(data);
-        updateApplicantCounts(data.applicants); // Update counts on refresh
+        updateApplicantCounts(data.applicants);
       })
       .catch((err) => {
         console.error("Error refreshing job details:", err);
@@ -198,12 +216,10 @@ export function ViewMoreDetails() {
       setTimeout(() => setActionMessage(""), 5000);
       return;
     }
-
     if (action === "approve") {
       if (applicantCounts.approved >= job.maxApplicants) {
         setActionMessage(`Cannot approve more than ${job.maxApplicants} applicants.`);
         setTimeout(() => setActionMessage(""), 5000);
-        console.log("Cannot approve more than max applicants");
         return;
       }
       if (applicantCounts.approved + 1 === job.maxApplicants) {
@@ -214,16 +230,14 @@ export function ViewMoreDetails() {
     } else {
       setAutoStartMessage("");
     }
-
-    setLocalApplicants((prevLocalApplicants) => {
-      const updatedApplicants = prevLocalApplicants.map((applicant) =>
+    setLocalApplicants((prev) => {
+      const updated = prev.map((applicant) =>
         applicant.applicantId === applicantId
           ? { ...applicant, status: action.toUpperCase() }
           : applicant
       );
-      console.log("Updated applicants:", updatedApplicants);
-      updateApplicantCounts(updatedApplicants);
-      return updatedApplicants;
+      updateApplicantCounts(updated);
+      return updated;
     });
   };
 
@@ -266,6 +280,8 @@ export function ViewMoreDetails() {
         setActionMessage("Job finished successfully!");
         refreshJobDetails();
         setTimeout(() => setActionMessage(""), 3000);
+        // Show the review popup right after finishing
+        setIsReviewPopupVisible(true);
       })
       .catch((error) => {
         console.error("Error finishing job:", error);
@@ -318,30 +334,22 @@ export function ViewMoreDetails() {
         applicantId: applicant.applicantId,
         status: applicant.status
       }));
-      console.log("Applicants to update:", applicantsToUpdate);
       const response = await fetch(
         `/api/v1/job-posts/my-job-posts/${jobId}/applicants/approve-reject`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(applicantsToUpdate)
         }
       );
-
       if (!response.ok) {
         const message = `Error saving applicant changes: ${response.status} ${response.statusText}`;
         setActionMessage(message);
         setTimeout(() => setActionMessage(""), 5000);
         throw new Error(message);
       }
-
-      console.log("Applicant statuses updated successfully");
-
       setActionMessage("Changes saved successfully!");
       setTimeout(() => setActionMessage(""), 3000);
-
       setIsApplicantsPopupVisible(false);
       refreshJobDetails();
     } catch (error) {
@@ -353,17 +361,13 @@ export function ViewMoreDetails() {
     return (
       <div
         className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${
-          darkMode
-            ? "bg-gray-900 text-white border-gray-700"
-            : "bg-gray-50 text-gray-900 border-gray-200"
+          darkMode ? "bg-gray-900 text-white border-gray-700" : "bg-gray-50 text-gray-900 border-gray-200"
         } flex gap-8`}
       >
         {/* LEFT: Job Details Skeleton */}
         <div
           className={`flex-1 p-6 rounded-lg shadow-md border transition-all ease-in-out duration-500 ${
-            darkMode
-              ? "bg-gray-800 border-gray-700 text-white"
-              : "bg-white border-gray-200 text-gray-900"
+            darkMode ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200 text-gray-900"
           }`}
         >
           <h1 className="text-3xl font-bold mb-6 animate-pulse bg-gray-300 dark:bg-gray-700 rounded w-3/4 h-8"></h1>
@@ -386,9 +390,7 @@ export function ViewMoreDetails() {
         {/* RIGHT: Applicants Sidebar Skeleton */}
         <div
           className={`w-60 p-6 rounded-lg shadow-md border transition-all ease-in-out duration-500 ${
-            darkMode
-              ? "bg-gray-800 border-gray-700 text-white"
-              : "bg-white border-gray-200 text-gray-900"
+            darkMode ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200 text-gray-900"
           } flex flex-col`}
         >
           <h2 className="text-xl font-bold mb-6 animate-pulse bg-gray-300 dark:bg-gray-700 rounded w-1/2 h-6"></h2>
@@ -406,9 +408,7 @@ export function ViewMoreDetails() {
     return (
       <div
         className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${
-          darkMode
-            ? "bg-gray-900 text-white border-gray-700"
-            : "bg-gray-50 text-gray-900 border-gray-200"
+          darkMode ? "bg-gray-900 text-white border-gray-700" : "bg-gray-50 text-gray-900 border-gray-200"
         } flex gap-8`}
       >
         <animated.div
@@ -432,9 +432,7 @@ export function ViewMoreDetails() {
     return (
       <div
         className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${
-          darkMode
-            ? "bg-gray-900 text-white border-gray-700"
-            : "bg-gray-50 text-gray-900 border-gray-200"
+          darkMode ? "bg-gray-900 text-white border-gray-700" : "bg-gray-50 text-gray-900 border-gray-200"
         } flex gap-8`}
       >
         <h1 className="text-2xl font-bold mb-4">Job Not Found</h1>
@@ -443,10 +441,8 @@ export function ViewMoreDetails() {
     );
   }
 
-  // Determine button disabled states based on job status
   const isJobOpen = job.status === "OPEN";
 
-  // Pagination Calculations
   const indexOfLastApplicant = currentPage * applicantsPerPage;
   const indexOfFirstApplicant = indexOfLastApplicant - applicantsPerPage;
   const currentApplicants = Array.isArray(localApplicants)
@@ -484,17 +480,13 @@ export function ViewMoreDetails() {
   return (
     <div
       className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${
-        darkMode
-          ? "bg-gray-900 text-white border-gray-700"
-          : "bg-gray-50 text-gray-900 border-gray-200"
+        darkMode ? "bg-gray-900 text-white border-gray-700" : "bg-gray-50 text-gray-900 border-gray-200"
       } flex gap-8`}
     >
       {/* LEFT: Job Details */}
       <div
         className={`flex-1 p-6 rounded-lg shadow-md border transition-all ease-in-out duration-500 ${
-          darkMode
-            ? "bg-gray-800 border-gray-700 text-white"
-            : "bg-white border-gray-200 text-gray-900"
+          darkMode ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200 text-gray-900"
         }`}
       >
         <h1
@@ -609,14 +601,22 @@ export function ViewMoreDetails() {
             Cancel
           </button>
         </div>
+
+        {/* Link to manage reviews */}
+        <div className="mt-8">
+          <Link
+            to={`/search-reviews?reviewedUserId=${approvedApplicants.length > 0 ? approvedApplicants[0].applicantId : ""}`}
+            className="text-blue-500 hover:underline"
+          >
+            Manage Submitted Reviews
+          </Link>
+        </div>
       </div>
 
       {/* RIGHT: Applicants Sidebar */}
       <div
         className={`w-60 p-6 rounded-lg shadow-md border transition-all ease-in-out duration-500 ${
-          darkMode
-            ? "bg-gray-800 border-gray-700 text-white"
-            : "bg-white border-gray-200 text-gray-900"
+          darkMode ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200 text-gray-900"
         } flex flex-col`}
       >
         <h2 className="text-xl font-bold mb-6">Applicants</h2>
@@ -626,7 +626,6 @@ export function ViewMoreDetails() {
         >
           Manage Applicants
         </button>
-
         {Array.isArray(job.applicants) && job.applicants.length > 0 ? (
           <div className="space-y-4"></div>
         ) : (
@@ -655,7 +654,17 @@ export function ViewMoreDetails() {
         totalPages={totalPages}
         job={job}
         isJobOpen={job.status === "OPEN"}
-        jobPostId={job.jobPostId} 
+        jobPostId={job.jobPostId}
+      />
+
+      {/* Review Popup */}
+      <UserReviewPopup
+        isVisible={isReviewPopupVisible}
+        onClose={() => setIsReviewPopupVisible(false)}
+        jobPostId={job.jobPostId}
+        reviewerID={currentUser?.userId}
+        reviewedUserID={approvedApplicants.length > 0 ? approvedApplicants[0].applicantId : null}
+        roleOfReviewer="POSTER"
       />
     </div>
   );
