@@ -2,9 +2,110 @@ import { useContext, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ThemeContext } from "./ThemeContext";
 import { FaCircle } from "react-icons/fa";
+import ReportActionsDropdown from "./ReportActionsDropDown";
 
 export default function AdminReportManagementPopup() {
   const { darkMode } = useContext(ThemeContext);
+
+
+  // ACTION FORM 
+  const [selectedAction, setSelectedAction] = useState(""); // State to track selected action
+  const [isEditJobPostFormVisible, setIsEditJobPostFormVisible] = useState(false);
+  const [isEditApplicantFormVisible, setIsEditApplicantFormVisible] = useState(false);
+  const [isEditReviewFormVisible, setIsEditReviewFormVisible] = useState(false);
+  const [isDeleteJobPostConfirmationVisible, setIsDeleteJobPostConfirmationVisible] = useState(false);
+  const [isDeleteApplicantConfirmationVisible, setIsDeleteApplicantConfirmationVisible] = useState(false);
+  const [isRemoveReviewConfirmationVisible, setIsRemoveReviewConfirmationVisible] = useState(false);
+
+  const handleActionSelect = (action) => {
+    setSelectedAction(action);
+    // Reset visibility of all forms
+    setIsEditJobPostFormVisible(false);
+    setIsEditApplicantFormVisible(false);
+    setIsEditReviewFormVisible(false);
+    setIsDeleteJobPostConfirmationVisible(false);
+    setIsDeleteApplicantConfirmationVisible(false);
+    setIsRemoveReviewConfirmationVisible(false);
+
+    // Show the appropriate form based on the selected action
+    switch (action) {
+      case "editJobPost":
+        setIsEditJobPostFormVisible(true);
+        break;
+      case "editApplicant":
+        setIsEditApplicantFormVisible(true);
+        break;
+      case "editReview":
+        setIsEditReviewFormVisible(true);
+        break;
+      case "deleteJobPost":
+        setIsDeleteJobPostConfirmationVisible(true);
+        break;
+      case "deleteApplicant":
+        setIsDeleteApplicantConfirmationVisible(true);
+        break;
+      case "removeReview":
+        setIsRemoveReviewConfirmationVisible(true);
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Function to handle submitting the edit job post form (will be a separate component later)
+  const handleEditJobPostSubmit = (formData) => {
+    console.log("Editing job post with data:", formData);
+    // Make API request to update job post
+    // After success, reset form visibility
+    setIsEditJobPostFormVisible(false);
+  };
+
+  // Function to handle deleting the job post (will be a separate component later)
+  const handleDeleteJobPost = () => {
+    console.log("Deleting job post:", report.reportedJobPostId);
+    // Make API request to delete job post
+    // After success, reset confirmation visibility
+    setIsDeleteJobPostConfirmationVisible(false);
+  };
+
+  const handleDeleteApplicant = () => {
+    console.log("Deleting applicant:", report.reportedApplicantId);
+    // Make API request to delete applicant
+    // After success, reset confirmation visibility
+    setIsDeleteApplicantConfirmationVisible(false);
+  };
+
+  const handleEditApplicantSubmit = (message) => {
+    console.log("Editing applicant with data:", message);
+    // Make API request to update applicant
+    // After success, reset form visibility
+    setIsEditApplicantFormVisible(false);
+  };
+
+  const handleEditReviewSubmit = (reviewData) => {
+    console.log("Editing review with data:", reviewData);
+    // Make API request to update review
+    // After success, reset form visibility
+    setIsEditReviewFormVisible(false);
+  };
+
+  const handleRemoveReview = () => {
+    console.log("Removing review:", report.reportedReviewId);
+    // Make API request to remove review
+    // After success, reset confirmation visibility
+    setIsRemoveReviewConfirmationVisible(false);
+  };
+
+
+
+
+
+
+
+
+
+
+
 
   // We’ll build a local "report" object from the query string
   const [searchParams] = useSearchParams();
@@ -103,30 +204,30 @@ export default function AdminReportManagementPopup() {
       .catch((error) => console.error(error));
   }, []);
 
-// 6) Update Report Status
-function handleUpdateReportStatus() {
-  if (!report?.reportId || !status) return;
-  fetch(`/api/v1/reports/${report.reportId}?status=${status.toUpperCase()}`, { // Assuming your backend expects uppercase status
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-  })
-    .then((res) => {
-      if (!res.ok) throw new Error("Failed to update report status");
-      // Backend doesn't return the updated report, so we update the frontend state directly
-      setReport((prevReport) => ({
-        ...prevReport,
-        reportStatus: status.toUpperCase(), // Use the 'status' from the dropdown
-      }));
-      setStatus(status.toUpperCase()); // Keep the local 'status' state in sync
-      console.log("Status updated successfully (frontend state updated).");
-      // You might want to show a success message to the user here
+  // 6) Update Report Status
+  function handleUpdateReportStatus() {
+    if (!report?.reportId || !status) return;
+    fetch(`/api/v1/reports/${report.reportId}?status=${status.toUpperCase()}`, { // Assuming your backend expects uppercase status
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
     })
-    .catch((error) => {
-      console.error("Error updating report status:", error);
-      // Handle the error appropriately, e.g., show an error message to the user
-    });
-}
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to update report status");
+        // Backend doesn't return the updated report, so we update the frontend state directly
+        setReport((prevReport) => ({
+          ...prevReport,
+          reportStatus: status.toUpperCase(), // Use the 'status' from the dropdown
+        }));
+        setStatus(status.toUpperCase()); // Keep the local 'status' state in sync
+        console.log("Status updated successfully (frontend state updated).");
+        // You might want to show a success message to the user here
+      })
+      .catch((error) => {
+        console.error("Error updating report status:", error);
+        // Handle the error appropriately, e.g., show an error message to the user
+      });
+  }
 
   // 7)  Handle User Ban (Disable)
   function handleUserBan() {
@@ -453,27 +554,215 @@ function handleUpdateReportStatus() {
 
 
 
-        {/* Manage / Drop actions */}
-        <div className="flex items-center justify-between mt-6">
-          <div className="space-x-2">
-            <button
-              className={`px-4 py-2 rounded hover:opacity-90 transition ${darkMode ? "bg-green-700 text-white" : "bg-gray-300 text-black"
-                }`}
-            >
-              Managed Report
-            </button>
-            <button
-              className={`px-4 py-2 rounded hover:opacity-90 transition ${darkMode ? "bg-gray-700 text-white" : "bg-gray-300 text-black"
-                }`}
-            >
-              Drop Report
-            </button>
+        {/* Action Dropdown */}
+        <ReportActionsDropdown report={report} onActionSelect={handleActionSelect} />
+
+        {/* Conditional rendering of forms/confirmations */}
+
+        {/* Edit JobPost action */}
+        {isEditJobPostFormVisible && (
+          <div className="rounded-md shadow-md p-6 bg-white ">
+            <h3 className="mb-6">Edit Job Post</h3>
+            <form onSubmit={(e) => { e.preventDefault(); handleEditJobPostSubmit(/* Form Data */); }} className="space-y-4">
+              <div>
+                <label htmlFor="title" className="block text-gray-700  text-sm font-bold mb-2">
+                  Title:
+                </label>
+                <input
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  id="title"
+                  type="text"
+                  defaultValue={jobPostData?.title}
+                />
+              </div>
+              {/* You can add more fields here following the same pattern */}
+              <div>
+                <label htmlFor="description" className="block text-gray-700 text-sm font-bold mb-2">
+                  Description:
+                </label>
+                <textarea
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700  leading-tight focus:outline-none focus:shadow-outline resize-none"
+                  id="description"
+                  defaultValue={jobPostData?.description}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <button
+                  className="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                  type="submit"
+                >
+                  Save Changes
+                </button>
+                <button
+                  className="px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                  onClick={() => setIsEditJobPostFormVisible(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
-        </div>
+        )}
+        {/* Delete JobPost ction */}
+        {isDeleteJobPostConfirmationVisible && (
+          <div className="rounded-md shadow-md p-6 bg-white ">
+            <h3 className="text-lg font-semibold text-gray-800  mb-4">
+              Confirm Delete Job Post
+            </h3>
+            <p className="text-gray-700  mb-4">
+              Are you sure you want to delete job post ID: {report.reportedJobPostId}?
+            </p>
+            <div className="flex justify-end space-x-2">
+              <button
+                className="px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                onClick={handleDeleteJobPost}
+              >
+                Yes, Delete
+              </button>
+              <button
+                className="px-5 py-2 bg-gray-300 text-gray-700  rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+                onClick={() => setIsDeleteJobPostConfirmationVisible(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+        {/* Edit applicant message */}
+        {isEditApplicantFormVisible && (
+          <div className="rounded-md shadow-md p-6 bg-white">
+            <h3 className="text-lg font-semibold text-gray-800  mb-4">
+              Edit Applicant Messae
+            </h3>
+            <form onSubmit={(e) => { e.preventDefault(); handleEditApplicantSubmit(/* Form Data */); }} className="space-y-4">
+              <div>
+                <label htmlFor="applicant-message" className="block text-gray-700  text-sm font-bold mb-2">
+                  Message:
+                </label>
+                <textarea
+                  id="applicant-message"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700  leading-tight focus:outline-none focus:shadow-outline resize-none"
+                  defaultValue={applicantData?.message}
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  className="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                  type="submit"
+                >
+                  Save Changes
+                </button>
+                <button
+                  className="px-5 py-2 bg-gray-300 text-gray-700  rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+                  onClick={() => setIsEditApplicantFormVisible(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+        {/* Delete applicant confirmation */}
+        {isDeleteApplicantConfirmationVisible && (
+          <div className="rounded-md shadow-md p-6 bg-white ">
+            <h3 className="text-lg font-semibold text-gray-800  mb-4">
+              Confirm Delete Applicant
+            </h3>
+            <p className="text-gray-700  mb-4">
+              Are you sure you want to delete applicant ID: {report.reportedApplicantId}?
+            </p>
+            <div className="flex justify-end space-x-2">
+              <button
+                className="px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                onClick={handleDeleteApplicant}
+              >
+                Yes, Delete
+              </button>
+              <button
+                className="px-5 py-2 bg-gray-300 text-gray-700  rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+                onClick={() => setIsDeleteApplicantConfirmationVisible(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+        {/* Edit review form */}
+        {isEditReviewFormVisible && reportedReview && (
+          <div className="rounded-md shadow-md p-6 bg-white ">
+            <h3 className="text-lg font-semibold text-gray-800  mb-4">
+              Edit Review
+            </h3>
+            <form onSubmit={(e) => { e.preventDefault(); handleEditReviewSubmit(/* Form Data */); }} className="space-y-4">
+              <div>
+                <label htmlFor="review-content" className="block text-gray-700  text-sm font-bold mb-2">
+                  Content:
+                </label>
+                <textarea
+                  id="review-content"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700  leading-tight focus:outline-none focus:shadow-outline resize-none"
+                  defaultValue={reportedReview?.content}
+                />
+              </div>
+              <div>
+                <label htmlFor="review-rating" className="block text-gray-700  text-sm font-bold mb-2">
+                  Rating:
+                </label>
+                <input
+                  type="number"
+                  id="review-rating"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700  leading-tight focus:outline-none focus:shadow-outline"
+                  defaultValue={reportedReview?.rating}
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  className="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                  type="submit"
+                >
+                  Save Changes
+                </button>
+                <button
+                  className="px-5 py-2 bg-gray-300 text-gray-700  rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+                  onClick={() => setIsEditReviewFormVisible(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+        {/* Remove review confirmation */}
+        {isRemoveReviewConfirmationVisible && (
+          <div className="rounded-md shadow-md p-6 bg-white ">
+            <h3 className="text-lg font-semibold text-gray-800  mb-4">
+              Confirm Remove Review
+            </h3>
+            <p className="text-gray-700  mb-4">
+              Are you sure you want to remove review ID: {report.reportedReviewId}?
+            </p>
+            <div className="flex justify-end space-x-2">
+              <button
+                className="px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                onClick={handleRemoveReview}
+              >
+                Yes, Remove
+              </button>
+              <button
+                className="px-5 py-2 bg-gray-300 text-gray-700  rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+                onClick={() => setIsRemoveReviewConfirmationVisible(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ... (conditional rendering for other forms: edit applicant, delete applicant, edit review, remove review) */}
 
         {/* Update Status Dropdown */}
         <div className="mt-6">
-          <label className="block mb-2 font-semibold">ACTION dropdown</label>
+          <label className="block mb-2 font-semibold">Status Update</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
