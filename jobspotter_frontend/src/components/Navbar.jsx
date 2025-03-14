@@ -187,12 +187,22 @@ export default function Navbar() {
                 >
                   View My Jobs
                 </Link>
+
+                 <Link
+                  to="/UserReviewRatingHistory"
+                  className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  View Rating Review History
+                </Link>
+
                 <Link
                   to="/CreateJobPost"
                   className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   Create Job Post
                 </Link>
+
+               
               </div>
             </div>
 

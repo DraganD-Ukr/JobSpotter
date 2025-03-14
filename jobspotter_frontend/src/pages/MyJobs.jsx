@@ -1,11 +1,22 @@
 import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaList, FaTh, FaTag, FaMapMarkerAlt, FaUsers, FaRoute } from "react-icons/fa";
+import {
+  FaList,
+  FaTh,
+  FaTag,
+  FaMapMarkerAlt,
+  FaUsers,
+  FaRoute,
+  FaCircle,
+  FaCheckCircle,
+  FaClock,
+  FaTimesCircle
+} from "react-icons/fa";
 import { MdDateRange } from "react-icons/md";
 import { ThemeContext } from "../components/ThemeContext";
 
 export function MyJobs() {
-  // State for dynamic tag mapping via API
+  // ---------------------------TAG MAPPING (Dynamic via API)---------------------------
   const [tagMapping, setTagMapping] = useState(new Map());
   useEffect(() => {
     const fetchTags = async () => {
@@ -37,20 +48,16 @@ export function MyJobs() {
     fetchTags();
   }, []);
 
-  // State for jobs data, loading, and errors
+  // ---------------------------STATE DECLARATIONS---------------------------
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Card vs. List view
   const [viewType, setViewType] = useState("card");
-
-  // Pagination states
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
 
-  // Filters & search
   const [filters, setFilters] = useState({
     title: "",
     tags: [],
@@ -64,7 +71,7 @@ export function MyJobs() {
   const navigate = useNavigate();
   const { darkMode } = useContext(ThemeContext);
 
-  // For dynamic tag colors in the filters sidebar (optional)
+  // ---------------------------Dynamic Tag Colors---------------------------
   const [tagColors, setTagColors] = useState({});
   const getTagColor = (tag) => {
     if (tagColors[tag]) {
@@ -89,7 +96,7 @@ export function MyJobs() {
     }
   };
 
-  // Fetch "My Jobs" on mount and whenever page or sortBy changes
+  // ---------------------------Fetch My Jobs---------------------------
   useEffect(() => {
     fetchMyJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,7 +106,6 @@ export function MyJobs() {
     setLoading(true);
     const size = 9;
     const endpoint = `/api/v1/job-posts/my-job-posts?pageNumber=${page}&size=${size}&sortBy=${filters.sortBy}`;
-
     fetch(endpoint, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
@@ -110,13 +116,11 @@ export function MyJobs() {
         return res.json();
       })
       .then((data) => {
-        // If backend returns a simple array
         if (Array.isArray(data)) {
           setJobs(processJobs(data));
           setTotalElements(data.length);
           setTotalPages(1);
         } else {
-          // Otherwise, assume paginated
           const jobsArray = data.content || [];
           setJobs(processJobs(jobsArray));
           setTotalPages(data.totalPages || 1);
@@ -130,7 +134,7 @@ export function MyJobs() {
       .finally(() => setLoading(false));
   }
 
-  // Convert tag enums to user-friendly strings
+  // ---------------------------Process Jobs---------------------------
   function processJobs(jobArray) {
     return jobArray.map((job) => {
       let friendlyTags = [];
@@ -150,24 +154,77 @@ export function MyJobs() {
     });
   }
 
-  // Toggle Card/List view
+  // ---------------------------STATUS LOGIC---------------------------
+  function getJobStatusInfo(job) {
+    let statusColor = "text-gray-400";
+    let statusText = "N/A";
+    let StatusIcon = FaCircle;
+    switch (job.status) {
+      case "OPEN":
+        statusColor = "text-green-500";
+        statusText = "Open";
+        break;
+      case "ASSIGNED":
+        statusColor = "text-blue-500";
+        statusText = "Assigned";
+        break;
+      case "IN_PROGRESS":
+        statusColor = "text-yellow-500";
+        statusText = "In Progress";
+        break;
+      case "COMPLETED":
+        statusColor = "text-gray-500";
+        statusText = "Completed";
+        break;
+      case "CANCELLED":
+        statusColor = "text-red-500";
+        statusText = "Cancelled";
+        break;
+      default:
+        statusColor = "text-gray-400";
+        statusText = "N/A";
+    }
+    return { statusColor, statusText, StatusIcon };
+  }
+
+  function getApplicantStatusInfo(job) {
+    let applicantStatusColor = "text-gray-400";
+    let applicantStatusText = job.applicantStatus || "N/A";
+    switch (job.applicantStatus) {
+      case "PENDING":
+        applicantStatusColor = "text-yellow-500";
+        break;
+      case "ACCEPTED":
+        applicantStatusColor = "text-green-500";
+        break;
+      case "REJECTED":
+        applicantStatusColor = "text-red-500";
+        break;
+      default:
+        applicantStatusColor = "text-gray-400";
+    }
+    return { applicantStatusColor, applicantStatusText };
+  }
+  // ---------------------------END STATUS LOGIC---------------------------
+
+  // ---------------------------Toggle Card/List View---------------------------
   function toggleView() {
     setViewType((prev) => (prev === "card" ? "list" : "card"));
   }
 
-  // Search submit handler
+  // ---------------------------Search Submit Handler---------------------------
   function handleSearchSubmit(e) {
     e.preventDefault();
     fetchMyJobs();
   }
 
-  // Handle filter changes (slider, etc.)
+  // ---------------------------Handle Filter Changes---------------------------
   function handleFilterChange(e) {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   }
 
-  // Tag addition/removal
+  // ---------------------------Tag Addition/Removal---------------------------
   function handleAddTag(tag) {
     if (tag && !filters.tags.includes(tag)) {
       setFilters((prev) => ({ ...prev, tags: [...prev.tags, tag] }));
@@ -180,7 +237,7 @@ export function MyJobs() {
     }));
   }
 
-  // Handle location search (uses browser geolocation)
+  // ---------------------------Location Search---------------------------
   function handleLocationSearch() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
@@ -195,12 +252,12 @@ export function MyJobs() {
     }
   }
 
-  // Navigate to job details page
+  // ---------------------------Navigation---------------------------
   function handleViewDetails(jobId) {
     navigate(`/myJob/${jobId}`);
   }
 
-  // Pagination
+  // ---------------------------Pagination---------------------------
   function handlePageChange(newPage) {
     if (newPage >= 0 && newPage < totalPages) {
       setPage(newPage);
@@ -327,17 +384,13 @@ export function MyJobs() {
                 {filters.tags.map((tag) => (
                   <span
                     key={tag}
-                    className={`px-2 py-1 rounded-full flex items-center ${getTagColor(
-                      tag
-                    )}`}
+                    className={`px-2 py-1 rounded-full flex items-center ${getTagColor(tag)}`}
                   >
                     <FaTag className="mr-2" />
                     <span className="mr-2">
-                      {
-                        Array.from(tagMapping.entries()).find(
-                          ([, val]) => val === tag
-                        )?.[0] || tag
-                      }
+                      {Array.from(tagMapping.entries()).find(
+                        ([, val]) => val === tag
+                      )?.[0] || tag}
                     </span>
                     <button
                       type="button"
@@ -415,10 +468,7 @@ export function MyJobs() {
 
             {/* Radius Filter */}
             <div className="mb-4 p-4 border rounded-md">
-              <label
-                htmlFor="distance-range-slider"
-                className="block mb-2 font-medium text-gray-700"
-              >
+              <label htmlFor="distance-range-slider" className="block mb-2 font-medium text-gray-700">
                 Radius (km)
               </label>
               <div className="relative w-full">
@@ -432,9 +482,7 @@ export function MyJobs() {
                   onChange={handleFilterChange}
                   className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #3b82f6 ${
-                      filters.radius / 5
-                    }%, #d1d5db ${filters.radius / 5}%)`,
+                    background: `linear-gradient(to right, #3b82f6 ${filters.radius / 5}%, #d1d5db ${filters.radius / 5}%)`,
                   }}
                 />
                 <div className="absolute w-full top-4 flex justify-between">
@@ -447,20 +495,13 @@ export function MyJobs() {
               </div>
               <div className="flex justify-between text-xs text-gray-600 mt-1">
                 {[0, 100, 200, 300, 400, 500].map((value) => (
-                  <span key={value} className="w-8 text-center">
-                    {value}
-                  </span>
+                  <span key={value} className="w-8 text-center">{value}</span>
                 ))}
               </div>
-              <p className="text-sm mt-2 text-gray-600">
-                Radius: {filters.radius} km
-              </p>
+              <p className="text-sm mt-2 text-gray-600">Radius: {filters.radius} km</p>
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-            >
+            <button type="submit" className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
               Apply Filters
             </button>
           </form>
@@ -468,22 +509,17 @@ export function MyJobs() {
 
         {/* Jobs Listing */}
         <div className="w-4/5 p-4 ml-4 mr-30">
-          {/* Header with "Showing X Jobs" and Sort By dropdown in top-right */}
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold">
               Showing {totalElements} Job{totalElements !== 1 ? "s" : ""}
             </h2>
             <div className="flex items-center space-x-2">
-              <label htmlFor="sortBy" className="font-medium">
-                Sort By:
-              </label>
+              <label htmlFor="sortBy" className="font-medium">Sort By:</label>
               <select
                 id="sortBy"
                 name="sortBy"
                 value={filters.sortBy}
-                onChange={(e) =>
-                  setFilters((prev) => ({ ...prev, sortBy: e.target.value }))
-                }
+                onChange={(e) => setFilters((prev) => ({ ...prev, sortBy: e.target.value }))}
                 className="px-3 py-2 border rounded-md"
               >
                 <option value="datePosted">Date Posted</option>
@@ -492,22 +528,18 @@ export function MyJobs() {
             </div>
           </div>
 
-          {errorMessage && (
-            <div className="text-red-500 mb-4 text-center">{errorMessage}</div>
-          )}
+          {errorMessage && <div className="text-red-500 mb-4 text-center">{errorMessage}</div>}
 
           {jobs.length === 0 ? (
             <p className="text-center">No jobs found.</p>
           ) : (
-            <>
-              <div
-                className={
-                  viewType === "card"
-                    ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto"
-                    : "max-w-6xl mx-auto space-y-4"
-                }
-              >
-                {jobs.map((job) => (
+            <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto" : "max-w-6xl mx-auto space-y-4"}>
+              {jobs.map((job) => {
+                // STATUS LOGIC: Retrieve job and applicant status info
+                const { statusColor, statusText, StatusIcon } = getJobStatusInfo(job);
+                const { applicantStatusColor, applicantStatusText } = getApplicantStatusInfo(job);
+
+                return (
                   <div
                     key={job.jobPostId}
                     className={`card border border-gray-300 ${
@@ -517,46 +549,50 @@ export function MyJobs() {
                     }`}
                   >
                     <h3 className="text-xl font-semibold">{job.title}</h3>
-
                     {job.address && (
                       <p className="flex items-center gap-1">
                         <FaMapMarkerAlt className="text-red-500" /> {job.address}
                       </p>
                     )}
-
                     {job.datePosted && (
                       <p className="flex items-center gap-1">
-                        <MdDateRange className="text-blue-500" /> Posted:{" "}
-                        {new Date(job.datePosted).toLocaleDateString()}
+                        <MdDateRange className="text-blue-500" /> Posted: {new Date(job.datePosted).toLocaleDateString()}
                       </p>
                     )}
-
                     {typeof job.maxApplicants !== "undefined" && (
                       <p className="flex items-center gap-1">
-                        <FaUsers className="text-purple-500" /> Max Applicants:{" "}
-                        {job.maxApplicants}
+                        <FaUsers className="text-purple-500" /> Max Applicants: {job.maxApplicants}
                       </p>
                     )}
-
                     {typeof job.relevantDistance !== "undefined" && (
                       <p className="flex items-center gap-1">
-                        <FaRoute className="text-green-500" /> Distance:{" "}
-                        {parseFloat(job.relevantDistance).toFixed(2)} km
+                        <FaRoute className="text-green-500" /> Distance: {parseFloat(job.relevantDistance).toFixed(2)} km
                       </p>
                     )}
-
                     <p className="mt-2">
-                      <strong>Description:</strong>{" "}
-                      {job.description && job.description.length > 100
-                        ? job.description.slice(0, 100) + "..."
-                        : job.description}
+                      <strong>Description:</strong> {job.description && job.description.length > 100 ? job.description.slice(0, 100) + "..." : job.description}
                     </p>
-
                     {job.tags && job.tags.length > 0 && (
                       <p className="my-3 text-sm">
                         <strong>Tags:</strong> {job.tags.join(", ")}
                       </p>
                     )}
+
+                    {/* Status Indicators */}
+                    <p className="flex items-center mt-2 gap-1">
+                      <StatusIcon className={`${statusColor} mr-1`} />
+                      <strong className="mr-2">Job Status:</strong>
+                      <span className={`${statusColor}`}>{statusText}</span>
+                    </p>
+                    <p className="flex items-center mt-2 gap-1">
+                      {job.applicantStatus === "PENDING" && <FaClock className={`${applicantStatusColor} mr-1`} />}
+                      {job.applicantStatus === "ACCEPTED" && <FaCheckCircle className={`${applicantStatusColor} mr-1`} />}
+                      {job.applicantStatus === "REJECTED" && <FaTimesCircle className={`${applicantStatusColor} mr-1`} />}
+                      {job.applicantStatus !== "PENDING" &&
+                        job.applicantStatus !== "ACCEPTED" &&
+                        job.applicantStatus !== "REJECTED" && <FaCircle className={`${applicantStatusColor} mr-1`} />}
+                      <strong>Applicant Status:</strong> <span className={`${applicantStatusColor}`}>{applicantStatusText}</span>
+                    </p>
 
                     <div className="mt-4">
                       <button
@@ -567,9 +603,9 @@ export function MyJobs() {
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            </>
+                );
+              })}
+            </div>
           )}
 
           {/* Pagination */}

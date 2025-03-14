@@ -1,63 +1,179 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { FaList, FaTh, FaTimesCircle } from "react-icons/fa";
+import { FaList, FaTh, FaCircle } from "react-icons/fa"; // <-- Added FaCircle
 import { ThemeContext } from "../components/ThemeContext";
+
+// Helper function to determine icon/color/text for each report status
+function getReportStatusInfo(report) {
+  let statusColor = "text-gray-400";
+  let statusText = "N/A";
+  let StatusIcon = FaCircle; // Default icon
+
+  switch (report.status) {
+    case "OPEN":
+      statusColor = "text-green-500";
+      statusText = "Open";
+      break;
+    case "UNDER_REVIEW":
+      statusColor = "text-yellow-500";
+      statusText = "Under Review";
+      break;
+    case "PENDING_RESPONSE":
+      statusColor = "text-orange-500";
+      statusText = "Pending Response";
+      break;
+    case "RESOLVED":
+      statusColor = "text-blue-500";
+      statusText = "Resolved";
+      break;
+    case "REJECTED":
+      statusColor = "text-red-500";
+      statusText = "Rejected";
+      break;
+    case "ACTION_TAKEN":
+      statusColor = "text-green-600";
+      statusText = "Action Taken";
+      break;
+    case "ESCALATED":
+      statusColor = "text-purple-500";
+      statusText = "Escalated";
+      break;
+    case "ON_HOLD":
+      statusColor = "text-indigo-500";
+      statusText = "On Hold";
+      break;
+    case "AUTO_RESOLVED":
+      statusColor = "text-teal-500";
+      statusText = "Auto Resolved";
+      break;
+    default:
+      statusColor = "text-gray-400";
+      statusText = "N/A";
+  }
+
+  return { statusColor, statusText, StatusIcon };
+}
 
 export function SearchReport() {
   const { darkMode } = useContext(ThemeContext);
 
-  //  State 
+  // For reading/writing URL query params
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Main data
   const [reportsData, setReportsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // For card/list toggle
+  // Card/list toggle
   const [viewType, setViewType] = useState("card");
 
-  // Pagination states (zero-based page)
+  // Pagination
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
 
-  // Filter state: adjust to match your actual fields
+  // Filters
   const [filters, setFilters] = useState({
-    title: "",
+    tags: [],
     status: "",
+    reportedUserId: "",
+    reportedJobPostId: "",
+    reportedApplicantId: "",
+    reportedReviewId: "",
+    sort: "createdAt",
+    isAsc: true,
   });
 
-  // For reading/writing query params
-  const [searchParams, setSearchParams] = useSearchParams();
+  // Possible tag values
+  const possibleTags = [
+    "HARASSMENT",
+    "SPAM",
+    "INAPPROPRIATE_CONTENT",
+    "MISINFORMATION",
+    "POLICY_VIOLATION",
+    "OTHER",
+  ];
 
-  const initialTitle = searchParams.get("title") || "";
-  const [localTitle, setLocalTitle] = useState(initialTitle);
+  // Possible statuses
+  const possibleStatuses = [
+    "OPEN",
+    "UNDER_REVIEW",
+    "PENDING_RESPONSE",
+    "RESOLVED",
+    "REJECTED",
+    "ACTION_TAKEN",
+    "ESCALATED",
+    "ON_HOLD",
+    "AUTO_RESOLVED",
+  ];
 
-  //  On mount, or when page/pageSize changes 
+  // Possible sort fields
+  const possibleSortFields = [
+    "reportId",
+    "reportedId",
+    "reportedUserId",
+    "reportMessage",
+    "reportStatus",
+    "createdAt",
+  ];
+
+  /**
+   * On mount or when searchParams/page/pageSize change:
+   * 1) Sync local filter state from URL
+   * 2) Fetch reports
+   */
   useEffect(() => {
+    syncFiltersFromUrl();
     fetchReports();
-
+    // eslint-disable-next-line
   }, [searchParams, page, pageSize]);
 
-  //  Fetch function 
+  // 1) Sync local filters from the URL
+  function syncFiltersFromUrl() {
+    const urlTags = searchParams.getAll("tags");
+    const urlStatus = searchParams.get("status") || "";
+    const urlReportedUserId = searchParams.get("reportedUserId") || "";
+    const urlReportedJobPostId = searchParams.get("reportedJobPostId") || "";
+    const urlReportedApplicantId = searchParams.get("reportedApplicantId") || "";
+    const urlReportedReviewId = searchParams.get("reportedReviewId") || "";
+    const urlSort = searchParams.get("sort") || "createdAt";
+    const urlIsAsc = searchParams.get("isAsc");
+    let isAscBool = true;
+    if (urlIsAsc === "false") {
+      isAscBool = false;
+    }
+
+    setFilters({
+      tags: urlTags,
+      status: urlStatus,
+      reportedUserId: urlReportedUserId,
+      reportedJobPostId: urlReportedJobPostId,
+      reportedApplicantId: urlReportedApplicantId,
+      reportedReviewId: urlReportedReviewId,
+      sort: urlSort,
+      isAsc: isAscBool,
+    });
+  }
+
+  // 2) Fetch reports from the server
   async function fetchReports() {
     setLoading(true);
     setErrorMessage("");
 
     try {
-      // Read the search params from the URL
-      const queryTitle = searchParams.get("title") || "";
-      const queryStatus = searchParams.get("status") || "";
-
-      const endpoint = `/api/v1/reports/search?title=${encodeURIComponent(
-        queryTitle
-      )}&status=${encodeURIComponent(queryStatus)}&page=${page}&size=${pageSize}`;
-
+      const token = localStorage.getItem("token") || "";
+      const endpoint = `/api/v1/reports/search?${searchParams.toString()}&page=${page}&size=${pageSize}`;
       console.log("Fetching:", endpoint);
 
       const res = await fetch(endpoint, {
         method: "GET",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
       });
 
       if (!res.ok) {
@@ -76,42 +192,51 @@ export function SearchReport() {
     }
   }
 
-  //  Handle form submit 
-  function handleSearchSubmit(e) {
+  // 3) When user clicks "Apply Filters"
+  function handleFilterSubmit(e) {
     e.preventDefault();
 
-    // Update the URL’s search params with our filter states
-    const newParams = {
-      ...filters,
-      title: localTitle, 
-    };
+    const newParams = new URLSearchParams();
+    if (filters.tags && filters.tags.length > 0) {
+      filters.tags.forEach((t) => {
+        newParams.append("tags", t);
+      });
+    }
+    if (filters.status) {
+      newParams.set("status", filters.status);
+    }
+    if (filters.reportedUserId) {
+      newParams.set("reportedUserId", filters.reportedUserId);
+    }
+    if (filters.reportedJobPostId) {
+      newParams.set("reportedJobPostId", filters.reportedJobPostId);
+    }
+    if (filters.reportedApplicantId) {
+      newParams.set("reportedApplicantId", filters.reportedApplicantId);
+    }
+    if (filters.reportedReviewId) {
+      newParams.set("reportedReviewId", filters.reportedReviewId);
+    }
+    newParams.set("sort", filters.sort);
+    newParams.set("isAsc", filters.isAsc ? "true" : "false");
 
-    Object.keys(newParams).forEach((key) => {
-      if (!newParams[key]) delete newParams[key];
-    });
-
-    // Convert to search params
     setSearchParams(newParams);
-    // Reset page to 0
     setPage(0);
   }
 
-  //  Toggle view 
+  // 4) Toggle view (card/list)
   function toggleView() {
     setViewType((prev) => (prev === "card" ? "list" : "card"));
   }
 
-  //  Pagination 
+  // 5) Pagination
   function handlePageChange(newPage) {
     setPage(newPage);
   }
-
   function handlePageSizeChange(e) {
     setPageSize(parseInt(e.target.value, 10));
     setPage(0);
   }
-
-  // For rendering pagination buttons (similar to your job code)
   function renderPaginationButtons() {
     const buttons = [];
     const maxButtons = 5;
@@ -183,13 +308,64 @@ export function SearchReport() {
     return buttons;
   }
 
-  //  Render 
+  // 6) Render
   if (loading) {
     return (
       <div className="main-content min-h-screen flex items-center justify-center">
         <p>Loading...</p>
       </div>
     );
+  }
+
+  // Add a helper for status icons/colors
+  function getReportStatusInfo(report) {
+    // Default
+    let statusColor = "text-gray-400";
+    let statusText = "N/A";
+    let StatusIcon = FaCircle;
+
+    switch (report.reportStatus) {
+      case "Open":
+        statusColor = "text-green-500";
+        statusText = "Open";
+        break;
+      case "Under Review":
+        statusColor = "text-yellow-500";
+        statusText = "Under Review";
+        break;
+      case "Pending Response":
+        statusColor = "text-orange-500";
+        statusText = "Pending Response";
+        break;
+      case "Resolved":
+        statusColor = "text-blue-500";
+        statusText = "Resolved";
+        break;
+      case "Rejected":
+        statusColor = "text-red-500";
+        statusText = "Rejected";
+        break;
+      case "Action Taken":
+        statusColor = "text-green-600";
+        statusText = "Action Taken";
+        break;
+      case "Escalated":
+        statusColor = "text-purple-500";
+        statusText = "Escalated";
+        break;
+      case "On Hold":
+        statusColor = "text-indigo-500";
+        statusText = "On Hold";
+        break;
+      case "Auto Resolved":
+        statusColor = "text-teal-500";
+        statusText = "Auto Resolved";
+        break;
+      default:
+        statusColor = "text-gray-400";
+        statusText = "N/A";
+    }
+    return { statusColor, statusText, StatusIcon };
   }
 
   return (
@@ -200,28 +376,11 @@ export function SearchReport() {
           : "bg-white text-gray-900 border-gray-200"
       }`}
     >
-      {/* Search Bar */}
-      <div className="flex justify-center mb-8">
-        <form onSubmit={handleSearchSubmit} className="flex">
-          <input
-            type="text"
-            value={localTitle}
-            onChange={(e) => setLocalTitle(e.target.value)}
-            placeholder="Search reports by title..."
-            className="px-4 py-2 border rounded-l-md focus:outline-none"
-          />
-          <button
-            type="submit"
-            className="px-4 py-2 bg-green-500 text-white rounded-r-md hover:bg-green-600"
-          >
-            Search
-          </button>
-        </form>
-
-        {/* Toggle View Button */}
+      {/* Top bar: toggle view, pageSize */}
+      <div className="flex justify-between items-center mb-6">
         <button
           onClick={toggleView}
-          className="px-4 py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400 flex items-center ml-4"
+          className="px-4 py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400 flex items-center"
           id="toggle-view"
         >
           {viewType === "card" ? (
@@ -238,7 +397,7 @@ export function SearchReport() {
         </button>
 
         {/* Show Results Dropdown */}
-        <div className="justify-center ml-10 flex items-center">
+        <div className="flex items-center">
           <label htmlFor="pageSize" className="mr-2">
             Show Results:
           </label>
@@ -257,18 +416,108 @@ export function SearchReport() {
       </div>
 
       <div className="flex">
-        {/* Left column: filters */}
-        <div className="w-1/5 pr-12 border-r mr-4">
+        {/* Left column: Filters */}
+        <div className="w-1/4 pr-8 border-r mr-4">
           <h3 className="text-xl font-bold mb-4">Filters</h3>
-          <form onSubmit={handleSearchSubmit}>
-            {/* Example filter: status */}
-            <div className="mb-4 p-4 border rounded-md">
-              <label className="block mb-2 font-semibold">Status</label>
+          <form onSubmit={handleFilterSubmit} className="space-y-6">
+            {/* reportedUserId */}
+            <div>
+              <label className="block mb-1 font-semibold">
+                Reported User ID
+              </label>
+              <input
+                type="text"
+                value={filters.reportedUserId}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    reportedUserId: e.target.value,
+                  }))
+                }
+                className={`w-full px-3 py-2 border rounded-md ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-black"
+                }`}
+                placeholder="UUID or numeric ID"
+              />
+            </div>
+            {/* reportedJobPostId */}
+            <div>
+              <label className="block mb-1 font-semibold">
+                Reported Job Post ID
+              </label>
+              <input
+                type="text"
+                value={filters.reportedJobPostId}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    reportedJobPostId: e.target.value,
+                  }))
+                }
+                className={`w-full px-3 py-2 border rounded-md ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-black"
+                }`}
+                placeholder="Numeric ID"
+              />
+            </div>
+            {/* reportedApplicantId */}
+            <div>
+              <label className="block mb-1 font-semibold">
+                Reported Applicant ID
+              </label>
+              <input
+                type="text"
+                value={filters.reportedApplicantId}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    reportedApplicantId: e.target.value,
+                  }))
+                }
+                className={`w-full px-3 py-2 border rounded-md ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-black"
+                }`}
+                placeholder="Numeric ID"
+              />
+            </div>
+            {/* reportedReviewId */}
+            <div>
+              <label className="block mb-1 font-semibold">
+                Reported Review ID
+              </label>
+              <input
+                type="text"
+                value={filters.reportedReviewId}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    reportedReviewId: e.target.value,
+                  }))
+                }
+                className={`w-full px-3 py-2 border rounded-md ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-black"
+                }`}
+                placeholder="Numeric ID"
+              />
+            </div>
+            {/* status */}
+            <div>
+              <label className="block mb-1 font-semibold">Status</label>
               <select
-                name="status"
                 value={filters.status}
                 onChange={(e) =>
-                  setFilters((prev) => ({ ...prev, status: e.target.value }))
+                  setFilters((prev) => ({
+                    ...prev,
+                    status: e.target.value,
+                  }))
                 }
                 className={`w-full px-3 py-2 border rounded-md ${
                   darkMode
@@ -277,13 +526,101 @@ export function SearchReport() {
                 }`}
               >
                 <option value="">Any</option>
-                <option value="OPEN">OPEN</option>
-                <option value="RESOLVED">RESOLVED</option>
-                <option value="REJECTED">REJECTED</option>
+                {possibleStatuses.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
               </select>
             </div>
-
-
+            {/* tags (multi-check) */}
+            <div>
+              <label className="block mb-1 font-semibold">Tags</label>
+              <div className="flex flex-wrap gap-2">
+                {possibleTags.map((tag) => (
+                  <label
+                    key={tag}
+                    className={`inline-flex items-center space-x-2 px-3 py-1 border rounded-md cursor-pointer ${
+                      darkMode
+                        ? filters.tags.includes(tag)
+                          ? "bg-blue-900 border-blue-700 text-white"
+                          : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                        : filters.tags.includes(tag)
+                        ? "bg-blue-50 border-blue-700 text-blue-800"
+                        : "bg-white border-gray-300 text-gray-900 hover:bg-gray-100"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.tags.includes(tag)}
+                      onChange={() => {
+                        setFilters((prev) => {
+                          const hasTag = prev.tags.includes(tag);
+                          if (hasTag) {
+                            return {
+                              ...prev,
+                              tags: prev.tags.filter((t) => t !== tag),
+                            };
+                          } else {
+                            return {
+                              ...prev,
+                              tags: [...prev.tags, tag],
+                            };
+                          }
+                        });
+                      }}
+                      className="hidden"
+                    />
+                    <span>{tag}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            {/* Sorting Field */}
+            <div>
+              <label className="block mb-1 font-semibold">Sort By</label>
+              <select
+                value={filters.sort}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    sort: e.target.value,
+                  }))
+                }
+                className={`w-full px-3 py-2 border rounded-md ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-black"
+                }`}
+              >
+                {possibleSortFields.map((field) => (
+                  <option key={field} value={field}>
+                    {field}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Sort Order */}
+            <div>
+              <label className="block mb-1 font-semibold">Sort Order</label>
+              <select
+                value={filters.isAsc ? "true" : "false"}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    isAsc: e.target.value === "true",
+                  }))
+                }
+                className={`w-full px-3 py-2 border rounded-md ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-black"
+                }`}
+              >
+                <option value="true">Ascending</option>
+                <option value="false">Descending</option>
+              </select>
+            </div>
             <button
               type="submit"
               className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
@@ -293,12 +630,12 @@ export function SearchReport() {
           </form>
         </div>
 
-        {/* Right column: reports list */}
-        <div className="w-4/5 p-4 ml-4">
-          <div className="flex flex-col items-start mb-8">
-            <h2 className="text-2xl font-bold text-center mb-4">
+        {/* Right column: Reports list */}
+        <div className="w-3/4 p-4 ml-4">
+          <div className="flex flex-col items-start mb-4">
+            <h2 className="text-2xl font-bold mb-2">
               {totalElements > 0
-                ? `Search returned ${totalElements} reports`
+                ? `Found ${totalElements} report(s)`
                 : "No reports found"}
             </h2>
           </div>
@@ -318,17 +655,24 @@ export function SearchReport() {
               }
             >
               {reportsData.map((report) => {
+                // Convert createdAt to a human-readable format
+                const createdAtReadable = report.createdAt
+                  ? new Date(report.createdAt).toLocaleString()
+                  : "N/A";
+
+                // Get status color/icon
+                const { statusColor, statusText, StatusIcon } = getReportStatusInfo(report);
+console.log("reportedUserId", report.reportedUserId);
+                // Build query params for the "Manage" link
                 const queryParams = new URLSearchParams({
-                  reportId: report.reportId || "",
-                  reportSubjectType: report.reportSubjectType || "",
-                  reportSubjectId: report.reportSubjectId?.toString() || "",
+                  reportId: report.reportId?.toString() || "",
                   reportedUserId: report.reportedUserId?.toString() || "",
                   reportedJobPostId: report.reportedJobPostId?.toString() || "",
-                  reviewId: report.reviewId?.toString() || "",
-                  reviewMessage: report.reviewMessage || "",
+                  reportedApplicantId: report.reportedApplicantId?.toString() || "",
+                  reportedReviewId: report.reportedReviewId?.toString() || "",
                   reportMessage: report.reportMessage || "",
                   reportTags: report.reportTags ? report.reportTags.join(",") : "",
-                  reportStatus: report.reportStatus || "",
+                  reportStatus: report.status || "",
                   createdAt: report.createdAt || "",
                 }).toString();
 
@@ -344,18 +688,29 @@ export function SearchReport() {
                     <h2 className="text-lg font-semibold mb-2">
                       Report ID: {report.reportId}
                     </h2>
-                    <p className="text-sm mb-2">
-                      <strong>Title:</strong> {report.title || "N/A"}
-                    </p>
-                    <p className="text-sm mb-2">
-                      <strong>Status:</strong> {report.status || "N/A"}
-                    </p>
-                    <p className="text-sm mb-4 line-clamp-3">
-                      <strong>Description:</strong>{" "}
-                      {report.description || "N/A"}
+
+                    {/* Display the color-coded status */}
+                    <p className="flex items-center text-sm mb-2">
+                      <strong className="mr-1">Status:</strong>
+                      <StatusIcon className={`${statusColor} mr-1`} />
+                      <span className={`${statusColor}`}>{statusText}</span>
                     </p>
 
-                    {/* "Manage" link that opens AdminReportManagementPopup */}
+                    <p className="text-sm mb-2">
+                      <strong>Tags:</strong>{" "}
+                      {report.reportTags?.length
+                        ? report.reportTags.join(", ")
+                        : "None"}
+                    </p>
+                    <p className="text-sm mb-2">
+                      <strong>Created At:</strong> {createdAtReadable}
+                    </p>
+                    <p className="text-sm mb-4 line-clamp-3">
+                      <strong>Message:</strong>{" "}
+                      {report.reportMessage || "N/A"}
+                    </p>
+
+                    {/* "Manage" link => AdminReportManagementPopup */}
                     <Link
                       to={`/adminreportmanagementpopup?${queryParams}`}
                       className="text-blue-500 hover:underline"
@@ -370,22 +725,17 @@ export function SearchReport() {
 
           {/* Pagination */}
           <div className="flex justify-center mt-8">
-            {/* Previous Button */}
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 0}
               className="w-32 px-4 py-2 mr-6 mx-1 bg-gray-300 text-black rounded-l-full rounded-r-md hover:bg-gray-400 disabled:opacity-50 flex justify-center"
               style={{
-                clipPath:
-                  "polygon(100% 0%, 85% 50%, 100% 100%, 0% 100%, 0% 0%)",
+                clipPath: "polygon(100% 0%, 85% 50%, 100% 100%, 0% 100%, 0% 0%)",
               }}
             >
               Previous
             </button>
-
             {renderPaginationButtons()}
-
-            {/* Next Button */}
             <button
               onClick={() => handlePageChange(page + 1)}
               disabled={page === totalPages - 1 || reportsData.length === 0}

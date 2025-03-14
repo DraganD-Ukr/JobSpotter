@@ -29,7 +29,6 @@ const ApplicantsManagementPopup = React.memo(({
     jobPostId
 }) => {
     const { darkMode } = useContext(ThemeContext);
-console.log("jobpostid",jobPostId)
     if (!isApplicantsPopupVisible) {
         return null;
     }

@@ -3,7 +3,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Notification from "./components/Notification";
 import HelpAndSupport from "./pages/HelpandSupport";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 import { Home } from "./pages/Home";
 import { About } from "./pages/About";
@@ -22,22 +22,27 @@ import { ViewMoreDetails } from "./components/ViewMoreDetails";
 import { JobPostDetails } from "./pages/JobPostDetails";
 import Data from "./pages/Data";
 import Profile from "./pages/Profile";
-import { useLocation } from "react-router-dom";
-import UserProfile from './pages/UserProfile';
-import {Dashboard} from "./pages/Dashboard";
+import UserProfile from "./pages/UserProfile";
+import { Dashboard } from "./pages/Dashboard";
 import AdminReportManagementPopup from "./components/AdminReportManagementPopup";
-import {SearchReport} from "./pages/SearchReport";
-import {UserReportFormPopup } from "./components/UserReportFormPopup";
+import { SearchReport } from "./pages/SearchReport";  
+import { UserReportFormPopup } from "./components/UserReportFormPopup";
 
 
 export default function App() {
   const location = useLocation();
-  const isJobPostPage = location.pathname === "/SearchJobPost" || location.pathname === "/JobPostHistory";
+  const isJobPostPage =
+    location.pathname === "/SearchJobPost" ||
+    location.pathname === "/JobPostHistory";
 
   return (
     <ThemeProvider>
       <Navbar />
-      <div className={`p-4 min-h-screen ${isJobPostPage ? "mx-20" : "container mx-auto"}`}>
+      <div
+        className={`p-4 min-h-screen ${
+          isJobPostPage ? "mx-20" : "container mx-auto"
+        }`}
+      >
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/notification" element={<Notification />} />
@@ -61,9 +66,10 @@ export default function App() {
           <Route path="/helpandsupport" element={<HelpAndSupport />} />
           <Route path="/users/:userId" element={<UserProfile />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/adminreportmanagementpopup" element={<AdminReportManagementPopup/>} />
+          <Route path="/adminreportmanagementpopup" element={<AdminReportManagementPopup />}/>
           <Route path="/searchreport" element={<SearchReport />} />
           <Route path="/userreportformpopup" element={<UserReportFormPopup />} />
+
 
         </Routes>
       </div>
