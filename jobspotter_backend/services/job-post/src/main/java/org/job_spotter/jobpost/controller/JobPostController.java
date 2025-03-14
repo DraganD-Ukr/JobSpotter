@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.job_spotter.jobpost.authUtils.JWTUtils;
 import org.job_spotter.jobpost.dto.*;
+import org.job_spotter.jobpost.model.Applicant;
 import org.job_spotter.jobpost.model.JobTagEnum;
 import org.job_spotter.jobpost.service.JobPostService;
 import org.springframework.data.domain.Page;
@@ -413,6 +414,40 @@ public class JobPostController {
 
         return ResponseEntity.noContent().build();
     }
+
+
+    @Operation(
+            summary = "Get applicant by id",
+            description = "Get an applicant by id. Only admins are allowed to view the applicant."
+                    + "This endpoint is dedicated only for admins."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully got applicant by id", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized: User is not an admin",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Not Found: Job post or applicant not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/applicants/{applicantId}")
+    public ResponseEntity<Applicant> getApplicantById(
+            @RequestHeader("Authorization") String accessToken,
+            @PathVariable Long applicantId
+    ) throws Exception {
+        log.info("Getting applicant by id: {}", applicantId);
+
+        Applicant applicant = jobPostService.getApplicantById(accessToken, applicantId);
+
+        return ResponseEntity.ok(applicant);
+    }
+
 
     @Operation(
             summary = "Update applicant message",

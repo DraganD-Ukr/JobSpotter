@@ -804,8 +804,19 @@ public class JobPostImpl implements JobPostService {
         return HttpStatus.NO_CONTENT;
     }
 
+    @Override
+    public Applicant getApplicantById(String accessToken, Long applicantId) throws Exception {
+//        Check if the user is an admin
+        checkIfUserIsAdmin(accessToken);
 
+        Applicant applicant = applicantRepository.findById(applicantId)
+                .orElseThrow(() -> {
+                    log.warn("Applicant not found with id {}", applicantId);
+                    return new ResourceNotFoundException("Applicant not found with id " + applicantId);
+                });
 
+        return applicant;
+    }
 
 
 //----------------------------------------------------------------------------------------------------------------

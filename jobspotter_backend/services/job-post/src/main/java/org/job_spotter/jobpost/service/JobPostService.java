@@ -1,6 +1,7 @@
 package org.job_spotter.jobpost.service;
 
 import org.job_spotter.jobpost.dto.*;
+import org.job_spotter.jobpost.model.Applicant;
 import org.job_spotter.jobpost.model.JobPost;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -44,4 +45,5 @@ public interface JobPostService {
 
     HttpStatus finishJobPost(UUID userId, Long jobPostId);
 
+    Applicant getApplicantById(String accessToken, Long applicantId) throws Exception;
 }
