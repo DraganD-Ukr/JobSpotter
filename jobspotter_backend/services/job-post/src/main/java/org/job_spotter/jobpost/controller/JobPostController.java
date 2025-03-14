@@ -657,6 +657,11 @@ public class JobPostController {
     }
 
 
+//-----------------------------------------Statistics----------------------------------
 
+    @GetMapping("/county-stats")
+    public ResponseEntity<List<JobPostByCounty>> getJobPostsByCounty() {
+        return ResponseEntity.ok(jobPostService.getJobPostsByCounty());
+    }
 
 }

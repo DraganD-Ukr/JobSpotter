@@ -46,4 +46,6 @@ public interface JobPostService {
     HttpStatus finishJobPost(UUID userId, Long jobPostId);
 
     Applicant getApplicantById(String accessToken, Long applicantId) throws Exception;
+
+    List<JobPostByCounty> getJobPostsByCounty();
 }

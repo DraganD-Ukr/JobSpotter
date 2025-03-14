@@ -3,6 +3,7 @@ package org.job_spotter.jobpost.service.Implementation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import feign.FeignException.FeignClientException;
+import jakarta.persistence.Tuple;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -816,6 +817,19 @@ public class JobPostImpl implements JobPostService {
                 });
 
         return applicant;
+    }
+
+    @Override
+    public List<JobPostByCounty> getJobPostsByCounty() {
+
+        List<Tuple> rawResults = jobPostRepository.getJobPostCountsByCounty();
+
+        return rawResults.stream()
+                .map(tuple -> new JobPostByCounty(
+                        tuple.get("county", String.class),
+                        tuple.get("jobPostCount", Number.class).longValue()
+                ))
+                .collect(Collectors.toList());
     }
 
 
