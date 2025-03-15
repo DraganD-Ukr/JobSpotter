@@ -659,6 +659,18 @@ public class JobPostController {
 
 //-----------------------------------------Statistics----------------------------------
 
+    @Operation(
+            summary = "Get job posts by county",
+            description = "Get job posts by county."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved job posts by county",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = JobPostByCounty.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @GetMapping("/county-stats")
     public ResponseEntity<List<JobPostByCounty>> getJobPostsByCounty() {
         return ResponseEntity.ok(jobPostService.getJobPostsByCounty());
@@ -674,7 +686,7 @@ public class JobPostController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Integer.class))
             ),
             @ApiResponse(responseCode = "500", description = "Internal server error",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
     @GetMapping("/count")
