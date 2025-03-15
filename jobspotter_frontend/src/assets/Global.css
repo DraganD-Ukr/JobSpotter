@@ -363,3 +363,25 @@ nav .group:hover > div {
   box-shadow: 0 0 10px 2px #59c70f, 
               0 0 20px 4px #13c100 inset;
 }
+
+
+.login-page .card:hover,
+.register-page .card:hover {
+  transform: none !important;           
+  box-shadow: 0 0 0 3px #59c70f !important;
+  transition: box-shadow 0.2s ease !important;
+}
+
+.main-content p {
+  color: #000000 !important; 
+}
+
+.darkMode .main-content p {
+  color: #ffffff !important; 
+}
+
+
+.no-hover-glow:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}

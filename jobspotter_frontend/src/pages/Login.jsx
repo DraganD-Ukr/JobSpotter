@@ -52,6 +52,7 @@ export function Login() {
     // Proceed only if there are no validation errors
     if (Object.keys(errors).length === 0) {
       try {
+        // 1) First, attempt login
         const response = await fetch("/api/v1/users/auth/login", {
           method: "POST",
           headers: {
@@ -61,7 +62,29 @@ export function Login() {
         });
 
         if (response.ok) {
-          setLoggedIn(true);
+          // 2) If login was successful, fetch user info from /api/v1/users/me
+          const meResponse = await fetch("/api/v1/users/me", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include", // needed so the session cookie is sent
+          });
+
+          if (meResponse.ok) {
+            const userData = await meResponse.json();
+            // 3) Store the userId in sessionStorage for Notification to detect
+            if (userData.userId) {
+              sessionStorage.setItem("userId", userData.userId);
+            }
+            // 4) Mark user as logged in
+            setLoggedIn(true);
+          } else {
+            const errorData = await meResponse.json();
+            setErrors(
+              errorData.errors || {
+                general: "Failed to retrieve user data.",
+              }
+            );
+          }
         } else {
           // If login fails, extract error messages from the response.
           const errorData = await response.json();
@@ -78,30 +101,25 @@ export function Login() {
     }
   };
 
-  // Handler to redirect the user to the job posts page
-  const handleRedirect = () => {
-    window.location.href = "/SearchJobPost";
-  };
-
   // If login is successful, remove the form and display a success message with two buttons.
   if (loggedIn) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white w-3/5 max-w-4xl rounded-lg shadow-lg p-6 text-center">
+      <div className="login-page main-content min-h-screen p-4 flex items-center justify-center my-10 rounded-4xl border">
+        <div className="card w-full max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6">Login Successful!</h2>
           <p className="mb-4">
             You have successfully logged in. Click one of the buttons below to proceed.
           </p>
           <div className="flex justify-center gap-4">
             <button
-              onClick={handleRedirect}
-              className="px-6 py-2 bg-gradient-to-r from-green-500 to-lime-500 text-white font-bold rounded-lg hover:opacity-90"
+              onClick={() => (window.location.href = "/SearchJobPost")}
+              className="px-6 py-2 bg-gradient-to-r from-green-500 to-lime-500 text-white font-bold rounded-lg hover:opacity-90 transition"
             >
               Go to Job Posts
             </button>
             <button
               onClick={() => (window.location.href = "/profile")}
-              className="px-6 py-2 bg-green-500 text-white font-bold rounded-lg hover:opacity-90"
+              className="px-6 py-2 bg-green-500 text-white font-bold rounded-lg hover:opacity-90 transition"
             >
               See Profiles
             </button>
@@ -113,22 +131,24 @@ export function Login() {
 
   // Render the login form when not logged in.
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+    <div className="login-page main-content min-h-screen p-4 flex items-center justify-center my-10 rounded-4xl border">
       {/* Outer container with two columns */}
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 bg-white rounded-lg shadow-lg overflow-hidden">
-        {/* Left Section (Green Gradient) */}
-        <div className="hidden md:flex flex-col justify-center items-center p-10 bg-gradient-to-br from-green-400 to-lime-500 text-white">
-          <h2 className="text-3xl font-bold mb-2">Welcome Back!</h2>
-          <p>Don't have an account?</p>
+      <div className="card w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+        {/* Left Section: Brand/Welcome Panel */}
+        <div className="hidden md:flex flex-col justify-center items-center p-10 lava-lamp-background text-white">
+          <h2 className="text-3xl font-bold mb-2 drop-shadow-lg">
+            Welcome Back!
+          </h2>
+          <p className="drop-shadow-sm">Don't have an account?</p>
           <a
             href="/register"
-            className="mt-4 px-6 py-2 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-200"
+            className="mt-4 px-6 py-2 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-200 transition"
           >
             Sign Up
           </a>
         </div>
 
-        {/* Right Section (Form) */}
+        {/* Right Section: Form */}
         <div className="p-10">
           <h2 className="text-3xl font-bold mb-6">Sign In</h2>
           {errors.general && (
@@ -137,19 +157,14 @@ export function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Username
-              </label>
+              <label className="block text-sm font-medium mb-1">Username</label>
               <input
                 type="text"
                 name="username"
                 value={formValues.username}
                 onChange={handleChange}
                 placeholder="Username or Email"
-                className="
-                  mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none
-                  focus:ring-2 focus:ring-green-400
-                "
+                className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
               />
               {errors.username && (
                 <p className="text-red-500 text-sm">{errors.username}</p>
@@ -158,19 +173,14 @@ export function Login() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Password
-              </label>
+              <label className="block text-sm font-medium mb-1">Password</label>
               <input
                 type="password"
                 name="password"
                 value={formValues.password}
                 onChange={handleChange}
                 placeholder="Password"
-                className="
-                  mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none
-                  focus:ring-2 focus:ring-green-400
-                "
+                className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
               />
               {errors.password && (
                 <p className="text-red-500 text-sm">{errors.password}</p>
@@ -181,14 +191,11 @@ export function Login() {
             <button
               type="submit"
               disabled={isButtonDisabled}
-              className={`
-                w-full text-white font-bold py-2 rounded-lg transition mt-2
-                ${
-                  isButtonDisabled
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-green-500 to-lime-500 hover:opacity-90"
-                }
-              `}
+              className={`w-full text-white font-bold py-2 rounded-lg transition mt-2 ${
+                isButtonDisabled
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-green-500 to-lime-500 hover:opacity-90"
+              }`}
             >
               Sign In
             </button>
