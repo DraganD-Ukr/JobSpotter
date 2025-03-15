@@ -48,4 +48,6 @@ public interface JobPostService {
     Applicant getApplicantById(String accessToken, Long applicantId) throws Exception;
 
     List<JobPostByCounty> getJobPostsByCounty();
+
+    Integer getTotalJobPostsCount();
 }

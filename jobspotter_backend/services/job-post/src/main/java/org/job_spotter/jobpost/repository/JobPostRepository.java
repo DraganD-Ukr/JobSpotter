@@ -30,4 +30,8 @@ public interface JobPostRepository extends JpaRepository<JobPost, Long> {
             ORDER BY jobPostCount DESC
             """, nativeQuery = true)
     List<Tuple> getJobPostCountsByCounty();
+
+
+    @Query("SELECT COUNT(jp) FROM JobPost jp")
+    Integer getTotalJobPostsCount();
 }

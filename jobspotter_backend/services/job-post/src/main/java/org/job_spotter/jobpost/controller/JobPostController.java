@@ -664,4 +664,9 @@ public class JobPostController {
         return ResponseEntity.ok(jobPostService.getJobPostsByCounty());
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Integer> getTotalJobPostsCount() {
+        return ResponseEntity.ok(jobPostService.getTotalJobPostsCount());
+    }
+
 }

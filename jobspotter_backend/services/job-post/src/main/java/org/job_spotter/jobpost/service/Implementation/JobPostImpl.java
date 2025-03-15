@@ -819,6 +819,13 @@ public class JobPostImpl implements JobPostService {
         return applicant;
     }
 
+
+
+//    --------------------------------------STATISTICS------------------------------------------------------------
+
+
+
+
     @Override
     public List<JobPostByCounty> getJobPostsByCounty() {
 
@@ -830,6 +837,11 @@ public class JobPostImpl implements JobPostService {
                         tuple.get("jobPostCount", Number.class).longValue()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Integer getTotalJobPostsCount() {
+        return jobPostRepository.getTotalJobPostsCount();
     }
 
 
