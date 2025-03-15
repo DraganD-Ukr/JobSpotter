@@ -3,8 +3,11 @@ package org.jobspotter.report.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jobspotter.report.authUtils.JWTUtils;
 import org.jobspotter.report.dto.ReportRequest;
 import org.jobspotter.report.exception.ResourceAlreadyExistsException;
+import org.jobspotter.report.exception.ResourceNotFoundException;
+import org.jobspotter.report.exception.UnauthorizedException;
 import org.jobspotter.report.model.Report;
 import org.jobspotter.report.model.ReportSortByField;
 import org.jobspotter.report.model.ReportStatus;
@@ -26,7 +29,7 @@ import java.util.UUID;
 @Service
 public class ReportServiceImpl implements ReportService {
 
-
+    private final JWTUtils jwtUtils;
     private final MongoTemplate mongoTemplate;
     private final ReportRepository reportRepository;
 
@@ -68,7 +71,10 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public Page<Report> searchReports(Set<ReportTag> tags, ReportStatus status, UUID reporterId, UUID reportedUserId, Long reportedJobPostId, Long reportedApplicantId, Long reportedReviewId, int page, int size, ReportSortByField sortBy, boolean isAsc) {
+    public Page<Report> searchReports(String accessToken, Set<ReportTag> tags, ReportStatus status, UUID reporterId, UUID reportedUserId, Long reportedJobPostId, Long reportedApplicantId, Long reportedReviewId, int page, int size, ReportSortByField sortBy, boolean isAsc) throws Exception {
+
+        isAdmin(accessToken);
+
         Pageable pageable = PageRequest.of(page, size);
         Query query = ReportSpecification.createQuery(
                 tags,
@@ -97,12 +103,14 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public void updateReportStatus(String reportId, ReportStatus status) {
+    public void updateReportStatus(String accessToken, String reportId, ReportStatus status) throws Exception {
+
+        isAdmin(accessToken);
 
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> {
                     log.error("Report with id: {} not found", reportId);
-                    return new IllegalArgumentException("Report not found");
+                    return new ResourceNotFoundException("Report not found");
                 });
 
         report.setReportStatus(status);
@@ -111,5 +119,12 @@ public class ReportServiceImpl implements ReportService {
         log.info("Report status updated for report: {}", reportId);
     }
 
+
+    private boolean isAdmin(String accToken) throws Exception {
+        if (jwtUtils.hasAdminRole(accToken)){
+            return true;
+        }
+        throw new UnauthorizedException("User does not have admin role");
+    }
 
 }

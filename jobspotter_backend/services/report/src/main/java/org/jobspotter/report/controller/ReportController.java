@@ -29,7 +29,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -108,11 +107,13 @@ public class ReportController {
             @RequestParam(value = "isAsc", required = false, defaultValue = "true") boolean sortDirection
     ) throws Exception {
 
-        jwtUtils.hasAdminRole(accessToken);
+
 
         log.info("Finding reports for admin...");
 
-        Page<Report> reports = reportService.searchReports(tags,
+        Page<Report> reports = reportService.searchReports(
+                accessToken,
+                tags,
                 status,
                 reporterId == null ? null : UUID.fromString(reporterId),
                 reportedUserId == null ? null : UUID.fromString(reportedUserId),
@@ -147,7 +148,7 @@ public class ReportController {
     ) throws Exception {
 
 
-        jwtUtils.hasAdminRole(accessToken);
+
 
         ReportStatus reportStatus;
 
@@ -159,11 +160,9 @@ public class ReportController {
         }
 
 
-
-
         log.info("Updating report status for report: {}", reportId);
 
-        reportService.updateReportStatus(reportId, reportStatus);
+        reportService.updateReportStatus(accessToken, reportId, reportStatus);
 
         return ResponseEntity.noContent().build();
     }

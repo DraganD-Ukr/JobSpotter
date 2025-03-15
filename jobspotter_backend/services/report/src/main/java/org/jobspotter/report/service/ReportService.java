@@ -14,7 +14,7 @@ public interface ReportService {
 
     void generateReport(UUID reporterId, ReportRequest reportRequest);
 
-    Page<Report> searchReports(Set<ReportTag> tags, ReportStatus status, UUID reporterId, UUID reportedUserId, Long reportedJobPostId, Long reportedApplicantId, Long reportedReviewId, int page, int size, ReportSortByField sortBy, boolean isAsc);
+    Page<Report> searchReports(String accessToken, Set<ReportTag> tags, ReportStatus status, UUID reporterId, UUID reportedUserId, Long reportedJobPostId, Long reportedApplicantId, Long reportedReviewId, int page, int size, ReportSortByField sortBy, boolean isAsc) throws Exception;
 
-    void updateReportStatus(String reportId, ReportStatus status);
+    void updateReportStatus(String accessToken, String reportId, ReportStatus status) throws Exception;
 }
