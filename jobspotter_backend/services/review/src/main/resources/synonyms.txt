@@ -1,4 +1,166 @@
-friendly,approachable,warm,personable,sociable,cool, kind
-
-
-
+skilled,competent,experienced,qualified,expert,proficient,adept,capable,masterly,knowledgeable,talented,accomplished,seasoned,trained,polished,gifted,virtuous,artful,clever,dexterous,ingenious,masterful,practiced,sharp,savvy,specialized,consummate,distinguished,formidable,guru,maestro,veteran,whiz,world-class,authority,authority in the field,crackerjack,dean,hotshot,maven,virtuoso
+unskilled,incompetent,inexperienced,unqualified,amateurish,inept,awkward,clumsy,unfit,unknowledgeable,untrained,green,novice,unseasoned,deficient,bungling,ham-fisted,maladroit,unpracticed,raw,rudimentary,wanting,weak,artless,fumbling,helpless,inexpert,jejune,puerile,amateur,dilettante,hack,learner,tyro
+reliable,dependable,trustworthy,consistent,punctual,responsible,steadfast,faithful,true,honest,reputable,upright,ethical,principled,sincere,dedicated,dutiful,genuine,loyal,secure,solid,stable,tried,veritable,authoritative,certifiable,doughty,infallible,proven,sterling,authentic,bona fide,conscientious,honorable,sound,surefire
+unreliable,undependable,untrustworthy,inconsistent,late,unpunctual,irresponsible,fickle,unfaithful,false,disreputable,dishonest,unethical,insincere,careless,capricious,deceitful,erratic,fraudulent,treacherous,unpredictable,wavering,chancy,dubious,shaky,slippery,tenuous,volatile,disingenuous,evasive,shifty,sketchy,unstable
+communicative,responsive,clear,informative,articulate,open,direct,forthcoming,engaging,easy to talk to,expressive,transparent,vocal,conversational,approachable,candid,frank,lucid,outgoing,plain-spoken,sociable,blunt,explicit,loquacious,perorational,prolix,talkative,accessible,affable,chatty,garrulous,intelligible
+uncommunicative,unresponsive,unclear,uninformative,inarticulate,reserved,silent,vague,difficult to reach,hard to talk to,taciturn,reticent,unforthcoming,closed-off,mute,secretive,unspoken,wordless,cryptic,inscrutable,ambiguous,enigmatic,laconic,mum,obfuscating,opaque,close-mouthed,dumb,incommunicado,speechless
+friendly,pleasant,kind,approachable,cordial,professional,polite,courteous,respectful,welcoming,amiable,affable,gracious,charming,agreeable,sociable,benevolent,genial,hospitable,obliging,warmhearted,convivial,gregarious,neighborly,personable,sympathetic,vivacious,amiable,chummy,comradely,good-natured
+unfriendly,unpleasant,rude,offensive,aloof,unprofessional,impolite,discourteous,disrespectful,cold,hostile,unwelcoming,abrasive,surly,distant,antagonistic,churlish,ill-mannered,inhospitable,ungracious,belligerent,caustic,irascible,petulant,prickly,testy,acerbic,acrimonious,cantankerous,crabby
+efficient,effective,productive,quick,fast,prompt,organized,resourceful,capable,accomplished,competent,adept,nimble,streamlined,expeditious,skillful,businesslike,economical,operative,potent,saving,time-saving,dynamic,energetic,fleet,methodical,practical,swift,active,dexterous,industrious,sharp-witted
+inefficient,ineffective,unproductive,slow,disorganized,wasteful,incapable,unaccomplished,sluggish,dilatory,cumbersome,unskillful,uncoordinated,lethargic,bunglesome,fruitless,futile,idle,laborious,otiose,awkward,clunky,hampering,inert,ponderous,unwieldy,clumsy,feeble,inoperative,stagnant,unavailing
+helpful,useful,supportive,assisting,beneficial,accommodating,went the extra mile,problem-solver,solution-oriented,resourceful,obliging,cooperative,instrumental,valuable,advantageous,contributory,favorable,kindly,ministerial,auxiliary,comforting,facilitating,salutary,sustaining,charitable,generous,philanthropic,serviceable
+unhelpful,useless,unsupportive,unassisting,detrimental,unaccommodating,did not go the extra mile,failed to solve the problem,not resourceful,obstructive,uncooperative,unwilling,adverse,counterproductive,deleterious,hindering,inimical,baleful,damaging,disadvantageous,inconvenient,pernicious,futile,impotent,ineffectual,obstructive
+careful,thorough,meticulous,precise,attentive to detail,diligent,conscientious,accurate,exact,systematic,scrupulous,methodical,painstaking,vigilant,circumspect,fastidious,heedful,punctilious,studious,alert,discreet,exacting,minute,particular,analytic,critical,discriminating,fussy,observant
+careless,sloppy,negligent,inattentive,imprecise,inaccurate,haphazard,disorganized,untidy,forgetful,lax,slipshod,reckless,heedless,sloppy,absent-minded,flustered,improvident,remiss,slapdash,bungling,flaky,inadvertent,scatterbrained,slack,forgetful,imprudent,offhand,rash,thoughtless
+respectful,considerate,polite,courteous,thoughtful,gentle,understanding,kind,gracious,tactful,civil,honorable,esteeming,appreciative,deferential,reverent,solicitous,urbane,venerating,admiring,decorous,obeisant,regardful,affable,chivalrous,complaisant
+disrespectful,inconsiderate,impolite,discourteous,thoughtless,rude,offensive,mean,ungrateful,tactless,uncivil,dishonorable,contemptuous,insulting,boorish,crude,impertinent,insolent,sarcastic,callous,flippant,indecorous,mocking,scornful,abusive,arrogant,disdainful,flippant
+fair price,reasonable price,affordable,good value,worth the money,just price,competitive,economical,modest,sensible,equitable,cost-effective,cheap,discounted,frugal,low-cost,thrifty,bargain-priced,fair-minded,moderate,nominal,budget-friendly,sensible pricing
+expensive,overpriced,costly,high-priced,unreasonable price,pricey,steep,exorbitant,inflated,too much,dear,uneconomical,excessive,extravagant,lavish,premium,unjustifiable,astronomical,inflated,outrageous,prohibitive,unwarranted,high-ticket,luxury,over the top
+good job,great work,excellent service,well done,fantastic,superb,outstanding,amazing,wonderful,terrific,commendable,exceptional,remarkable,splendid,admirable,brilliant,first-rate,impeccable,meritorious,stellar,ace,divine,exemplary,magnificent,noteworthy,top-notch,virtuoso
+bad job,poor work,terrible service,awful,unsatisfactory,dreadful,horrible,appalling,lousy,inferior,subpar,deficient,inadequate,shoddy,abysmal,atrocious,dismal,flawed,mediocre,wretched,amiss,awry,crummy,execrable,lamentable,second-rate,botched,bungled,faulty,imperfect
+happy,pleased,satisfied,delighted,content,joyful,glad,thrilled,stoked,impressed,cheerful,elated,euphoric,overjoyed,gratified,blissful,ecstatic,exuberant,gleeful,radiant,upbeat,buoyant,jovial,lighthearted,sparkling,sunny,charmed,exhilarated,jubilant,rapturous
+unhappy,displeased,dissatisfied,disappointed,sad,frustrated,annoyed,upset,miserable,let down,gloomy,dejected,crestfallen,despondent,sorrowful,bitter,dismayed,grief-stricken,melancholy,pessimistic,afflicted,blue,doleful,forlorn,morose,woeful,anguished,disconsolate,heartbroken,lugubrious
+recommend,highly recommend,would hire again,positive experience,great to work with,excellent choice,top-notch,superb,fantastic,a+,endorse,vouch for,commend,suggest,advocate,attest,certify,praise,sponsor,acclaim,applaud,back,champion,countenance,affirm,approve,sanction
+do not recommend,would not hire again,negative experience,difficult to work with,poor choice,subpar,terrible,awful,dreadful,f-,discourage,warn against,advise against,caution against,deprecate,dissuade,object to,censure,condemn,denounce,disapprove,reprobate,criticize,forswear,reject
+clean,tidy,neat,spotless,hygienic,sanitary,immaculate,pristine,spick-and-span,unblemished
+dirty,untidy,filthy,sloppy,unsanitary,messy,disorderly,soiled,impure,grimy,squalid,unclean
+prepared,equipped,ready,organized,primed,furnished,stocked
+unprepared,unequipped,unready,disorganized,unfurnished,unstocked
+diagnosed the issue,found a fix,troubleshooter,identified the problem,resolved the matter
+failed to diagnose,could not fix,ineffective at troubleshooting,problem remained
+patient,understanding,calm,tolerant,forbearing,composed,serene
+impatient,intolerant,agitated,restless,short-tempered,irritable
+enthusiastic,eager,motivated,keen,passionate,zealous,avid
+unenthusiastic,unmotivated,apathetic,indifferent,lethargic,listless
+flexible,adaptable,accommodating,versatile,malleable,pliable
+inflexible,unadaptable,unaccommodating,rigid,unyielding,obstinate
+honest,trustworthy,ethical,principled,sincere,upright,veracious,truthful
+dishonest,untrustworthy,unethical,unprincipled,insincere,deceitful,mendacious
+well-presented,neat appearance,tidy,groomed,presentable,smart
+poorly presented,untidy appearance,ungroomed,slovenly,messy
+clear instructions,precise directions,well-explained,explicit guidance,straightforward information
+vague instructions,unclear directions,poorly explained,ambiguous guidance,confusing information
+fair expectations,reasonable demands,realistic,just requirements,equitable standards
+unfair expectations,unreasonable demands,unrealistic,unjust requirements,inequitable standards
+timely payment,paid promptly,paid on time,swift payment,punctual remuneration
+delayed payment,paid late,payment overdue,slow payment,tardy remuneration
+respectful communication,courteous interaction,polite exchange,civil dialogue,considerate language
+disrespectful communication,discourteous interaction,impolite exchange,rude language,offensive language
+organized posting,clear requirements,well-structured,systematic listing,coherent details
+disorganized posting,unclear requirements,poorly structured,haphazard listing,confusing details
+punctual arrival,arrived on time,showed up promptly
+late arrival,arrived late,delayed
+completed the task,finished the job,executed the work,accomplished the assignment
+did not complete the task,failed to finish,left the job undone
+followed instructions,adhered to guidelines,complied with directions
+did not follow instructions,disregarded guidelines,ignored directions
+good communication skills,excellent interpersonal skills,strong verbal skills
+poor communication skills,weak interpersonal skills,lacking verbal skills
+positive attitude,optimistic outlook,cheerful disposition
+negative attitude,pessimistic outlook,gloomy disposition
+professional demeanor,businesslike manner,appropriate conduct
+unprofessional demeanor,inappropriate manner,unseemly conduct
+detail-oriented,focused on specifics,attentive to nuances
+not detail-oriented,overlooked specifics,inattentive to nuances
+problem-solving skills,ability to troubleshoot,resourceful in finding solutions
+lack of problem-solving skills,unable to troubleshoot,not resourceful
+time management skills,efficient use of time,organized schedule
+poor time management skills,inefficient use of time,disorganized schedule
+customer service skills,client-focused approach,good rapport with people
+poor customer service skills,not client-focused,poor rapport with people
+integrity,honesty,probity,rectitude,morality,virtue
+lack of integrity,dishonesty,improbity,immorality,vice
+enthusiastic about the job,eager to work,motivated to perform
+unenthusiastic about the job,reluctant to work,unmotivated
+flexible schedule,willing to adapt,available at various times
+inflexible schedule,unwilling to adapt,limited availability
+patient with requests,understanding of needs,calm under pressure
+impatient with requests,unwilling to understand,easily stressed
+clear expectations,well-defined tasks,understandable goals
+unclear expectations,poorly defined tasks,unintelligible goals
+provided necessary tools,supplied required materials,equipped for the job
+did not provide tools,lacked necessary materials,unprepared for the job
+safe work practices,adhered to safety regulations,prioritized safety
+unsafe work practices,disregarded safety regulations,neglected safety
+completed within budget,stayed within the agreed price,cost-conscious
+exceeded the budget,went over the agreed price,not cost-conscious
+completed on time,finished by the deadline,prompt completion
+did not complete on time,missed the deadline,delayed completion
+thorough cleanup,left the area tidy,cleaned up properly
+poor cleanup,left the area messy,did not clean up properly
+good follow-through,completed all agreed tasks,reliable in finishing
+poor follow-through,did not complete all tasks,unreliable in finishing
+addressed concerns,responded to questions,resolved issues
+did not address concerns,ignored questions,failed to resolve issues
+positive feedback,glowing review,excellent rating
+negative feedback,poor review,low rating
+met expectations,satisfied requirements,fulfilled the agreement
+did not meet expectations,failed requirements,did not fulfill the agreement
+exceeded expectations,went above and beyond,surpassed requirements
+fell short of expectations,did not measure up,failed to meet requirements
+professional attitude,businesslike approach,mature behavior
+unprofessional attitude,unbusinesslike approach,immature behavior
+positive communication,clear dialogue,constructive feedback
+negative communication,unclear dialogue,unhelpful feedback
+timely responses,replied quickly,prompt communication
+delayed responses,replied slowly,late communication
+respectful interaction,courteous exchange,polite behavior
+disrespectful interaction,discourteous exchange,rude behavior
+fair compensation,reasonable payment,appropriate wage
+unfair compensation,unreasonable payment,inappropriate wage
+clear agreement,well-defined terms,understandable contract
+unclear agreement,poorly defined terms,confusing contract
+good working relationship,positive rapport,collaborative spirit
+poor working relationship,negative rapport,lack of collaboration
+willing to negotiate,open to discussion,flexible on terms
+unwilling to negotiate,closed to discussion,inflexible on terms
+provided helpful information,offered useful details,shared relevant knowledge
+did not provide information,withheld details,lacked relevant knowledge
+easy to communicate with,approachable for questions,responsive to inquiries
+difficult to communicate with,unapproachable,unresponsive to inquiries
+reliable transportation,arrived with own transport,dependable travel
+unreliable transportation,had issues with transport,undependable travel
+followed through on commitments,honored agreements,kept promises
+did not follow through,broke agreements,did not keep promises
+showed initiative,took ownership,proactive approach
+lacked initiative,waited for instructions,reactive approach
+demonstrated expertise,showed proficiency,displayed mastery
+lacked expertise,showed incompetence,displayed lack of mastery
+provided helpful suggestions,offered valuable advice,contributed useful ideas
+did not provide suggestions,offered no advice,did not contribute ideas
+adhered to schedule,stuck to the timeline,followed the plan
+did not adhere to schedule,deviated from the timeline,did not follow the plan
+maintained a positive attitude,remained optimistic,stayed cheerful
+displayed a negative attitude,was pessimistic,seemed gloomy
+handled issues effectively,resolved problems efficiently,dealt with matters well
+did not handle issues well,failed to resolve problems,dealt with matters poorly
+provided clear explanations,explained things well,communicated understandably
+did not provide clear explanations,explained things poorly,communicated unclearly
+demonstrated a strong work ethic,showed dedication to the task,worked diligently
+lacked a strong work ethic,showed little dedication,did not work diligently
+maintained professionalism,acted appropriately,behaved professionally
+did not maintain professionalism,acted inappropriately,behaved unprofessionally
+showed respect for property,treated belongings carefully,respected premises
+did not show respect for property,treated belongings carelessly,disrespected premises
+completed all tasks thoroughly,finished everything completely,left no loose ends
+did not complete all tasks,left things unfinished,overlooked details
+provided updates regularly,kept informed,communicated progress
+did not provide updates,failed to keep informed,did not communicate progress
+was punctual for appointments,arrived on time for meetings,kept scheduled times
+was late for appointments,did not arrive on time,missed scheduled times
+demonstrated patience,showed tolerance,remained calm
+lacked patience,showed intolerance,became agitated
+followed safety guidelines,adhered to regulations,worked safely
+did not follow safety guidelines,ignored regulations,worked unsafely
+provided excellent customer service,offered top-notch support,treated well
+provided poor customer service,offered inadequate support,treated badly
+maintained a clean work environment,kept the workspace tidy,worked cleanly
+did not maintain a clean environment,left the workspace messy,worked sloppily
+used appropriate tools,utilized correct equipment,employed proper instruments
+did not use appropriate tools,utilized incorrect equipment,employed improper instruments
+demonstrated problem-solving skills,found solutions effectively,resolved issues
+lacked problem-solving skills,struggled to find solutions,failed to resolve issues
+communicated clearly and concisely,expressed thoughts effectively,was easy to understand
+did not communicate clearly,expressed thoughts poorly,was difficult to understand
+showed enthusiasm for the work,was passionate about the task,displayed eagerness
+lacked enthusiasm,was uninspired,showed little interest
