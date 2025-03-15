@@ -31,4 +31,6 @@ public interface UserService {
     void disableUser(String accessToken, UUID userId) throws Exception;
 
     ResponseEntity<UserResponse> updateUserById(String accessToken, UUID userId, UserPatchRequest userPatchRequest) throws Exception;
+
+    Integer getTotalUsersCount(String accessToken) throws Exception;
 }

@@ -324,4 +324,15 @@ public class UserController {
     }
 
 
+//    ---------------------------------------STATISTICS-----------------------------------
+
+    @GetMapping("/count")
+    public ResponseEntity<Integer> getTotalUsersCount(
+            @RequestHeader("Authorization") String accessToken
+    ) throws Exception {
+        log.info("Getting statistics");
+        return ResponseEntity.ok(userService.getTotalUsersCount(accessToken));
+    }
+
+
 }

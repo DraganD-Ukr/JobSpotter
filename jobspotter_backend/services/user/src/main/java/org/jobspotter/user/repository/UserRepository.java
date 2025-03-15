@@ -2,6 +2,7 @@ package org.jobspotter.user.repository;
 
 import org.jobspotter.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,4 +22,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     User findByUserId(UUID userIdFromToken);
 
     List<User> findAllByUserIdIn(List<UUID> userIds);
+
+    @Query("SELECT COUNT(u) FROM User u")
+    Integer getUsersCount();
 }

@@ -282,6 +282,12 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+    @Override
+    public Integer getTotalUsersCount(String accessToken) throws Exception {
+        isAdmin(accessToken);
+        return userRepository.getUsersCount();
+    }
+
 
     private boolean updateUserFromPatch(User user, UserPatchRequest userPatchRequest){
         boolean updated = false;
@@ -326,6 +332,12 @@ public class UserServiceImpl implements UserService {
 
         return updated;
 
+    }
+
+    private void isAdmin(String accessToken) throws Exception {
+        if (!jwtUtils.hasAdminRole(accessToken)) {
+           throw new UnauthorizedException("Unauthorized access");
+        }
     }
 
 
