@@ -844,6 +844,11 @@ public class JobPostImpl implements JobPostService {
         return jobPostRepository.getTotalJobPostsCount();
     }
 
+    @Override
+    public Integer getTotalApplicantsCount() {
+        return jobPostRepository.getTotalApplicantsCount();
+    }
+
 
 //----------------------------------------------------------------------------------------------------------------
 //                                              Helper methods

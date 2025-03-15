@@ -694,4 +694,22 @@ public class JobPostController {
         return ResponseEntity.ok(jobPostService.getTotalJobPostsCount());
     }
 
+
+    @Operation(
+            summary = "Get total applicants count",
+            description = "Get total applicants count."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved total applicants count",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Integer.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("applicants/count")
+    public ResponseEntity<Integer> getTotalApplicantsCount() {
+        return ResponseEntity.ok(jobPostService.getTotalApplicantsCount());
+    }
+
 }

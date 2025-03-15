@@ -50,4 +50,6 @@ public interface JobPostService {
     List<JobPostByCounty> getJobPostsByCounty();
 
     Integer getTotalJobPostsCount();
+
+    Integer getTotalApplicantsCount();
 }

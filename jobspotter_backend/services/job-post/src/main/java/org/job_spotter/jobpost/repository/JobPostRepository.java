@@ -34,4 +34,7 @@ public interface JobPostRepository extends JpaRepository<JobPost, Long> {
 
     @Query("SELECT COUNT(jp) FROM JobPost jp")
     Integer getTotalJobPostsCount();
+
+    @Query("SELECT COUNT(a) FROM Applicant a")
+    Integer getTotalApplicantsCount();
 }
