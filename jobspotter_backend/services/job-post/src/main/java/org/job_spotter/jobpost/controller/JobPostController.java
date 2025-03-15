@@ -712,7 +712,7 @@ public class JobPostController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    @GetMapping("/count}")
+    @GetMapping("/count")
     public ResponseEntity<Integer> getTotalJobPostsCountByStatus(
             @RequestParam(value = "status", defaultValue = "OPEN") @Schema(implementation = JobStatus.class) String status
     ) {
