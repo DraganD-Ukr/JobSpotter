@@ -3,6 +3,7 @@ package org.job_spotter.jobpost.service;
 import org.job_spotter.jobpost.dto.*;
 import org.job_spotter.jobpost.model.Applicant;
 import org.job_spotter.jobpost.model.JobPost;
+import org.job_spotter.jobpost.model.JobStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 
@@ -52,4 +53,6 @@ public interface JobPostService {
     Integer getTotalJobPostsCount();
 
     Integer getTotalApplicantsCount();
+
+    Integer getTotalJobPostsCountByStatus(JobStatus status);
 }

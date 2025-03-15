@@ -11,7 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.job_spotter.jobpost.authUtils.JWTUtils;
 import org.job_spotter.jobpost.dto.*;
+import org.job_spotter.jobpost.exception.InvalidRequestException;
 import org.job_spotter.jobpost.model.Applicant;
+import org.job_spotter.jobpost.model.JobStatus;
 import org.job_spotter.jobpost.model.JobTagEnum;
 import org.job_spotter.jobpost.service.JobPostService;
 import org.springframework.data.domain.Page;
@@ -692,6 +694,35 @@ public class JobPostController {
     @GetMapping("/count")
     public ResponseEntity<Integer> getTotalJobPostsCount() {
         return ResponseEntity.ok(jobPostService.getTotalJobPostsCount());
+    }
+
+
+    @Operation(
+            summary = "Get total job posts count by status",
+            description = "Get total job posts count by status."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved total job posts count by status",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Integer.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/count/{status}")
+    public ResponseEntity<Integer> getTotalJobPostsCountByStatus(
+            @PathVariable @Schema(implementation = JobStatus.class) String status
+    ) {
+        JobStatus convertedStatus;
+        try {
+            convertedStatus = JobStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidRequestException("Invalid job status: " + status + ". Valid values are: " + JobStatus.getEnumValues());
+        }
+        return ResponseEntity.ok(jobPostService.getTotalJobPostsCountByStatus(convertedStatus));
     }
 
 

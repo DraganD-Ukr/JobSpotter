@@ -2,6 +2,7 @@ package org.job_spotter.jobpost.repository;
 
 import jakarta.persistence.Tuple;
 import org.job_spotter.jobpost.model.JobPost;
+import org.job_spotter.jobpost.model.JobStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -37,4 +38,7 @@ public interface JobPostRepository extends JpaRepository<JobPost, Long> {
 
     @Query("SELECT COUNT(a) FROM Applicant a")
     Integer getTotalApplicantsCount();
+
+    @Query("SELECT COUNT(jp) FROM JobPost jp WHERE jp.status = :status")
+    Integer getTotalJobPostsCountByStatus(JobStatus status);
 }
