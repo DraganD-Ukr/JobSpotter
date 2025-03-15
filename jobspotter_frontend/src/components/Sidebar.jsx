@@ -75,7 +75,7 @@ export default function Sidebar() {
         <Link to="/Address" className="block text-sm hover:text-green-400">
           Manage Address
         </Link>
-        <Link to="#" className="block text-sm hover:text-green-400">
+        <Link to="/NotificationPopup" className="block text-sm hover:text-green-400">
           Notifications
         </Link>
         <Link
