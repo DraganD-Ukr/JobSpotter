@@ -841,7 +841,7 @@ public class JobPostImpl implements JobPostService {
 // Validation Methods
 //----------------------------------------------------------------------------------------------------------------
     private boolean checkIfUserIsJobPosterOrAdmin(String accessToken, JobPost jobPost) throws Exception {
-        boolean isJobPoster = jobPost.getJobPosterId().equals(jwtUtils.getUserIdFromToken(accessToken));
+        boolean isJobPoster = jobPost.getJobPosterId().equals(JWTUtils.getUserIdFromToken(accessToken));
         boolean isAdmin = jwtUtils.hasAdminRole(accessToken);
 
         if (!isJobPoster && !isAdmin) {
