@@ -1,15 +1,20 @@
 import { useState, useEffect, useRef, useContext } from "react";
+import { Link } from "react-router-dom";
 import { Search, Sun, Moon } from "lucide-react";
 import trollImage from "../assets/troll.jpg";
-import gigachadImage from "../assets/gigachad.png";
 import { ThemeContext } from "./ThemeContext";
 import Notification from "./Notification";
+import ProfilePicture from "../components/ProfilePicture";
 
 export default function Navbar() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [username, setUsername] = useState("");
+  const [userId, setUserId] = useState(""); // NEW state for userId
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Use this to track admin status
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Use the global dark mode state from context
   const { darkMode, setDarkMode } = useContext(ThemeContext);
@@ -54,7 +59,7 @@ export default function Navbar() {
     }
   }
 
-  // Clicking a search result → navigate to “Jobs Available”
+  // Clicking a search result  navigate to “Jobs Available”
   function handleResultClick(job) {
     window.location.href = `/SearchJobPost?jobId=${job.jobPostId}`;
   }
@@ -74,7 +79,7 @@ export default function Navbar() {
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Check if user is logged in
+  // Check if user is logged in (and if they are admin)
   useEffect(() => {
     fetch("/api/v1/users/me", {
       method: "GET",
@@ -87,11 +92,16 @@ export default function Navbar() {
       })
       .then((data) => {
         setUsername(data.username || "");
+        setUserId(data.userId || ""); // Set userId from API
         setIsLoggedIn(true);
+
+        // *** The ONLY admin check change: userType === "ADMIN" ***
+        setIsAdmin(data.userType === "ADMIN");
+        console.log("isAdmin:", data.userType);
       })
       .catch(() => setIsLoggedIn(false))
       .finally(() => setIsCheckingAuth(false));
-  }, []);
+  }, [setDarkMode]);
 
   // Logout
   const handleLogout = async () => {
@@ -114,65 +124,93 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 lava-lamp-background p-4 shadow-md relative">
       <div className="container mx-auto flex items-center justify-between nav-container">
         {/* Left: Logo */}
-        <a href="/">
+        <Link to="/">
           <img
             src="/jb.png"
             alt="JobSpotter Logo"
             className="h-10 w-auto object-contain scale-500 mb-2"
           />
-        </a>
+        </Link>
 
-        {/* Middle: "Jobs Available", "My Job Posts", and Data link */}
-        <div className="flex-1 flex justify-center items-center gap-8">
-          <div className="relative group inline-block">
-            <span className="inline-block px-3 py-2 text-white font-medium hover:underline">
-              Jobs Available
-            </span>
-            <div
-              className="absolute top-full mt-6 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg transform origin-bottom scale-0 opacity-0 transition-all ease-in-out duration-300 group-hover:scale-100 group-hover:opacity-100"
+        {/* Middle Nav: Show admin links if isAdmin, else normal user links */}
+        {isAdmin ? (
+          <div className="flex-1 flex justify-center items-center gap-8">
+            <Link
+              to="/dashboard"
+              className="text-white font-medium hover:underline"
             >
-              <a
-                href="/SearchJobPost"
-                className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                View All Jobs
-              </a>
-              <a
-                href="/JobPostHistory"
-                className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                View Job Post History
-              </a>
-              <div className="h-px w-full bg-gray-300 dark:bg-gray-600" />
-            </div>
-          </div>
-
-          <div className="relative group inline-block">
-            <span className="inline-block px-3 py-2 text-white font-medium hover:underline">
-              My Job Posts
-            </span>
-            <div
-              className="absolute top-full mt-6 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg transform origin-bottom scale-0 opacity-0 transition-all ease-in-out duration-300 group-hover:scale-100 group-hover:opacity-100"
+              Dashboard
+            </Link>
+            <Link
+              to="/searchreport"
+              className="text-white font-medium hover:underline"
             >
-              <a
-                href="/myJobs"
-                className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                View My Jobs
-              </a>
-              <a
-                href="/CreateJobPost"
-                className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Create Job Post
-              </a>
-            </div>
-          </div>
+              Search Reports
+            </Link>
 
-          <a href="/data" className="text-white font-medium hover:underline">
-            Data
-          </a>
-        </div>
+          </div>
+        ) : (
+          <div className="flex-1 flex justify-center items-center gap-8">
+            <div className="relative group inline-block">
+              <span className="inline-block px-3 py-2 text-white font-medium hover:underline">
+                Jobs Available
+              </span>
+              <div
+                className="absolute top-full mt-6 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg transform origin-bottom scale-0 opacity-0 transition-all ease-in-out duration-300 group-hover:scale-100 group-hover:opacity-100"
+              >
+                <Link
+                  to="/SearchJobPost"
+                  className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  View All Jobs
+                </Link>
+                <Link
+                  to="/JobPostHistory"
+                  className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  View Job Post History
+                </Link>
+                <div className="h-px w-full bg-gray-300 dark:bg-gray-600" />
+              </div>
+            </div>
+
+            <div className="relative group inline-block">
+              <span className="inline-block px-3 py-2 text-white font-medium hover:underline">
+                My Job Posts
+              </span>
+              <div
+                className="absolute top-full mt-6 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg transform origin-bottom scale-0 opacity-0 transition-all ease-in-out duration-300 group-hover:scale-100 group-hover:opacity-100"
+              >
+                <Link
+                  to="/myJobs"
+                  className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  View My Jobs
+                </Link>
+
+                 <Link
+                  to="/SearchReviews"
+                  className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  View Rating Review History
+                </Link>
+
+                <Link
+                  to="/CreateJobPost"
+                  className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Create Job Post
+                </Link>
+
+               
+              </div>
+            </div>
+
+            <Link to="/data" className="text-white font-medium hover:underline">
+              Data
+            </Link>
+          </div>
+        )}
 
         <div className="flex items-center space-x-4">
           {/* Search Bar */}
@@ -251,49 +289,46 @@ export default function Navbar() {
             <div className="text-white">Loading...</div>
           ) : !isLoggedIn ? (
             <>
-              <a
-                href="/login"
+              <Link
+                to="/login"
                 className="bg-green-700 px-4 py-2 text-white rounded-md hover:bg-green-800"
               >
                 Login
-              </a>
-              <a
-                href="/register"
+              </Link>
+              <Link
+                to="/register"
                 className="bg-lime-700 px-4 py-2 text-white rounded-md hover:bg-lime-800"
               >
                 Register
-              </a>
+              </Link>
             </>
           ) : (
             <div className="flex items-center gap-2">
               <div className="relative group inline-block">
-                <img
-                  src={gigachadImage}
-                  alt="Profile"
-                  className="w-10 h-10 rounded-full cursor-pointer"
-                />
-                {/* Profile dropdown now also uses mt-6 & origin-bottom */}
+                {/* Replace static image with ProfilePicture component */}
+                <ProfilePicture userId={userId} darkMode={darkMode} />
+                {/* Profile dropdown remains unchanged */}
                 <div
                   className="absolute top-full mt-6 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg z-50 transform origin-bottom scale-0 opacity-0 transition-all ease-in-out duration-300 group-hover:scale-100 group-hover:opacity-100"
                 >
-                  <a
-                    href="/profile"
+                  <Link
+                    to="/profile"
                     className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-100"
                   >
                     Profile
-                  </a>
-                  <a
-                    href="#"
+                  </Link>
+                  <Link
+                    to="#"
                     className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-100"
                   >
                     Job Activity
-                  </a>
-                  <a
-                    href="/Settings"
+                  </Link>
+                  <Link
+                    to="/Settings"
                     className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-100"
                   >
                     Settings
-                  </a>
+                  </Link>
                   <div className="h-px bg-gray-300 dark:bg-gray-600" />
                   <div
                     onClick={handleLogout}
@@ -316,7 +351,7 @@ export default function Navbar() {
               className="relative w-12 h-7 flex-shrink-0 rounded-full cursor-pointer transition-colors bg-white dark:bg-gray-900"
             >
               <div
-                className={`absolute top-1 left-1 h-5 w-5 flex items-center justify-center rounded-full bg-white dark:bg-gray-900 text-gray-700 dark:text-white shadow-md transform transition-transform ease-in-out ${
+                className={`absolute top-1 left-1 h-5 w-5 flex items-center justify-center rounded-full bg-white dark:bg-gray-900 text-gray-700 dark:text-white shadow-md transform transition-transform ease-in-out duration-300 ${
                   darkMode ? "translate-x-5" : "translate-x-0"
                 }`}
               >

@@ -3,16 +3,19 @@ import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { ThemeContext } from "./ThemeContext";
 import { Link } from "react-router-dom";
 
+import ProfilePicture from './ProfilePicture';
+
 const ApplicantItem = React.memo(({
   applicant,
   handleApplicantAction,
   isJobOpen,
   applicantCounts,
-  jobMaxApplicants
+  jobMaxApplicants,
+  jobPostId
 }) => {
   const { darkMode } = useContext(ThemeContext);
   const [localStatus, setLocalStatus] = useState(applicant.status);
-
+console.log("jobpostid",jobPostId)
   // Modified functions: Added event parameter to prevent navigation when buttons are clicked.
   const onApprove = (e) => {
     e.preventDefault();
@@ -30,7 +33,7 @@ const ApplicantItem = React.memo(({
     e.preventDefault();
     e.stopPropagation();
     if (isJobOpen && localStatus !== 'REJECTED') {
-      handleApplicantAction(applicant.applicantId, "reject");
+      handleApplicantAction(applicant.applicantId, "rejected");
       setLocalStatus('REJECTED');
     }
   };
@@ -45,6 +48,11 @@ const ApplicantItem = React.memo(({
         <h4 className="font-semibold text-gray-800 dark:text-gray-200">
           {applicant.name || `Applicant ID ${applicant.applicantId}`}
         </h4>
+
+        <div className="mr-6">
+          <ProfilePicture userId={applicant.userId} darkMode={darkMode} />
+        </div>
+
         {applicant.message && applicant.message.trim() !== "" && (
           <p className={`font-mono mt-2 ${darkMode ? 'text-neutral-400' : 'text-neutral-500'}`}>
             <span className={`font-extralight ${darkMode ? 'text-neutral-300' : 'text-neutral-500'}`}>
@@ -60,7 +68,7 @@ const ApplicantItem = React.memo(({
         )}
         <p className={`text-sm mb-2 font-medium ${localStatus === 'ACCEPTED' ? 'text-green-500' :
           localStatus === 'REJECTED' ? 'text-red-500' :
-          'text-gray-500 dark:text-gray-300'}`}>
+            'text-gray-500 dark:text-gray-300'}`}>
           Status: {localStatus}
         </p>
         <div className="mt-3 flex justify-end gap-4">
@@ -69,11 +77,10 @@ const ApplicantItem = React.memo(({
               <button
                 id={`confirm-applicant-popup-${applicant.applicantId}`}
                 onClick={onApprove}
-                className={`p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-opacity-50 ${
-                  localStatus === 'ACCEPTED'
+                className={`p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-opacity-50 ${localStatus === 'ACCEPTED'
                     ? darkMode ? 'bg-green-700' : 'bg-green-600'
                     : darkMode ? 'bg-green-600 hover:bg-green-700 focus:ring-green-600' : 'bg-green-500 hover:bg-green-600 focus:ring-green-500'
-                }`}
+                  }`}
                 aria-label="accepted"
                 disabled={!isJobOpen || localStatus === 'ACCEPTED' || applicantCounts.approved >= jobMaxApplicants}
               >
@@ -82,11 +89,10 @@ const ApplicantItem = React.memo(({
               <button
                 id={`reject-applicant-popup-${applicant.applicantId}`}
                 onClick={onReject}
-                className={`p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-opacity-50 ${
-                  localStatus === 'REJECTED'
+                className={`p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-opacity-50 ${localStatus === 'REJECTED'
                     ? 'bg-red-600'
                     : 'bg-red-500 hover:bg-red-600 focus:ring-red-500'
-                }`}
+                  }`}
                 aria-label="Reject"
                 disabled={!isJobOpen || localStatus === 'REJECTED'}
               >
@@ -95,6 +101,16 @@ const ApplicantItem = React.memo(({
             </>
           )}
         </div>
+        <div className="flex justify-end mt-2">
+                        <Link 
+                          to={`/userreportformpopup?jobId=${jobPostId }&reportedUserId=${applicant.userId }&applicantId=${applicant.applicantId}`}
+                          className="text-red-500 hover:text-red-700"
+                          title="Report this job post"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <FaTimesCircle size={20} />
+                        </Link>
+                      </div>
       </Link>
     </div>
   );
