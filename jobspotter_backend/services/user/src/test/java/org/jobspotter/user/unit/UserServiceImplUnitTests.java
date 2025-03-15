@@ -241,6 +241,121 @@ public class UserServiceImplUnitTests {
             assertTrue(response.getBody().containsKey(userIds.get(1)));
         }
 
+    @Test
+    void updateUserById_User_SuccessfulUpdate() throws Exception {
+
+        UUID userId = UUID.randomUUID();
+        String accessToken = "testToken";
+        User user = User.builder().userId(userId).username("testuser").firstName("John").build();
+        UserPatchRequest userPatchRequest = new UserPatchRequest();
+        userPatchRequest.setFirstName("Updated Name");
+
+            try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class)) {
+                when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+                jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
+
+                userPatchRequest.setFirstName("Updated Name");
+
+                ResponseEntity<UserResponse> response = userService.updateUserById(accessToken, userId, userPatchRequest);
+
+                assertNotNull(response);
+                assertEquals(200, response.getStatusCode().value());
+                verify(userRepository, times(1)).save(user);
+            }
+
+    }
+
+    @Test
+    void updateUserById_Admin_SuccessfulUpdate() throws Exception {
+
+        UUID userId = UUID.randomUUID();
+        String accessToken = "testToken";
+        User user = User.builder().userId(userId).username("testuser").firstName("John").build();
+        UserPatchRequest userPatchRequest = new UserPatchRequest();
+        userPatchRequest.setFirstName("Updated Name");
+
+        try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class)) {
+            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(UUID.randomUUID());
+            when(jwtUtilsMocked.hasAdminRole(accessToken)).thenReturn(true);
+
+            userPatchRequest.setFirstName("Updated Name");
+
+            ResponseEntity<UserResponse> response = userService.updateUserById(accessToken, userId, userPatchRequest);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            verify(userRepository, times(1)).save(user);
+        }
+
+    }
+
+    @Test
+    void updateUserById_UserNotFound() {
+
+        UUID userId = UUID.randomUUID();
+        String accessToken = "testToken";
+        UserPatchRequest userPatchRequest = new UserPatchRequest();
+        userPatchRequest.setFirstName("Updated Name");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () ->
+                userService.updateUserById(accessToken, userId, userPatchRequest));
+    }
+
+    @Test
+    void updateUserById_UnauthorizedAccess() {
+
+        UUID userId = UUID.randomUUID();
+        String accessToken = "testToken";
+        User user = User.builder().userId(userId).username("testuser").build();
+        UserPatchRequest userPatchRequest = new UserPatchRequest();
+        userPatchRequest.setFirstName("Updated Name");
+
+        try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class)) {
+            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(UUID.randomUUID());
+
+            assertThrows(UnauthorizedException.class, () ->
+                    userService.updateUserById(accessToken, userId, userPatchRequest));
+        }
+
+
+    }
+
+    @Test
+    void updateUserById_NoChangesDetected() throws Exception {
+
+        UUID userId = UUID.randomUUID();
+        String accessToken = "testToken";
+        User user = User.builder()
+                .userId(userId)
+                .username("testuser")
+                .firstName("John")
+                .lastName("Doe")
+                .email("johnDoe@gmail.com")
+                .build();
+        UserPatchRequest userPatchRequest = new UserPatchRequest();
+        userPatchRequest.setFirstName("John");
+        userPatchRequest.setLastName("Doe");
+        userPatchRequest.setEmail("johnDoe@gmail.com");
+
+
+        try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class)) {
+            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
+
+            ResponseEntity<UserResponse> response = userService.updateUserById(accessToken, userId, userPatchRequest);
+
+            assertEquals(204, response.getStatusCode().value());
+            verify(userRepository, never()).save(user);
+        }
+
+
+    }
+
+
         @Test
         void deleteUser_UserDeleteHimself_success()  {
             String accessToken = "testToken";
