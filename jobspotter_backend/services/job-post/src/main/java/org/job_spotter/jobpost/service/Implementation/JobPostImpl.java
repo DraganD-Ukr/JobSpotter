@@ -146,11 +146,13 @@ public class JobPostImpl implements JobPostService {
         //TODO: Trim Discription For better request performance
         //TODO: Optimize Search Response DTO (users will be sent to view details of job post on another page)
 
+        // Check if the Page number and size are valid
+        checkIfPageNumberAndSizeAreValid(pageNumber, pageSize);
+
         // Split the tags string into a list of tag names
         List<String> tagList = covertTagsToListFromString(tags);
 
-        log.info("Tag list: {}", tagList);
-        log.info("Title: {}", title);
+
 
         PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
 
@@ -203,6 +205,9 @@ public class JobPostImpl implements JobPostService {
         //TODO: Sort By and Sort Direction
         //TODO: Trim Discription For better request performance
 
+        // Check if the Page number and size are valid
+        checkIfPageNumberAndSizeAreValid(pageNumber, pageSize);
+
         // Split the tags string into a list of tag names
         List<String> tagList = covertTagsToListFromString(tags);
 
@@ -235,6 +240,9 @@ public class JobPostImpl implements JobPostService {
     //applicant model
     @Override
     public Page<JobPostsUserWorkedOnSearchResponse> searchJobsUserWorkedOn(UUID userId, String title, String status, String sortBy, String sortDirection, int page, int size) {
+
+        // Check if the Page number and size are valid
+        checkIfPageNumberAndSizeAreValid(page, size);
 
         // Define allowed sorting fields
         Set<String> allowedSortFields = Set.of("datePosted", "lastUpdatedAt", "title", "status");
@@ -863,8 +871,14 @@ public class JobPostImpl implements JobPostService {
 
 // Validation Methods
 //----------------------------------------------------------------------------------------------------------------
+    private void checkIfPageNumberAndSizeAreValid(int pageNumber, int pageSize) {
+        if (pageNumber < 0 || pageSize < 1) {
+            throw new InvalidRequestException("Invalid page number or page size.");
+        }
+    }
+
     private boolean checkIfUserIsJobPosterOrAdmin(String accessToken, JobPost jobPost) throws Exception {
-        boolean isJobPoster = jobPost.getJobPosterId().equals(jwtUtils.getUserIdFromToken(accessToken));
+        boolean isJobPoster = jobPost.getJobPosterId().equals(JWTUtils.getUserIdFromToken(accessToken));
         boolean isAdmin = jwtUtils.hasAdminRole(accessToken);
 
         if (!isJobPoster && !isAdmin) {
@@ -990,6 +1004,7 @@ public class JobPostImpl implements JobPostService {
             return "An unknown error occurred while parsing the error response.";
         }
     }
+
 
 }
 
