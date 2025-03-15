@@ -1,2 +1,109 @@
- needed,need,requirement,necessity,demand,desire,want,must,urgency,craving,prerequisite,essential
- home,accommodation,house,apartment,flat,property,real estate,building,place,location,habitat
+needed,need,requirement,necessity,demand,desire,want,must,urgency,craving,prerequisite,essential
+home,accommodation,house,apartment,flat,property,real estate,building,place,location,habitat
+repair,fix,mend,restore,renovate,refurbish,remodel,correct,adjust,patch,service,maintain
+dog,pet,canine,puppy,hound,animal,companion,pooch,mutt,cur,doggy,fido
+walk,stroll,amble,saunter,trek,hike,pace,march,promenade,meander,roam,traverse
+clean,tidy,sanitize,wash,scrub,polish,dust,sweep,mop,purify,disinfect,decontaminate
+garden,yard,lawn,plot,grounds,backyard,terrace,patio,landscape,greenery,flora,horticulture
+paint,coat,color,tint,stain,varnish,lacquer,brush,spray,apply,cover,decorate
+move,relocate,transport,shift,carry,transfer,haul,convey,deliver,displace,budge,migrate
+assemble,build,construct,erect,put together,fabricate,compose,form,create,join,connect,unite
+delivery,courier,shipment,transportation,freight,package,parcel,dispatch,carrying,conveyance,supply,distribution
+pickup,collect,retrieve,gather,fetch,obtain,acquire,secure,accumulate,reclaim,salvage,repossess
+help,assist,aid,support,lend a hand,serve,benefit,facilitate,guide,advise,mentor,collaborate
+cook,prepare,bake,fry,grill,roast,boil,simmer,sauté,stew,broil,heat
+shop,purchase,buy,acquire,obtain,procure,invest in,patronize,retail,browse,select,choose
+errand,task,chore,duty,assignment,mission,job,responsibility,obligation,commission,undertaking,work
+install,set up,mount,position,place,fix,establish,implement,integrate,deploy,arrange,fit
+organize,arrange,sort,classify,systematize,structure,order,catalog,codify,collate,regulate,methodize
+event,occasion,gathering,function,party,celebration,affair,social,meetup,conference,festival,ceremony
+tutor,teach,instruct,educate,train,coach,mentor,guide,explain,demonstrate,impart,inform
+care,nurture,tend,look after,support,protect,safeguard,preserve,watch over,foster,maintain,sustain
+child,kid,infant,toddler,youth,minor,offspring,descendant,progeny,babe,tot,urchin
+elderly,senior,aged,old,retired,veteran,pensioner,grandparent,oldster,matriarch,patriarch,octogenarian
+pet care,animal care,pet sitting,pet walking,pet feeding,pet grooming,pet boarding,animal husbandry,veterinary,animal welfare,pet health,pet treatment
+yard work,gardening,landscaping,lawn care,groundskeeping,horticulture,cultivation,planting,trimming,pruning,weeding,mowing
+house cleaning,domestic cleaning,residential cleaning,janitorial services,maid service,sanitation,housekeeping,tidying,sweeping,mopping,dusting,vacuuming
+handyman,repairman,craftsman,technician,tradesman,mechanic,fixer,installer,builder,carpenter,plumber,electrician
+computer,laptop,desktop,PC,device,machine,system,hardware,software,technology,electronics,digital
+internet,web,online,network,connectivity,cyber,digital,virtual,cloud,wifi,broadband,ethernet
+software,application,program,app,system,platform,tool,utility,code,script,module,component
+website,site,webpage,portal,domain,URL,online presence,homepage,web address,web portal,web resource,web application
+data,information,facts,figures,statistics,details,records,content,knowledge,intelligence,input,output
+design,create,plan,develop,formulate,devise,compose,fashion,shape,style,pattern,blueprint
+writing,composition,authoring,drafting,scripting,typing,transcription,penmanship,calligraphy,literature,journalism,copywriting
+editing,revision,correction,modification,adjustment,refinement,alteration,amendment,proofreading,redaction,censorship,adaptation
+marketing,promotion,advertising,publicity,sales,branding,campaign,strategy,outreach,distribution,merchandising,commercial
+photography,picture,image,shot,photo,snap,portrait,landscape,still life,candid,digital,film
+video,movie,film,clip,footage,recording,animation,motion picture,broadcast,streaming,playback,visual
+music,song,tune,melody,harmony,composition,instrumental,vocal,audio,soundtrack,concert,performance
+translation,interpretation,conversion,rendering,version,adaptation,transcription,deciphering,encoding,decoding,paraphrasing,rewording
+event planning,party planning,wedding planning,organization,coordination,logistics,management,execution,preparation,arrangement,implementation,orchestration
+personal assistant,virtual assistant,secretary,aide,helper,assistant,executive assistant,administrative support,clerical,support staff,admin,associate
+delivery driver,courier,messenger,carrier,transporter,hauler,shipper,distributor,freight forwarder,logistics,dispatcher,router
+customer service,support,help desk,assistance,care,liaison,representative,agent,help line,contact center,troubleshooting,resolution
+data entry,typing,input,keying,recording,transcription,compilation,processing,filing,documenting,cataloging,archiving
+social media,networking,platform,online community,digital media,web 2.0,social network,interaction,engagement,sharing,posting,connection
+graphic design,visual design,illustration,layout,typography,branding,logo design,web design,print design,art direction,visual communication,creative direction
+accounting,bookkeeping,finance,auditing,tax preparation,financial services,budgeting,payroll,reporting,analysis,reconciliation,forecasting
+legal,law,attorney,lawyer,counsel,jurisprudence,litigation,advocacy,legislation,regulation,ordinance,statute
+medical,health,healthcare,clinical,therapy,treatment,diagnosis,prescription,medicine,pharmacy,wellness,rehabilitation
+fitness,exercise,workout,training,physical activity,gym,sports,athletics,conditioning,strength,cardio,endurance
+tutoring,teaching,instruction,coaching,mentoring,education,training,guidance,explanation,demonstration,imparting,informing
+renovation,remodeling,refurbishment,upgrade,improvement,alteration,modification,conversion,restoration,reconstruction,revamp,overhaul
+plumbing,pipework,waterworks,drainage,sanitary,fittings,fixtures,valves,plumber,piping,sewage,irrigation
+electrical,wiring,power,circuitry,electronics,voltage,current,electrician,installation,outlets,lighting,appliances
+carpentry,woodworking,joinery,cabinetry,furniture making,lumber,timber,woodcraft,carpenter,sawing,planing,shaping
+masonry,brickwork,stonework,concrete,tile setting,plastering,cement,mortar,bricklayer,stonecutter,tiling,rendering
+roofing,roof repair,shingles,tiles,gutters,flashing,leak repair,roofer,roofing materials,attic,eaves,skylight
+flooring,tiles,carpet,hardwood,laminate,vinyl,linoleum,installation,laying,polishing,refinishing,underlayment
+appliance repair,fixing,servicing,maintenance,troubleshooting,diagnostics,replacement,parts,technician,gadgets,white goods,electronics
+furniture assembly,putting together,building,constructing,installing,fitting,joining,fastening,screwing,bolting,assembling,erecting
+window cleaning,glass cleaning,pane cleaning,window washing,squeegee,detergent,streak-free,sparkling,transparent,clear,view,reflection
+gutter cleaning,leaf removal,debris removal,downspout cleaning,flushing,unclogging,maintenance,prevention,water flow,drainage,protection,safety
+pressure washing,power washing,jet washing,surface cleaning,exterior cleaning,driveway cleaning,patio cleaning,deck cleaning,building washing,sidewalk cleaning,restoration,maintenance
+junk removal,waste removal,trash removal,debris removal,clearing,hauling,disposal,recycling,dumping,cleanout,decluttering,organization
+moving services,relocation services,transportation services,packing services,unpacking services,loading services,unloading services,storage services,movers,van,truck,logistics
+packing,boxing,wrapping,crating,securing,labeling,organizing,preparing,arranging,stowing,shipping,moving
+unpacking,unboxing,unwrapping,sorting,organizing,arranging,placing,setting up,installing,assembling,decorating,settling in
+storage,warehousing,safekeeping,keeping,holding,depositing,storing,archiving,inventory,preservation,conservation,stockpiling
+security,safety,protection,safeguarding,defense,surveillance,monitoring,guarding,patrol,alarm,lock,prevention
+pest control,extermination,fumigation,insect control,rodent control,termite control,ant control,mosquito control,bed bug control,pest management,prevention,inspection
+locksmith,lock repair,key cutting,lock installation,emergency lockout,security systems,access control,safe opening,lock picking,rekeying,master key,security hardware
+alarm systems,security systems,surveillance systems,monitoring systems,detection systems,intrusion detection,fire alarm,burglar alarm,home security,business security,protection,safety
+fence installation,fence repair,fence building,fence maintenance,fence painting,fence staining,fence replacement,fence gate,fence post,fence panels,privacy fence,security fence
+deck building,deck repair,deck staining,deck painting,deck maintenance,patio building,porch building,terrace building,outdoor living space,wood deck,composite deck,railing
+patio installation,patio repair,patio cleaning,patio sealing,patio pavers,patio stones,concrete patio,brick patio,flagstone patio,outdoor living space,entertainment area,relaxation space
+driveway paving,driveway repair,driveway sealing,driveway cleaning,asphalt driveway,concrete driveway,gravel driveway,paver driveway,driveway resurfacing,driveway extension,access road,private road
+tree removal,tree trimming,tree pruning,tree service,arborist,tree care,tree maintenance,stump removal,tree cutting,branch removal,logging,wood chipping
+landscaping design,landscape architecture,garden design,outdoor design,yard design,planting design,hardscaping,softscaping,irrigation design,lighting design,outdoor living,environmental design
+irrigation systems,sprinkler systems,drip irrigation,watering systems,lawn irrigation,garden irrigation,agricultural irrigation,water conservation,water management,automatic irrigation,timers,sensors
+pool cleaning,pool maintenance,pool repair,pool service,pool opening,pool closing,pool chemicals,pool equipment,pool vacuum,pool filter,pool pump,pool cover
+hot tub repair,spa repair,jacuzzi repair,whirlpool repair,hot tub maintenance,spa maintenance,jet repair,heater repair,pump repair,filter repair,leak repair,electronics repair
+solar panel installation,solar energy,renewable energy,photovoltaic systems,green energy,solar power,solar panels,energy efficiency,sustainable energy,clean energy,off-grid,grid-tied
+window installation,window repair,window replacement,window glass,window frames,window screens,window tinting,window blinds,window shades,energy-efficient windows,double-pane windows,triple-pane windows
+door installation,door repair,door replacement,door frames,door handles,door locks,door hinges,door screens,sliding doors,french doors,entry doors,interior doors
+drywall repair,drywall installation,sheetrock repair,plaster repair,wall repair,ceiling repair,patching,taping,mudding,sanding,finishing,texture
+painting services,interior painting,exterior painting,house painting,commercial painting,wall painting,ceiling painting,trim painting,brush painting,spray painting,roller painting,color matching
+wallpaper installation,wallpaper removal,wall coverings,decorative paper,patterned paper,textured paper,vinyl wallpaper,fabric wallpaper,prep work,pasting,hanging,trimming
+tile installation,tile repair,tile replacement,ceramic tile,porcelain tile,stone tile,mosaic tile,backsplash tile,floor tile,wall tile,grout,sealing
+carpet cleaning,upholstery cleaning,rug cleaning,steam cleaning,deep cleaning,stain removal,odor removal,fabric protection,shampooing,extraction,drying,restoration
+blind cleaning,shade cleaning,drapery cleaning,curtain cleaning,window treatment cleaning,dusting,vacuuming,spot cleaning,fabric care,maintenance,restoration,preservation
+chandelier cleaning,light fixture cleaning,glass cleaning,crystal cleaning,polishing,dusting,maintenance,restoration,preservation,sparkling,shining,radiant
+air duct cleaning,vent cleaning,HVAC cleaning,ductwork cleaning,allergen removal,dust removal,mold removal,air quality improvement,ventilation system,filtration system,maintenance,efficiency
+chimney cleaning,chimney sweeping,flue cleaning,soot removal,creosote removal,fire safety,inspection,maintenance,prevention,draft improvement,efficiency
+appliance installation,setup,connection,hookup,fitting,plumbing connection,electrical connection,testing,calibration,alignment,leveling,securing
+smart home installation,home automation,connected home,IoT devices,smart devices,smart lighting,smart thermostats,smart security,voice control,remote access,integration,configuration
+home theater installation,surround sound installation,projector installation,screen installation,speaker installation,calibration,setup,configuration,wiring,remote control,integration,entertainment system
+TV mounting,wall mounting,bracket installation,cable management,wiring concealment,setup,configuration,alignment,leveling,securing,display,television
+computer repair,laptop repair,desktop repair,hardware repair,software repair,troubleshooting,diagnostics,maintenance,upgrades,data recovery,virus removal,malware removal
+printer repair,scanner repair,copier repair,fax machine repair,office equipment repair,maintenance,troubleshooting,diagnostics,parts replacement,calibration,alignment,cleaning
+phone repair,smartphone repair,tablet repair,screen repair,battery replacement,charging port repair,button repair,speaker repair,microphone repair,software repair,data recovery
+data backup,data recovery,data transfer,cloud backup,external drive backup,system restore,file recovery,disk recovery,partition recovery,raid recovery,data migration,data security
+IT support,technical support,help desk support,computer support,network support,server support,software support,hardware support,troubleshooting,diagnostics,maintenance,administration
+network installation,network setup,network configuration,router setup,switch setup,firewall setup,wireless network,wired network,network security,network maintenance,troubleshooting,optimization
+cybersecurity,information security,data protection,threat detection,vulnerability assessment,penetration testing,security auditing,firewall management,intrusion detection,malware analysis,encryption,authentication
+web development,website design,web programming,front-end development,back-end development,full-stack development,web application development,e-commerce development,content management systems,database development,server administration,web hosting
+mobile app development,iOS app development,Android app development,cross-platform app development,UI/UX design,app testing,app deployment,app maintenance,app updates,mobile development,software development,programming
+e-commerce,online shopping,online retail,digital commerce,web store,online marketplace,shopping cart,payment gateway,order processing,inventory management,shipping,fulfillment
+digital marketing,online marketing
