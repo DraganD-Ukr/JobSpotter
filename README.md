@@ -1,11 +1,18 @@
 # **JobSpotter**
 
-![License](https://img.shields.io/github/license/DraganD-Ukr/JobSpotter)
-![Issues](https://img.shields.io/github/issues/DraganD-Ukr/JobSpotter)
-![Last Commit](https://img.shields.io/github/last-commit/DraganD-Ukr/JobSpotter)
-![Total Commits](https://img.shields.io/github/commit-activity/m/DraganD-Ukr/JobSpotter)
-![Total PRs Closed](https://img.shields.io/github/issues-pr-closed/DraganD-Ukr/JobSpotter)
-![Contributors](https://img.shields.io/github/contributors/DraganD-Ukr/JobSpotter)
+<div style="text-align: center;">
+  <img src="https://img.shields.io/github/license/DraganD-Ukr/JobSpotter?style=flat" alt="License" height="25">
+  <img src="https://img.shields.io/github/issues/DraganD-Ukr/JobSpotter" alt="Issues" height="25">
+  <img src="https://img.shields.io/github/last-commit/DraganD-Ukr/JobSpotter" alt="Last Commit" height="25">
+  <img src="https://img.shields.io/github/commit-activity/t/DraganD-Ukr/JobSpotter/main" alt="Total Commits" height="25">
+  <img src="https://img.shields.io/github/issues-pr-closed/DraganD-Ukr/JobSpotter" alt="Total PRs Closed" height="25">
+  <img src="https://img.shields.io/github/contributors/DraganD-Ukr/JobSpotter" alt="Contributors" height="25">
+</div>
+
+
+
+</br>
+</br>
 
 A web platform that connects users with local, simple side jobs, such as babysitting, pet care, or lawn mowing. Built with scalability and high performance in mind, the application leverages a **microservices architecture** to ensure maintainability, fast user interactions, and seamless job discovery.
 
