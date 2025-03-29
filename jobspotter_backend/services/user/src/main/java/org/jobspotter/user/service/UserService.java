@@ -10,23 +10,23 @@ import java.util.UUID;
 
 public interface UserService {
 
-    ResponseEntity<HttpStatus> registerUser(UserRegisterRequest userRegisterRequest) throws Exception;
+    void registerUser(UserRegisterRequest userRegisterRequest) throws Exception;
 
     TokenResponse loginUser(UserLoginRequest userLoginRequest);
 
-    ResponseEntity<HttpStatus> logoutUser(String accessToken) throws Exception;
+    void logoutUser(String accessToken) throws Exception;
 
-    ResponseEntity<UserResponse> getUserById(UUID userId) throws Exception;
+    UserResponse getUserById(UUID userId) throws Exception;
 
     ResponseEntity<UserResponse> updateUser(UUID userId, UserPatchRequest userPatchRequest);
 
-    ResponseEntity<HttpStatus> uploadProfilePicture(UUID userId, MultipartFile multipartFile) throws Exception;
+    void uploadProfilePicture(UUID userId, MultipartFile multipartFile) throws Exception;
 
-    ResponseEntity<HttpStatus> deleteProfilePicture(UUID userId) throws Exception;
+    void deleteProfilePicture(UUID userId) throws Exception;
 
-    ResponseEntity<Map<UUID, UserBasicInfoResponse>> getAllByIds(List<UUID> userIds);
+    Map<UUID, UserBasicInfoResponse> getAllByIds(List<UUID> userIds);
 
-    ResponseEntity<HttpStatus> deleteUser(String accessToken, UUID userId) throws Exception;
+    void deleteUser(String accessToken, UUID userId) throws Exception;
 
     void disableUser(String accessToken, UUID userId) throws Exception;
 

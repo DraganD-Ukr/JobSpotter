@@ -54,7 +54,10 @@ public class UserController {
             @RequestBody @Valid UserRegisterRequest userRegisterRequest
             ) throws Exception {
         log.info("Creating user");
-        return userService.registerUser(userRegisterRequest);
+
+        userService.registerUser(userRegisterRequest);
+
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @Operation(summary = "Login a user")
@@ -129,22 +132,17 @@ public class UserController {
             @RequestHeader("Authorization") String accessToken,
             HttpServletResponse response
     ) throws Exception {
-        log.info("Logging out user");
-        ResponseEntity<HttpStatus> status = userService.logoutUser(accessToken);
 
-        if (status.getStatusCode() == HttpStatus.NO_CONTENT) {
+        log.info("Logging out user with ID:, {}", JWTUtils.getUserIdFromToken(accessToken));
 
-            log.info("User logged out successfully");
+        userService.logoutUser(accessToken);
 
-            clearCookie("AccessToken", response);
-            clearCookie("RefreshToken", response);
+        clearCookie("AccessToken", response);
+        clearCookie("RefreshToken", response);
 
-            log.info("Cookies cleared");
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        log.info("Cookies cleared");
 
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 
     }
 
@@ -164,9 +162,12 @@ public class UserController {
     public ResponseEntity<UserResponse> myProfile(
             @RequestHeader("Authorization") String accessToken
     ) throws Exception {
+
         log.info("Getting user details");
+
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
-        return userService.getUserById(userId);
+
+        return ResponseEntity.ok(userService.getUserById(userId));
     }
 
 //    Get user by id
@@ -174,8 +175,10 @@ public class UserController {
     public ResponseEntity<UserResponse> getUserById(
             @PathVariable UUID userId
     ) throws Exception {
+
         log.info("Getting user details");
-        return userService.getUserById(userId);
+
+        return ResponseEntity.ok(userService.getUserById(userId));
     }
 
 
@@ -184,7 +187,8 @@ public class UserController {
             @RequestParam List<UUID> userIds
             ) {
         log.info("Getting user details");
-        return userService.getAllByIds(userIds);
+
+        return ResponseEntity.ok(userService.getAllByIds(userIds));
     }
 
 
@@ -255,7 +259,10 @@ public class UserController {
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
         log.info("Updating user profile image");
-        return userService.uploadProfilePicture(userId, profileImage);
+
+        userService.uploadProfilePicture(userId, profileImage);
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @Operation(summary = "Delete user profile image")
@@ -283,7 +290,9 @@ public class UserController {
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
         log.info("Deleting user profile image");
-        return userService.deleteProfilePicture(userId);
+        userService.deleteProfilePicture(userId);
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
 
@@ -293,7 +302,10 @@ public class UserController {
             @RequestHeader("Authorization") String accessToken
     ) throws Exception {
         log.info("Deleting user");
-        return userService.deleteUser(accessToken, userId);
+
+        userService.deleteUser(accessToken, userId);
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
 

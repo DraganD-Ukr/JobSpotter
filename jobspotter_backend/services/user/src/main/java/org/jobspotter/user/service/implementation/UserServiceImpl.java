@@ -11,10 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.user.authUtils.JWTUtils;
 import org.jobspotter.user.dto.*;
-import org.jobspotter.user.exception.InvalidFileExtensionException;
-import org.jobspotter.user.exception.ResourceAlreadyExistsException;
-import org.jobspotter.user.exception.ResourceNotFoundException;
-import org.jobspotter.user.exception.UnauthorizedException;
+import org.jobspotter.user.exception.*;
 import org.jobspotter.user.fileUtils.FileUtils;
 import org.jobspotter.user.model.User;
 import org.jobspotter.user.model.UserType;
@@ -38,7 +35,7 @@ public class UserServiceImpl implements UserService {
     private final JWTUtils jwtUtils;
 
     @Override
-    public ResponseEntity<HttpStatus> registerUser(UserRegisterRequest userRegisterRequest) {
+    public void registerUser(UserRegisterRequest userRegisterRequest) {
         if (userRepository.existsByUsernameAndEmail(userRegisterRequest.getUsername(), userRegisterRequest.getEmail())) {
             log.warn("Could not register user: user with same email or username already exists");
             throw new ResourceAlreadyExistsException("User already exists");
@@ -73,7 +70,6 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         log.info("User with Id: {} created successfully",userId);
 
-        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @Override
@@ -82,7 +78,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<HttpStatus> logoutUser(String accessToken) throws Exception {
+    public void logoutUser(String accessToken) throws Exception {
 
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
@@ -90,22 +86,20 @@ public class UserServiceImpl implements UserService {
 
         if (status == HttpStatus.NO_CONTENT) {
             log.info("User with Id: {} logged out successfully", userId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
-            log.warn("Failed to log out user with Id: {}", userId);
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            throw new InvalidRequestException("Invalid request");
         }
 
 
     }
 
     @Override
-    public ResponseEntity<UserResponse> getUserById(UUID userId) {
+    public UserResponse getUserById(UUID userId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
 
-        return new ResponseEntity<>(UserResponse.builder()
+        return UserResponse.builder()
                 .userId(user.getUserId())
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
@@ -116,8 +110,8 @@ public class UserServiceImpl implements UserService {
                 .createdAt(user.getCreatedAt())
                 .lastUpdatedAt(user.getLastUpdatedAt())
                 .userType(user.getUserType())
-                .build(), HttpStatus.OK
-        );
+                .build();
+
 
     }
 
@@ -157,25 +151,23 @@ public class UserServiceImpl implements UserService {
      * @param userId user id of the user
      * @return ResponseEntity<HttpStatus> response entity
      */
-    //upload user profile picture
     @Override
-    public ResponseEntity<HttpStatus> uploadProfilePicture(UUID userId, MultipartFile multipartFile) throws Exception {
+    public void uploadProfilePicture(UUID userId, MultipartFile multipartFile) throws Exception {
 
         //check if file is empty
         if(multipartFile.isEmpty()){
             log.warn("No file uploaded");
-            throw new ResourceNotFoundException("No file uploaded");
+            throw new InvalidRequestException("No/Empty file uploaded");
 
             //check if file is an image
         } else if (!FileUtils.isImage(multipartFile.getOriginalFilename())) {
             log.warn("Wrong file type uploaded");
-            throw new InvalidFileExtensionException( multipartFile.getOriginalFilename(),FileUtils.IMAGE_EXTENSIONS);
+            throw new InvalidFileExtensionException(multipartFile.getOriginalFilename(), FileUtils.IMAGE_EXTENSIONS);
         }
 
         //upload file to S3 bucket
         s3BucketService.uploadFile(userId, multipartFile);
 
-        return ResponseEntity.ok(HttpStatus.NO_CONTENT);
     }
 
     /**
@@ -184,24 +176,24 @@ public class UserServiceImpl implements UserService {
      * @param userId user id of the user
      * @return ResponseEntity<HttpStatus> response entity
      */
-    //delete user profile picture
     @Override
-    public ResponseEntity<HttpStatus> deleteProfilePicture(UUID userId) throws Exception {
+    public void deleteProfilePicture(UUID userId) {
 
         //delete file from S3 bucket
         s3BucketService.deleteFile(userId);
 
-        return ResponseEntity.ok(HttpStatus.NO_CONTENT);
     }
 
 
     @Override
-    public ResponseEntity<Map<UUID, UserBasicInfoResponse>> getAllByIds(List<UUID> userIds) {
+    public Map<UUID, UserBasicInfoResponse> getAllByIds(List<UUID> userIds) {
 
         List<User> users = userRepository.findAllByUserIdIn(userIds);
 
         // Use stream to collect the data into a map
-        Map<UUID, UserBasicInfoResponse> usersResponseMap = users.stream()
+
+
+        return users.stream()
                 .collect(Collectors.toMap(
                         User::getUserId,
                         user -> UserBasicInfoResponse.builder()
@@ -212,13 +204,10 @@ public class UserServiceImpl implements UserService {
                                 .build()
                 ));
 
-        // Return the map wrapped in a ResponseEntity
-        return ResponseEntity.ok(usersResponseMap);
-
     }
 
     @Override
-    public ResponseEntity<HttpStatus> deleteUser(String accessToken, UUID userId) throws Exception {
+    public void deleteUser(String accessToken, UUID userId) throws Exception {
         authorizeUser(userId, accessToken);
 
         User user = userRepository.findById(userId)
@@ -231,7 +220,6 @@ public class UserServiceImpl implements UserService {
 
 //        TODO: delete user from all other services(notify job-post service, applicants who applied to jobs, etc)
 
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @Override

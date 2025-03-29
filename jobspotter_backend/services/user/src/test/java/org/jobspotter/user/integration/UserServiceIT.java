@@ -72,7 +72,7 @@ public class UserServiceIT {
 
     @Test
     @Order(1)
-    void shouldRegisterUserSuccessfully() throws InterruptedException {
+    void shouldRegisterUserSuccessfully() {
         UserRegisterRequest request = new UserRegisterRequest(
                 "john_doe",
                 "John",
