@@ -11,10 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.user.authUtils.JWTUtils;
 import org.jobspotter.user.dto.*;
-import org.jobspotter.user.exception.InvalidFileExtensionException;
-import org.jobspotter.user.exception.ResourceAlreadyExistsException;
-import org.jobspotter.user.exception.ResourceNotFoundException;
-import org.jobspotter.user.exception.UnauthorizedException;
+import org.jobspotter.user.exception.*;
 import org.jobspotter.user.fileUtils.FileUtils;
 import org.jobspotter.user.model.User;
 import org.jobspotter.user.model.UserType;
@@ -37,8 +34,12 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final JWTUtils jwtUtils;
 
+    /**
+     * Register a new user. Creates user in keycloak(with essential information needed in keycloak) and user db.
+     * @param userRegisterRequest User register request
+     */
     @Override
-    public ResponseEntity<HttpStatus> registerUser(UserRegisterRequest userRegisterRequest) {
+    public void registerUser(UserRegisterRequest userRegisterRequest) {
         if (userRepository.existsByUsernameAndEmail(userRegisterRequest.getUsername(), userRegisterRequest.getEmail())) {
             log.warn("Could not register user: user with same email or username already exists");
             throw new ResourceAlreadyExistsException("User already exists");
@@ -73,16 +74,27 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         log.info("User with Id: {} created successfully",userId);
 
-        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+
+    /**
+     * Login user. Returns access token and refresh token
+     * @param userLoginRequest User login request
+     * @return TokenResponse - login response needed for client to maintain session
+     */
     @Override
     public TokenResponse loginUser(UserLoginRequest userLoginRequest) {
         return keyCloakService.loginUser(userLoginRequest);
     }
 
+
+    /**
+     * Logs out user by invalidating the cookies with tokens
+     * @param accessToken access token
+     * @throws Exception - if {@link JWTUtils} service fails
+     */
     @Override
-    public ResponseEntity<HttpStatus> logoutUser(String accessToken) throws Exception {
+    public void logoutUser(String accessToken) throws Exception {
 
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
@@ -90,22 +102,26 @@ public class UserServiceImpl implements UserService {
 
         if (status == HttpStatus.NO_CONTENT) {
             log.info("User with Id: {} logged out successfully", userId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
-            log.warn("Failed to log out user with Id: {}", userId);
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            throw new InvalidRequestException("Invalid request");
         }
 
 
     }
 
+
+    /**
+     * Get user by id
+     * @param userId user id
+     * @return UserResponse - user representation
+     */
     @Override
-    public ResponseEntity<UserResponse> getUserById(UUID userId) {
+    public UserResponse getUserById(UUID userId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
 
-        return new ResponseEntity<>(UserResponse.builder()
+        return UserResponse.builder()
                 .userId(user.getUserId())
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
@@ -116,11 +132,18 @@ public class UserServiceImpl implements UserService {
                 .createdAt(user.getCreatedAt())
                 .lastUpdatedAt(user.getLastUpdatedAt())
                 .userType(user.getUserType())
-                .build(), HttpStatus.OK
-        );
+                .build();
+
 
     }
 
+
+    /**
+     * Update user information. Updates user in keycloak(if user's property belongs to keycloak as well) and user db.
+     * @param userId user id
+     * @param userPatchRequest user patch request
+     * @return UserResponse - updated user representation or no content if no changes detected
+     */
     @Override
     public ResponseEntity<UserResponse> updateUser(UUID userId, UserPatchRequest userPatchRequest) {
 
@@ -154,54 +177,55 @@ public class UserServiceImpl implements UserService {
      * Upload user profile picture to S3 bucket
      *
      * @param multipartFile uploaded file
-     * @param userId user id of the user
-     * @return ResponseEntity<HttpStatus> response entity
+     * @param userId user id
      */
-    //upload user profile picture
     @Override
-    public ResponseEntity<HttpStatus> uploadProfilePicture(UUID userId, MultipartFile multipartFile) throws Exception {
+    public void uploadProfilePicture(UUID userId, MultipartFile multipartFile) throws Exception {
 
         //check if file is empty
         if(multipartFile.isEmpty()){
             log.warn("No file uploaded");
-            throw new ResourceNotFoundException("No file uploaded");
+            throw new InvalidRequestException("No/Empty file uploaded");
 
             //check if file is an image
         } else if (!FileUtils.isImage(multipartFile.getOriginalFilename())) {
             log.warn("Wrong file type uploaded");
-            throw new InvalidFileExtensionException( multipartFile.getOriginalFilename(),FileUtils.IMAGE_EXTENSIONS);
+            throw new InvalidFileExtensionException(multipartFile.getOriginalFilename(), FileUtils.IMAGE_EXTENSIONS);
         }
 
         //upload file to S3 bucket
         s3BucketService.uploadFile(userId, multipartFile);
 
-        return ResponseEntity.ok(HttpStatus.NO_CONTENT);
     }
 
     /**
      * Delete user profile picture from S3 bucket
      *
-     * @param userId user id of the user
-     * @return ResponseEntity<HttpStatus> response entity
+     * @param userId user id
      */
-    //delete user profile picture
     @Override
-    public ResponseEntity<HttpStatus> deleteProfilePicture(UUID userId) throws Exception {
+    public void deleteProfilePicture(UUID userId) {
 
         //delete file from S3 bucket
         s3BucketService.deleteFile(userId);
 
-        return ResponseEntity.ok(HttpStatus.NO_CONTENT);
     }
 
 
+    /**
+     * Get user basic info by batch(used by other services to get user info)
+     * @param userIds list of user ids
+     * @return Map of user id to user basic info
+     */
     @Override
-    public ResponseEntity<Map<UUID, UserBasicInfoResponse>> getAllByIds(List<UUID> userIds) {
+    public Map<UUID, UserBasicInfoResponse> getAllByIds(List<UUID> userIds) {
 
         List<User> users = userRepository.findAllByUserIdIn(userIds);
 
         // Use stream to collect the data into a map
-        Map<UUID, UserBasicInfoResponse> usersResponseMap = users.stream()
+
+
+        return users.stream()
                 .collect(Collectors.toMap(
                         User::getUserId,
                         user -> UserBasicInfoResponse.builder()
@@ -212,13 +236,17 @@ public class UserServiceImpl implements UserService {
                                 .build()
                 ));
 
-        // Return the map wrapped in a ResponseEntity
-        return ResponseEntity.ok(usersResponseMap);
-
     }
 
+
+    /**
+     * Delete user. Deletes user from keycloak and user db
+     * @param accessToken access token
+     * @param userId user id
+     * @throws Exception if user is not authorized to delete user, user not found or {@link KeyCloakServiceImpl} or {@link JWTUtils} service fails
+     */
     @Override
-    public ResponseEntity<HttpStatus> deleteUser(String accessToken, UUID userId) throws Exception {
+    public void deleteUser(String accessToken, UUID userId) throws Exception {
         authorizeUser(userId, accessToken);
 
         User user = userRepository.findById(userId)
@@ -231,9 +259,15 @@ public class UserServiceImpl implements UserService {
 
 //        TODO: delete user from all other services(notify job-post service, applicants who applied to jobs, etc)
 
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+
+    /**
+     * Disable user. Disables user in keycloak(user is not able to login) until manual resolution.
+     * @param accessToken admin access token
+     * @param userId user id
+     * @throws Exception if user is not authorized, user not found or {@link JWTUtils} service fails
+     */
     @Override
     public void disableUser(String accessToken, UUID userId) throws Exception {
 
@@ -250,6 +284,15 @@ public class UserServiceImpl implements UserService {
         log.info("User with Id: {} disabled successfully", userId);
     }
 
+
+    /**
+     * Update user profile by id. Updates user in keycloak(if user's property belongs to keycloak as well) and user db. Both user and admin can update user profile.
+     * @param accessToken access token
+     * @param userId user id
+     * @param userPatchRequest user patch request
+     * @return UserResponse - updated user representation or no content if no changes detected
+     * @throws Exception if user is not authorized, user not found or {@link JWTUtils} service fails
+     */
     @Override
     public ResponseEntity<UserResponse> updateUserById(String accessToken, UUID userId, UserPatchRequest userPatchRequest) throws Exception {
 
@@ -282,6 +325,13 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+
+    /**
+     * Get all users. Returns list of all users
+     * @param accessToken admin access token
+     * @return number of all users
+     * @throws Exception if user is not authorized
+     */
     @Override
     public Integer getTotalUsersCount(String accessToken) throws Exception {
         isAdmin(accessToken);
@@ -289,6 +339,12 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    /**
+     * Helper method to update user from patch request. Updates user in keycloak(if user's property belongs to keycloak as well).
+     * @param user user model
+     * @param userPatchRequest user patch request
+     * @return true if user was updated, false otherwise
+     */
     private boolean updateUserFromPatch(User user, UserPatchRequest userPatchRequest){
         boolean updated = false;
         boolean toUpdateKeycloak = false;
@@ -334,6 +390,12 @@ public class UserServiceImpl implements UserService {
 
     }
 
+
+    /**
+     * Helper method to check if user has admin role admin. See {@link JWTUtils#hasAdminRole(String)}
+     * @param accessToken access token
+     * @throws Exception if user is not admin or {@link JWTUtils} service fails
+     */
     private void isAdmin(String accessToken) throws Exception {
         if (!jwtUtils.hasAdminRole(accessToken)) {
            throw new UnauthorizedException("Unauthorized access");
@@ -341,6 +403,12 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    /**
+     * Helper method to authorize user. Checks if user is authorized to access resource.
+     * @param resourceUserId user id(owner) of the resource
+     * @param accessToken access token
+     * @throws Exception if user is not authorized or {@link JWTUtils} service fails
+     */
     private void authorizeUser(UUID resourceUserId, String accessToken) throws Exception {
 
         UUID tokenUserId = JWTUtils.getUserIdFromToken(accessToken);

@@ -1,6 +1,8 @@
 package org.jobspotter.user.integration;
 
+import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.user.UserApplication;
 import org.jobspotter.user.dto.*;
 import org.jobspotter.user.model.AddressType;
@@ -16,6 +18,10 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -23,9 +29,9 @@ import java.util.concurrent.TimeUnit;
 import static io.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
+@Slf4j
 @SpringBootTest(classes = UserApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Testcontainers
@@ -40,10 +46,6 @@ public class UserServiceIT {
             .withUsername("testuser")
             .withPassword("testpass");
 
-    @LocalServerPort
-    private int port;
-
-    private String baseUrl;
 
 
     @DynamicPropertySource
@@ -54,6 +56,22 @@ public class UserServiceIT {
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
+
+        // Add AWS properties from environment variables
+        registry.add("aws.accessKeyId", () -> System.getenv("AWS_S3_ACCESS_KEY_ID"));
+        registry.add("aws.secretAccessKey", () -> System.getenv("AWS_S3_SECRET_ACCESS_KEY"));
+        registry.add("aws.s3.region", () -> System.getenv("AWS_S3_REGION"));
+        registry.add("aws.s3.bucket", () -> System.getenv("AWS_S3_BUCKET"));
+
+//        Add keycloak properties from environment variables
+        registry.add("keycloak.admin.client-id", () -> System.getenv("KEYCLOAK_ADMIN_CLIENT_ID"));
+        registry.add("keycloak.admin.username", () -> System.getenv("KEYCLOAK_ADMIN_USERNAME"));
+        registry.add("keycloak.admin.password", () -> System.getenv("KEYCLOAK_ADMIN_PASSWORD"));
+
+
+        // Disable Config Server
+        registry.add("spring.cloud.config.enabled", () -> "false");
+        registry.add("spring.config.import", () -> "optional:configtree:");
     }
 
 
@@ -63,16 +81,50 @@ public class UserServiceIT {
     }
 
 
+
+
+
+    @LocalServerPort
+    private int port;
+
+    private static String baseUrl;
+
     public static String accessToken;
     public static UUID userId;
     public static Long addressId;
 
 
+    public static String adminAccessToken;
+
     //    -------------------------------------------User Controller Tests--------------------------------------------------
 
     @Test
+    @Order(0)
+    void loginAdmin() {
+
+//        The keycloak instance used for testing should have an admin user with the following credentials
+//        Alternatively, later, keycloak instance can be spun up using docker-compose and the admin user can be created
+        UserLoginRequest loginRequest = new UserLoginRequest(
+                "admin1", "Admin@123"
+        );
+
+        adminAccessToken = given()
+                .contentType(ContentType.JSON)
+                .body(loginRequest)
+                .when()
+                .post(baseUrl + "/auth/login")
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.OK.value())
+                .cookie("AccessToken", notNullValue())
+                .cookie("RefreshToken", notNullValue())
+                .extract().cookie("AccessToken");
+
+    }
+
+    @Test
     @Order(1)
-    void shouldRegisterUserSuccessfully() throws InterruptedException {
+    void shouldRegisterUserSuccessfully() {
         UserRegisterRequest request = new UserRegisterRequest(
                 "john_doe",
                 "John",
@@ -118,10 +170,27 @@ public class UserServiceIT {
 
     @Test
     @Order(3)
+    void loginUser_InvalidCredentials() {
+        UserLoginRequest loginRequest = new UserLoginRequest("john_doe", "invalidPass123");
+
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(loginRequest)
+                .when()
+                .post(baseUrl + "/auth/login")
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
+
+
+    }
+
+    @Test
+    @Order(4)
     void shouldLoginUserSuccessfully() {
         UserLoginRequest loginRequest = new UserLoginRequest("john_doe", "password123");
 
-        // Perform login request
 
         accessToken = given()
                 .contentType(ContentType.JSON)
@@ -141,14 +210,32 @@ public class UserServiceIT {
 
 
     @Test
-    @Order(4)
+    @Order(5)
     void shouldGetUserProfileSuccessfully() {
+
+        userId = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .when()
+                .get(baseUrl + "/me")
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.OK.value())
+                .body("username", equalTo("john_doe"))
+                .body("firstName", equalTo("John"))
+                .body("lastName", equalTo("Doe"))
+                .body("email", equalTo("john.doe@example.com"))
+                .extract().body().jsonPath().getUUID("userId");
+    }
+
+    @Test
+    @Order(6)
+    void shouldGetUserProfileByIdSuccessfully() {
         // Use a valid token here
 
         given()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .when()
-                .get(baseUrl + "/me")
+                .get(baseUrl + "/" + userId)
                 .then()
                 .log().body()
                 .statusCode(HttpStatus.OK.value())
@@ -159,8 +246,44 @@ public class UserServiceIT {
     }
 
     @Test
-    @Order(5)
-    void shouldUpdateUserProfileSuccessfully() {// Use a valid token here
+    @Order(7)
+    void GetUserProfileById_NotFound() {
+        // Use a valid token here
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .when()
+                .get(baseUrl + "/" + UUID.randomUUID())
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    @Order(8)
+    void shouldReturnBasicUserInfo(){
+
+        List<UUID> userIds = List.of(userId);
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .contentType(ContentType.JSON)
+                .queryParam("userIds", userIds)
+                .when()
+                .get(baseUrl)
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.OK.value())
+                .body(userId + ".userId", equalTo(userId.toString()))  // Use userId as the key
+                .body(userId + ".username", equalTo("john_doe"))
+                .body(userId + ".firstName", equalTo("John"))
+                .body(userId + ".lastName", equalTo("Doe"));
+
+    }
+
+    @Test
+    @Order(9)
+    void shouldUpdateUserProfileSuccessfully() {
 
         UserPatchRequest patchRequest = UserPatchRequest.builder()
                 .email("john_updated@gmail.com")
@@ -187,42 +310,216 @@ public class UserServiceIT {
                 .extract().body().jsonPath().getUUID("userId");
     }
 
-    @Test
-    @Order(6)
-    void shouldLogoutUserSuccessfully() {
-
-        given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .when()
-                .post(baseUrl + "/auth/logout")
-                .then()
-                .statusCode(HttpStatus.NO_CONTENT.value())
-//                .cookie("AccessToken", nullValue())
-//                .cookie("RefreshToken", nullValue());
-        ;
-    }
 
     @Test
-    @Order(7)
-    void shouldReturnBasicUserInfo(){
+    @Order(10)
+    void shouldUpdateUserProfile_NoChange() {
 
-        List<UUID> userIds = List.of(userId);
+        UserPatchRequest patchRequest = UserPatchRequest.builder()
+                .email("john_updated@gmail.com")
+                .firstName("UpdatedJohn")
+                .lastName("UpdatedDoe")
+                .phoneNumber("0877654321")
+                .about("I am a software engineer")
+                .build();
 
         given()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .contentType(ContentType.JSON)
-                .queryParam("userIds", userIds)
+                .body(patchRequest)
                 .when()
-                .get(baseUrl)
+                .patch(baseUrl + "/me")
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    @Test
+    @Order(11)
+    void updateUserProfileById_UserNotFound() {
+
+        UserPatchRequest patchRequest = UserPatchRequest.builder()
+                .email("john_updated@gmail.com")
+                .firstName("UpdatedJohn")
+                .lastName("UpdatedDoe")
+                .phoneNumber("0877654321")
+                .about("I am a software engineer")
+                .build();
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .contentType(ContentType.JSON)
+                .body(patchRequest)
+                .when()
+                .patch(baseUrl + "/" + UUID.randomUUID())
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+
+    @Test
+    @Order(12)
+    void adminShouldUpdateUserProfileByIdSuccessfully() {
+
+        UserPatchRequest patchRequest = UserPatchRequest.builder()
+                .email("john_updated_by_admin@gmail.com")
+                .build();
+
+        userId = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminAccessToken)
+                .contentType(ContentType.JSON)
+                .body(patchRequest)
+                .when()
+                .patch(baseUrl + "/" + userId)
                 .then()
                 .log().body()
                 .statusCode(HttpStatus.OK.value())
-                .body(userId + ".userId", equalTo(userId.toString()))  // Use userId as the key
-                .body(userId + ".username", equalTo("john_doe"))
-                .body(userId + ".firstName", equalTo("UpdatedJohn"))
-                .body(userId + ".lastName", equalTo("UpdatedDoe"));
+                .body("email", equalTo("john_updated_by_admin@gmail.com"))
+                .extract().body().jsonPath().getUUID("userId");
+    }
+
+
+
+
+
+    @Test
+    @Order(13)
+    void shouldCreateUserProfileImageSuccessfully()  {
+
+        Path imagePath = Paths.get("src/test/resources/test.jpg");
+
+        try {
+            byte[] imageBytes = Files.readAllBytes(imagePath);
+
+            RestAssured.given()
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                    .contentType(ContentType.MULTIPART)
+                    .multiPart("profileImage", "test.jpg", imageBytes, "image/jpg")
+                    .when()
+                    .put(baseUrl + "/me/profile-image")
+                    .then()
+                    .log().body()
+                    .statusCode(HttpStatus.NO_CONTENT.value());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
+
+    @Test
+    @Order(14)
+    void shouldUpdateUserProfileImageSuccessfully()  {
+
+        Path imagePath = Paths.get("src/test/resources/test.jpg");
+
+        try {
+            byte[] imageBytes = Files.readAllBytes(imagePath);
+
+            RestAssured.given()
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                    .contentType(ContentType.MULTIPART)
+                    .multiPart("profileImage", "test.jpg", imageBytes, "image/jpg")
+                    .when()
+                    .put(baseUrl + "/me/profile-image")
+                    .then()
+                    .log().body()
+                    .statusCode(HttpStatus.NO_CONTENT.value());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Test
+    @Order(15)
+    void shouldDeleteUserProfileImageSuccessfully()  {
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .when()
+                .delete(baseUrl + "/me/profile-image" )
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+
+    }
+
+    @Test
+    @Order(16)
+    void deleteUserProfileImage_NotFound()  {
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .when()
+                .delete(baseUrl + "/me/profile-image" )
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.NOT_FOUND.value());
+
+    }
+
+
+    @Test
+    @Order(17)
+    void updateUserProfileImageSuccessfully_InvalidExtension()  {
+
+        Path imagePath = Paths.get("src/test/resources/test.txt");
+
+        try {
+            byte[] imageBytes = Files.readAllBytes(imagePath);
+
+            RestAssured.given()
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                    .contentType(ContentType.MULTIPART)
+                    .multiPart("profileImage", "test.txt", imageBytes, "text/plain")
+                    .when()
+                    .put(baseUrl + "/me/profile-image")
+                    .then()
+                    .log().body()
+                    .statusCode(HttpStatus.BAD_REQUEST.value());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    @Test
+    @Order(18)
+    void updateUserProfileImageFails_EmptyFile() {
+
+        byte[] emptyImageBytes = new byte[0]; // Empty byte array (0 bytes)
+
+        RestAssured.given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .contentType(ContentType.MULTIPART)
+                .multiPart("profileImage", "test-empty.jpg", emptyImageBytes, "image/jpeg") // Correct MIME type
+                .when()
+                .put(baseUrl + "/me/profile-image")
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.BAD_REQUEST.value()); // Expect failure
+    }
+
+
+    @Test
+    @Order(19)
+    void shouldGetTotalUsersCount() {
+
+        String res = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminAccessToken)
+                .when()
+                .get(baseUrl + "/count")
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.OK.value())
+                .extract().asString();
+
+
+        assertEquals(1, Integer.parseInt(res));
+    }
+
 
 
 
@@ -247,7 +544,7 @@ public class UserServiceIT {
             .build();
 
     @Test
-    @Order(8)
+    @Order(20)
     void shouldCreateAddressSuccessfully() {
 
 
@@ -273,7 +570,7 @@ public class UserServiceIT {
     }
 
     @Test
-    @Order(9)
+    @Order(21)
     void shouldCreateAnotherAddressSuccessfully() {
 
         given()
@@ -288,7 +585,7 @@ public class UserServiceIT {
     }
 
     @Test
-    @Order(10)
+    @Order(22)
     void shouldRetrieveAllUserAddresses() {
         given()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
@@ -304,7 +601,7 @@ public class UserServiceIT {
 
 
     @Test
-    @Order(11)
+    @Order(23)
     void shouldRetrieveUserAddressById() {
         given()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
@@ -324,7 +621,7 @@ public class UserServiceIT {
 
 
     @Test
-    @Order(12)
+    @Order(24)
     void shouldUpdateUserAddressSuccessfully() {
 
         AddressPatchRequest updatedAddress = AddressPatchRequest.builder()
@@ -364,7 +661,7 @@ public class UserServiceIT {
     }
 
     @Test
-    @Order(13)
+    @Order(25)
     void shouldUpdateUserAddressWithoutChangesSuccessfully() {
 
         AddressPatchRequest updatedAddress = AddressPatchRequest.builder()
@@ -387,7 +684,7 @@ public class UserServiceIT {
     }
 
     @Test
-    @Order(14)
+    @Order(26)
     void shouldDeleteUserAddressByIdAndReturnNotFoundOnRetrieval() {
         // Step 1: Delete the address
         given()
@@ -413,7 +710,7 @@ public class UserServiceIT {
 
 
     @Test
-    @Order(15)
+    @Order(27)
     void shouldFailToCreateAddressDueToInvalidData() {
         AddressRequest invalidAddressRequest = AddressRequest.builder()
                 .streetAddress("") // Empty street address (invalid)
@@ -434,6 +731,90 @@ public class UserServiceIT {
                 .log().body()
                 .statusCode(HttpStatus.BAD_REQUEST.value()); // Expecting a validation failure
 
+    }
+
+
+//    ------------------Final User Tests to clean up sources and check behaviour of delete/disable func-----------------------------
+
+
+    @Test
+    @Order(28)
+    void shouldDisableUserSuccessfully(){
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminAccessToken)
+                .when()
+                .put(baseUrl + "/" + userId + "/disable")
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    @Test
+    @Order(29)
+    void shouldDisableUser_NotAuthorized(){
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .when()
+                .put(baseUrl + "/" + userId + "/disable")
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    @Order(30)
+    void disableUser_NotFound(){
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminAccessToken)
+                .when()
+                .put(baseUrl + "/" + UUID.randomUUID() + "/disable")
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+
+    @Test
+    @Order(31)
+    void shouldLogoutUserSuccessfully() {
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .when()
+                .post(baseUrl + "/auth/logout")
+                .then()
+                .statusCode(HttpStatus.NO_CONTENT.value())
+//                .cookie("AccessToken", nullValue())
+//                .cookie("RefreshToken", nullValue());
+        ;
+    }
+
+
+    @Test
+    @Order(32)
+    void deleteUser(){
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .when()
+                .delete(baseUrl + "/" + userId)
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    @Test
+    @Order(33)
+    void deleteUser_NotFound(){
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminAccessToken)
+                .when()
+                .delete(baseUrl + "/" + userId)
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.NOT_FOUND.value());
     }
 
 

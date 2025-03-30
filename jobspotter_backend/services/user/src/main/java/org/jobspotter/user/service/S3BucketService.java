@@ -10,4 +10,6 @@ public interface S3BucketService {
     void uploadFile(UUID userID, MultipartFile file) throws IOException;
 
     void deleteFile(UUID userID);
+
+    boolean fileExists(UUID userID);
 }

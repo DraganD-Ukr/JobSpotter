@@ -17,6 +17,9 @@ import org.jobspotter.user.dto.deserializer.CountyDeserializer;
 import org.jobspotter.user.model.AddressType;
 import org.jobspotter.user.model.County;
 
+/**
+ * The address request. Used to create a new address for the user.
+ */
 @Builder
 @Setter
 @Getter

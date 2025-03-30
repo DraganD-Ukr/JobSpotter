@@ -2,11 +2,13 @@ package org.jobspotter.user.dto;
 
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+/**
+ * The user patch request DTO. Used to update the user information using PATCH.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

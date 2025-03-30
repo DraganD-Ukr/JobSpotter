@@ -2,14 +2,12 @@ package org.jobspotter.user.unit;
 
 import org.jobspotter.user.authUtils.JWTUtils;
 import org.jobspotter.user.dto.*;
-import org.jobspotter.user.exception.InvalidCredentialsException;
-import org.jobspotter.user.exception.ResourceAlreadyExistsException;
-import org.jobspotter.user.exception.ResourceNotFoundException;
-import org.jobspotter.user.exception.UnauthorizedException;
+import org.jobspotter.user.exception.*;
 import org.jobspotter.user.model.User;
 import org.jobspotter.user.model.UserType;
 import org.jobspotter.user.repository.UserRepository;
 import org.jobspotter.user.service.KeyCloakService;
+import org.jobspotter.user.service.S3BucketService;
 import org.jobspotter.user.service.implementation.UserServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +15,9 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,6 +38,9 @@ public class UserServiceImplUnitTests {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private S3BucketService s3BucketService;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -65,9 +68,9 @@ public class UserServiceImplUnitTests {
 
         when(keyCloakService.getUserIDbyEmail(request.getEmail(), "adminToken")).thenReturn(userId);
 
-        ResponseEntity<HttpStatus> response = userService.registerUser(request);
+        userService.registerUser(request);
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+
         verify(keyCloakService).createUser(anyString(), any(KeyCloakRegisterRequest.class));
         verify(userRepository).save(userCaptor.capture());
 
@@ -118,16 +121,15 @@ public class UserServiceImplUnitTests {
             jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
             when(keyCloakService.logoutUser(userId)).thenReturn(HttpStatus.NO_CONTENT);
 
-            ResponseEntity<HttpStatus> response = userService.logoutUser(accessToken);
+            userService.logoutUser(accessToken);
 
-            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
             verify(keyCloakService).logoutUser(userId);
 
         }
     }
 
     @Test
-    void logoutUser_failure() throws Exception {
+    void logoutUser_failure() {
         String accessToken = "testToken";
         UUID userId = UUID.randomUUID();
 
@@ -135,9 +137,8 @@ public class UserServiceImplUnitTests {
             jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
             when(keyCloakService.logoutUser(userId)).thenReturn(HttpStatus.BAD_REQUEST);
 
-            ResponseEntity<HttpStatus> response = userService.logoutUser(accessToken);
 
-            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+            assertThrows(InvalidRequestException.class, () -> userService.logoutUser(accessToken));
             verify(keyCloakService).logoutUser(userId);
 
         }
@@ -145,7 +146,7 @@ public class UserServiceImplUnitTests {
     }
 
     @Test
-    void getUserById_success() throws Exception {
+    void getUserById_success() {
         String accessToken = "testToken";
         UUID userId = UUID.randomUUID();
         User user = User.builder().userId(userId).username("testuser").build();
@@ -154,11 +155,10 @@ public class UserServiceImplUnitTests {
             jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
             when(userRepository.findById(userId)).thenReturn(Optional.ofNullable(user));
 
-            ResponseEntity<UserResponse> response = userService.getUserById(userId);
+            UserResponse result = userService.getUserById(userId);
 
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertEquals(user.getUserId(), response.getBody().getUserId());
-            assertEquals(user.getUsername(), response.getBody().getUsername());
+            assertEquals(user.getUserId(), result.getUserId());
+            assertEquals(user.getUsername(), result.getUsername());
 
         }
 
@@ -223,6 +223,82 @@ public class UserServiceImplUnitTests {
         verify(keyCloakService, never()).updateUser(any(), any());
     }
 
+    @Test
+    void uploadProfilePicture_success() throws Exception {
+        UUID userId = UUID.randomUUID();
+        MultipartFile multipartFile = mock(MultipartFile.class);
+
+        // Lenient stubbing to prevent UnnecessaryStubbingException
+        when(multipartFile.getOriginalFilename()).thenReturn("profile_picture.jpg");
+
+//        By default, mockito does nothing when uploadFile is called
+//        doNothing().when(s3BucketService).uploadFile(userId, multipartFile);
+
+        userService.uploadProfilePicture(userId, multipartFile);
+
+        verify(s3BucketService).uploadFile(userId, multipartFile);
+    }
+
+    @Test
+    void uploadProfilePicture_InvalidFileExtension() throws Exception {
+        UUID userId = UUID.randomUUID();
+        MultipartFile multipartFile = mock(MultipartFile.class);
+
+        // Mock the getOriginalFilename to return a file with an invalid extension (e.g., .txt)
+        when(multipartFile.getOriginalFilename()).thenReturn("profile_picture.txt");
+
+
+        assertThrows(InvalidFileExtensionException.class, () -> {
+            userService.uploadProfilePicture(userId, multipartFile);
+        });
+
+        // Verify that uploadFile was not called since the file extension is invalid
+        verify(s3BucketService, never()).uploadFile(userId, multipartFile);
+
+
+    }
+
+
+    @Test
+    void uploadProfilePicture_EmptyFile() throws IOException {
+        UUID userId = UUID.randomUUID();
+        MultipartFile multipartFile = mock(MultipartFile.class);
+
+        when(multipartFile.isEmpty()).thenReturn(true);
+
+        assertThrows(InvalidRequestException.class, () -> {
+            userService.uploadProfilePicture(userId, multipartFile);
+        });
+
+        // Verify that uploadFile was not called since the file extension is invalid
+        verify(s3BucketService, never()).uploadFile(userId, multipartFile);
+    }
+
+
+    @Test
+    void deleteProfilePicture_success() {
+        UUID userId = UUID.randomUUID();
+
+        userService.deleteProfilePicture(userId);
+
+        verify(s3BucketService).deleteFile(userId);
+    }
+
+
+    @Test
+    void deleteProfilePicture_NotFound() {
+        UUID userId = UUID.randomUUID();
+
+        doThrow(new ResourceNotFoundException("File does not exist in S3 bucket for user: " + userId))
+                .when(s3BucketService).deleteFile(userId);
+
+        assertThrows(ResourceNotFoundException.class, () -> userService.deleteProfilePicture(userId));
+
+
+        verify(s3BucketService, times(1)).deleteFile(userId);
+    }
+
+
 
     @Test
     void getAllByIds() {
@@ -233,12 +309,12 @@ public class UserServiceImplUnitTests {
         );
         when(userRepository.findAllByUserIdIn(userIds)).thenReturn(users);
 
-        ResponseEntity<Map<UUID, UserBasicInfoResponse>> response = userService.getAllByIds(userIds);
+        Map<UUID, UserBasicInfoResponse> response = userService.getAllByIds(userIds);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, response.getBody().size());
-        assertTrue(response.getBody().containsKey(userIds.get(0)));
-        assertTrue(response.getBody().containsKey(userIds.get(1)));
+
+        assertEquals(2, response.size());
+        assertTrue(response.containsKey(userIds.get(0)));
+        assertTrue(response.containsKey(userIds.get(1)));
     }
 
     @Test
@@ -366,9 +442,8 @@ public class UserServiceImplUnitTests {
             jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
             when(userRepository.findById(userId)).thenReturn(Optional.of(User.builder().userId(userId).username("testuser").build()));
 
-            ResponseEntity<HttpStatus> response = userService.deleteUser(accessToken, userId);
+            userService.deleteUser(accessToken, userId);
 
-            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
             verify(keyCloakService).deleteUser(userId);
 
         } catch (Exception e) {
@@ -388,9 +463,9 @@ public class UserServiceImplUnitTests {
             when(jwtUtilsMocked.hasAdminRole(accessToken)).thenReturn(true);
             when(userRepository.findById(userId)).thenReturn(Optional.of(User.builder().userId(userId).username("testuser").build()));
 
-            ResponseEntity<HttpStatus> response = userService.deleteUser(accessToken, userId);
+            userService.deleteUser(accessToken, userId);
 
-            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
             verify(keyCloakService).deleteUser(userId);
 
         } catch (Exception e) {

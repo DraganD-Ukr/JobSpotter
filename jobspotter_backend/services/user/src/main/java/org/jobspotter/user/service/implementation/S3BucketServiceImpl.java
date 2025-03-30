@@ -47,7 +47,7 @@ public class S3BucketServiceImpl implements S3BucketService {
     @Override
     public void uploadFile(UUID userID, MultipartFile file) throws IOException {
 
-        // Covnert the user ID to a string
+        // Convert the user ID to a string
         String fileName = userID.toString();
 
         // Create a PutObjectRequest object
@@ -101,6 +101,7 @@ public class S3BucketServiceImpl implements S3BucketService {
      * @return true if the file exists, false otherwise
      */
     // Check if the file exists in the S3 bucket
+    @Override
     public boolean fileExists(UUID userID) {
 
         // Convert the user ID to a string
