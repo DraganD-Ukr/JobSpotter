@@ -34,6 +34,10 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final JWTUtils jwtUtils;
 
+    /**
+     * Register a new user. Creates user in keycloak(with essential information needed in keycloak) and user db.
+     * @param userRegisterRequest User register request
+     */
     @Override
     public void registerUser(UserRegisterRequest userRegisterRequest) {
         if (userRepository.existsByUsernameAndEmail(userRegisterRequest.getUsername(), userRegisterRequest.getEmail())) {
@@ -72,11 +76,23 @@ public class UserServiceImpl implements UserService {
 
     }
 
+
+    /**
+     * Login user. Returns access token and refresh token
+     * @param userLoginRequest User login request
+     * @return TokenResponse - login response needed for client to maintain session
+     */
     @Override
     public TokenResponse loginUser(UserLoginRequest userLoginRequest) {
         return keyCloakService.loginUser(userLoginRequest);
     }
 
+
+    /**
+     * Logs out user by invalidating the cookies with tokens
+     * @param accessToken access token
+     * @throws Exception - if {@link JWTUtils} service fails
+     */
     @Override
     public void logoutUser(String accessToken) throws Exception {
 
@@ -93,6 +109,12 @@ public class UserServiceImpl implements UserService {
 
     }
 
+
+    /**
+     * Get user by id
+     * @param userId user id
+     * @return UserResponse - user representation
+     */
     @Override
     public UserResponse getUserById(UUID userId) {
 
@@ -115,6 +137,13 @@ public class UserServiceImpl implements UserService {
 
     }
 
+
+    /**
+     * Update user information. Updates user in keycloak(if user's property belongs to keycloak as well) and user db.
+     * @param userId user id
+     * @param userPatchRequest user patch request
+     * @return UserResponse - updated user representation or no content if no changes detected
+     */
     @Override
     public ResponseEntity<UserResponse> updateUser(UUID userId, UserPatchRequest userPatchRequest) {
 
@@ -148,8 +177,7 @@ public class UserServiceImpl implements UserService {
      * Upload user profile picture to S3 bucket
      *
      * @param multipartFile uploaded file
-     * @param userId user id of the user
-     * @return ResponseEntity<HttpStatus> response entity
+     * @param userId user id
      */
     @Override
     public void uploadProfilePicture(UUID userId, MultipartFile multipartFile) throws Exception {
@@ -173,8 +201,7 @@ public class UserServiceImpl implements UserService {
     /**
      * Delete user profile picture from S3 bucket
      *
-     * @param userId user id of the user
-     * @return ResponseEntity<HttpStatus> response entity
+     * @param userId user id
      */
     @Override
     public void deleteProfilePicture(UUID userId) {
@@ -185,6 +212,11 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    /**
+     * Get user basic info by batch(used by other services to get user info)
+     * @param userIds list of user ids
+     * @return Map of user id to user basic info
+     */
     @Override
     public Map<UUID, UserBasicInfoResponse> getAllByIds(List<UUID> userIds) {
 
@@ -206,6 +238,13 @@ public class UserServiceImpl implements UserService {
 
     }
 
+
+    /**
+     * Delete user. Deletes user from keycloak and user db
+     * @param accessToken access token
+     * @param userId user id
+     * @throws Exception if user is not authorized to delete user, user not found or {@link KeyCloakServiceImpl} or {@link JWTUtils} service fails
+     */
     @Override
     public void deleteUser(String accessToken, UUID userId) throws Exception {
         authorizeUser(userId, accessToken);
@@ -222,6 +261,13 @@ public class UserServiceImpl implements UserService {
 
     }
 
+
+    /**
+     * Disable user. Disables user in keycloak(user is not able to login) until manual resolution.
+     * @param accessToken admin access token
+     * @param userId user id
+     * @throws Exception if user is not authorized, user not found or {@link JWTUtils} service fails
+     */
     @Override
     public void disableUser(String accessToken, UUID userId) throws Exception {
 
@@ -238,6 +284,15 @@ public class UserServiceImpl implements UserService {
         log.info("User with Id: {} disabled successfully", userId);
     }
 
+
+    /**
+     * Update user profile by id. Updates user in keycloak(if user's property belongs to keycloak as well) and user db. Both user and admin can update user profile.
+     * @param accessToken access token
+     * @param userId user id
+     * @param userPatchRequest user patch request
+     * @return UserResponse - updated user representation or no content if no changes detected
+     * @throws Exception if user is not authorized, user not found or {@link JWTUtils} service fails
+     */
     @Override
     public ResponseEntity<UserResponse> updateUserById(String accessToken, UUID userId, UserPatchRequest userPatchRequest) throws Exception {
 
@@ -270,6 +325,13 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+
+    /**
+     * Get all users. Returns list of all users
+     * @param accessToken admin access token
+     * @return number of all users
+     * @throws Exception if user is not authorized
+     */
     @Override
     public Integer getTotalUsersCount(String accessToken) throws Exception {
         isAdmin(accessToken);
@@ -277,6 +339,12 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    /**
+     * Helper method to update user from patch request. Updates user in keycloak(if user's property belongs to keycloak as well).
+     * @param user user model
+     * @param userPatchRequest user patch request
+     * @return true if user was updated, false otherwise
+     */
     private boolean updateUserFromPatch(User user, UserPatchRequest userPatchRequest){
         boolean updated = false;
         boolean toUpdateKeycloak = false;
@@ -322,6 +390,12 @@ public class UserServiceImpl implements UserService {
 
     }
 
+
+    /**
+     * Helper method to check if user has admin role admin. See {@link JWTUtils#hasAdminRole(String)}
+     * @param accessToken access token
+     * @throws Exception if user is not admin or {@link JWTUtils} service fails
+     */
     private void isAdmin(String accessToken) throws Exception {
         if (!jwtUtils.hasAdminRole(accessToken)) {
            throw new UnauthorizedException("Unauthorized access");
@@ -329,6 +403,12 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    /**
+     * Helper method to authorize user. Checks if user is authorized to access resource.
+     * @param resourceUserId user id(owner) of the resource
+     * @param accessToken access token
+     * @throws Exception if user is not authorized or {@link JWTUtils} service fails
+     */
     private void authorizeUser(UUID resourceUserId, String accessToken) throws Exception {
 
         UUID tokenUserId = JWTUtils.getUserIdFromToken(accessToken);
