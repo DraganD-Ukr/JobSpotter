@@ -36,6 +36,13 @@ public class AddressServiceImpl implements AddressService {
     private final UserRepository userRepository;
     private final GeoCodingService geoCodingService;
 
+
+    /**
+     * Create a new address for the user
+     * @param userId User ID
+     * @param addressRequest Address request
+     * @return Address ID
+     */
     @Override
     public Long createAddress(UUID userId, AddressRequest addressRequest) {
 
@@ -91,6 +98,13 @@ public class AddressServiceImpl implements AddressService {
 
     }
 
+
+    /**
+     * Delete an address of the user
+     * @param userId User ID
+     * @param addressId Address ID
+     * @return Response entity with status
+     */
     @Override
     public ResponseEntity<HttpStatus> deleteAddress(UUID userId, Long addressId) {
 
@@ -117,6 +131,14 @@ public class AddressServiceImpl implements AddressService {
 
     }
 
+
+    /**
+     * Update an address of the user
+     * @param userId User ID
+     * @param addressId Address ID
+     * @param addressRequest Address request
+     * @return Updated address or no content
+     */
     @Override
     public ResponseEntity<?> updateAddress(UUID userId, Long addressId, AddressPatchRequest addressRequest) {
 
@@ -194,6 +216,13 @@ public class AddressServiceImpl implements AddressService {
 
     }
 
+
+    /**
+     * Get an address by ID
+     * @param userId User ID
+     * @param addressId Address ID
+     * @return Address response
+     */
     @Override
     public ResponseEntity<AddressResponse> getAddressById(UUID userId, Long addressId) {
 
@@ -229,6 +258,12 @@ public class AddressServiceImpl implements AddressService {
                 .build());
     }
 
+
+    /**
+     * Get all addresses of the user
+     * @param userId User ID
+     * @return List of address responses
+     */
     @Override
     public ResponseEntity<List<AddressResponse>> getAllAddresses(UUID userId) {
 
