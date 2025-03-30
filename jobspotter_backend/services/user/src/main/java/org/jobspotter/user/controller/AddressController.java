@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.jobspotter.user.authUtils.JWTUtils;
 import org.jobspotter.user.dto.AddressPatchRequest;
 import org.jobspotter.user.dto.AddressRequest;
 import org.jobspotter.user.dto.AddressResponse;
@@ -18,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users/addresses")
@@ -49,9 +47,7 @@ public class AddressController {
             @RequestBody @Valid AddressRequest addressRequest
             ) throws Exception {
 
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
-
-        Long addressId = addressService.createAddress(userId, addressRequest);
+        Long addressId = addressService.createAddress(accessToken, addressRequest);
 
         return ResponseEntity.created(new URI("/api/v1/users/addresses/" + addressId)).build();
     }
@@ -78,9 +74,9 @@ public class AddressController {
             @PathVariable Long addressId
     ) throws Exception {
 
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+        addressService.deleteAddress(accessToken, addressId);
 
-        return addressService.deleteAddress(userId, addressId);
+        return ResponseEntity.noContent().build();
     }
 
 
@@ -110,9 +106,8 @@ public class AddressController {
             @RequestBody @Valid AddressPatchRequest addressRequest
     ) throws Exception {
 
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+        return addressService.updateAddress(accessToken, addressId, addressRequest);
 
-        return addressService.updateAddress(userId, addressId, addressRequest);
     }
 
 
@@ -140,9 +135,8 @@ public class AddressController {
             @PathVariable Long addressId
     ) throws Exception {
 
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+        return ResponseEntity.ok(addressService.getAddressById(accessToken, addressId));
 
-        return addressService.getAddressById(userId, addressId);
     }
 
     @Operation(summary = "Get all addresses.")
@@ -165,8 +159,6 @@ public class AddressController {
             @RequestHeader("Authorization") String accessToken
     ) throws Exception {
 
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
-
-        return addressService.getAllAddresses(userId);
+        return ResponseEntity.ok(addressService.getAllAddresses(accessToken));
     }
 }
