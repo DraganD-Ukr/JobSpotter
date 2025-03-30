@@ -5,6 +5,9 @@ import lombok.Setter;
 
 import java.util.List;
 
+/**
+ * The KeyCloak register request DTO.
+ */
 public record KeyCloakRegisterRequest (
     boolean enabled,
     String firstName,

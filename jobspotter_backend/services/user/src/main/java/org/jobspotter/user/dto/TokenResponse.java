@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * The token response DTO. Mirrors the response from the Keycloak token endpoint.
+ */
 @AllArgsConstructor
 @Getter
 @Setter

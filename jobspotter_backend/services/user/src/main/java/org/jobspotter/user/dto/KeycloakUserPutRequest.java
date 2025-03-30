@@ -2,6 +2,9 @@ package org.jobspotter.user.dto;
 
 import lombok.*;
 
+/**
+ * Keycloak user put request DTO. Used to update the user information in Keycloak.
+ */
 @Getter
 @Setter
 @Builder

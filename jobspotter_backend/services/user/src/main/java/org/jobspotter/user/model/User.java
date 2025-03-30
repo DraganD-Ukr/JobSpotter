@@ -14,6 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * The user model of the JobSpotter.
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

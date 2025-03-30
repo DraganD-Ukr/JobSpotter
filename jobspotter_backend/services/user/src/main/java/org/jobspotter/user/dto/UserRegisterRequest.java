@@ -1,13 +1,15 @@
 package org.jobspotter.user.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+/**
+ * The user register request DTO. Used to register a new user.
+ */
 @Getter
 @AllArgsConstructor
 @Builder
