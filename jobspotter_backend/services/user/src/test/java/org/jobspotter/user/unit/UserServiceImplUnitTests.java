@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,6 +31,12 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class UserServiceImplUnitTests {
 
+
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Mock
+    private ValueOperations<String, Object> valueOperations;
 
     @Mock
     private JWTUtils jwtUtilsMocked;
@@ -191,6 +199,12 @@ public class UserServiceImplUnitTests {
         User user = User.builder().userId(userId).firstName("OldFirstName").build();
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
+        // Mock the opsForValue() method to return the mocked ValueOperations
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        // Now, you can use doNothing() on the set() method of ValueOperations
+        doNothing().when(valueOperations).set(any(), any());
+
         ResponseEntity<UserResponse> response = userService.updateUser(userId, request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -330,6 +344,12 @@ public class UserServiceImplUnitTests {
             when(userRepository.findById(userId)).thenReturn(Optional.of(user));
             jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
 
+            // Mock the opsForValue() method to return the mocked ValueOperations
+            when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+            // Now, you can use doNothing() on the set() method of ValueOperations
+            doNothing().when(valueOperations).set(any(), any());
+
             userPatchRequest.setFirstName("Updated Name");
 
             ResponseEntity<UserResponse> response = userService.updateUserById(accessToken, userId, userPatchRequest);
@@ -354,6 +374,12 @@ public class UserServiceImplUnitTests {
             when(userRepository.findById(userId)).thenReturn(Optional.of(user));
             jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(UUID.randomUUID());
             when(jwtUtilsMocked.hasAdminRole(accessToken)).thenReturn(true);
+
+            // Mock the opsForValue() method to return the mocked ValueOperations
+            when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+            // Now, you can use doNothing() on the set() method of ValueOperations
+            doNothing().when(valueOperations).set(any(), any());
 
             userPatchRequest.setFirstName("Updated Name");
 
@@ -593,7 +619,6 @@ public class UserServiceImplUnitTests {
     @Test
     void getTotalUsersCount_Unauthorized() throws Exception {
         String accessToken = "testToken";
-        Integer totalUsers = 10;
 
 
         when(jwtUtilsMocked.hasAdminRole(accessToken)).thenReturn(false);

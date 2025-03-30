@@ -1,5 +1,6 @@
 package org.jobspotter.user.integration;
 
+import com.redis.testcontainers.RedisContainer;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import lombok.extern.slf4j.Slf4j;
@@ -8,15 +9,23 @@ import org.jobspotter.user.dto.*;
 import org.jobspotter.user.model.AddressType;
 import org.jobspotter.user.model.County;
 import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.data.redis.connection.RedisConnectionCommands;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,6 +36,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,6 +47,14 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 public class UserServiceIT {
 
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
+    @Container
+    private static final RedisContainer redis = new RedisContainer(DockerImageName.parse("redis:7.0.11-alpine"))
+            .withExposedPorts(6379)
+            .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(Logger.class)))
+            .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*\\n", 1));
 
 
 
@@ -51,11 +69,23 @@ public class UserServiceIT {
     @DynamicPropertySource
     static void configureTestDatabase(DynamicPropertyRegistry registry) {
         postgres.start();
+        redis.start();
+
+
+
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
+
+        String redisPort = String.valueOf(redis.getMappedPort(6379));
+        String redisHost = redis.getHost();
+
+        registry.add("spring.data.redis.host", redis::getHost);
+        registry.add("spring.data.redis.port",  () -> redis.getMappedPort(6379) );
+        log.info("DynamicPropertySource - spring.data.redis.host set to: {}", redisHost);
+        log.info("DynamicPropertySource - spring.data.redis.port set to: {}", redisPort);
 
         // Add AWS properties from environment variables
         registry.add("aws.accessKeyId", () -> System.getenv("AWS_S3_ACCESS_KEY_ID"));
@@ -97,6 +127,12 @@ public class UserServiceIT {
     public static String adminAccessToken;
 
     //    -------------------------------------------User Controller Tests--------------------------------------------------
+
+    @Test
+    void redisConnectionTest() {
+        String response = redisTemplate.execute(RedisConnectionCommands::ping);
+        assertThat(response).isEqualTo("PONG");
+    }
 
     @Test
     @Order(0)

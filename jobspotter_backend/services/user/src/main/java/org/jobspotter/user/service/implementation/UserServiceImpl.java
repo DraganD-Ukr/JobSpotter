@@ -20,7 +20,6 @@ import org.jobspotter.user.service.KeyCloakService;
 import org.jobspotter.user.service.S3BucketService;
 import org.jobspotter.user.service.UserService;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -151,7 +150,6 @@ public class UserServiceImpl implements UserService {
      * @return UserResponse - updated user representation or no content if no changes detected
      */
     @Override
-    @CachePut(value = "users", key = "#userId")
     public ResponseEntity<UserResponse> updateUser(UUID userId, UserPatchRequest userPatchRequest) {
 
         User user = userRepository.findById(userId)
@@ -178,6 +176,7 @@ public class UserServiceImpl implements UserService {
                 .userType(user.getUserType())
                 .build();
 
+        redisTemplate.opsForValue().set("users::"+ u.getUserId().toString(), u);
 
         return ResponseEntity.ok(u);
     }
