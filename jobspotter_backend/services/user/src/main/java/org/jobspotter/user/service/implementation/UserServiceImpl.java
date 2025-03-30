@@ -19,6 +19,7 @@ import org.jobspotter.user.repository.UserRepository;
 import org.jobspotter.user.service.KeyCloakService;
 import org.jobspotter.user.service.S3BucketService;
 import org.jobspotter.user.service.UserService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -327,11 +328,12 @@ public class UserServiceImpl implements UserService {
 
 
     /**
-     * Get all users. Returns list of all users
+     * Get all users. Returns count of all users registered
      * @param accessToken admin access token
      * @return number of all users
      * @throws Exception if user is not authorized
      */
+    @Cacheable(value = "usersCount", key = "'usersCount'")
     @Override
     public Integer getTotalUsersCount(String accessToken) throws Exception {
         isAdmin(accessToken);
