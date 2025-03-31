@@ -232,7 +232,6 @@ public class UserServiceImpl implements UserService {
 
 //      Use stream to collect the data into a map
 
-//        TODO: Add caching
 
         return users.stream()
                 .collect(Collectors.toMap(

@@ -56,8 +56,6 @@ public class UserServiceIT {
             .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(Logger.class)))
             .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*\\n", 1));
 
-
-
     @Container
     private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest")
             .withDatabaseName("testdb")
