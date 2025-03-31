@@ -16,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -190,53 +189,6 @@ public class UserServiceImplUnitTests {
         }
     }
 
-
-    @Test
-    void updateUser_success() {
-        UUID userId = UUID.randomUUID();
-        UserPatchRequest request = new UserPatchRequest();
-        request.setFirstName("NewFirstName");
-        User user = User.builder().userId(userId).firstName("OldFirstName").build();
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-
-        // Mock the opsForValue() method to return the mocked ValueOperations
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-
-        // Now, you can use doNothing() on the set() method of ValueOperations
-        doNothing().when(valueOperations).set(any(), any());
-
-        ResponseEntity<UserResponse> response = userService.updateUser(userId, request);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("NewFirstName", response.getBody().getFirstName());
-        verify(userRepository).save(user);
-        verify(keyCloakService).updateUser(any(), eq(userId));
-    }
-
-    @Test
-    void updateUser_noChanges() {
-        UUID userId = UUID.randomUUID();
-        UserPatchRequest request = new UserPatchRequest(); // No changes
-        User user = User.builder().userId(userId).firstName("OldFirstName").build();
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-
-        ResponseEntity<UserResponse> response = userService.updateUser(userId, request);
-
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(userRepository, never()).save(any());
-        verify(keyCloakService, never()).updateUser(any(), any());
-    }
-
-    @Test
-    void updateUser_notFound() {
-        UUID userId = UUID.randomUUID();
-        UserPatchRequest request = new UserPatchRequest();
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> userService.updateUser(userId, request));
-        verify(keyCloakService, never()).updateUser(any(), any());
-    }
-
     @Test
     void uploadProfilePicture_success() throws Exception {
         UUID userId = UUID.randomUUID();
@@ -331,6 +283,8 @@ public class UserServiceImplUnitTests {
         assertTrue(response.containsKey(userIds.get(1)));
     }
 
+
+
     @Test
     void updateUserById_User_SuccessfulUpdate() throws Exception {
 
@@ -352,11 +306,33 @@ public class UserServiceImplUnitTests {
 
             userPatchRequest.setFirstName("Updated Name");
 
-            ResponseEntity<UserResponse> response = userService.updateUserById(accessToken, userId, userPatchRequest);
+            UserResponse response = userService.updateUserById(accessToken, userPatchRequest, userId);
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertEquals("Updated Name", response.getFirstName());
             verify(userRepository, times(1)).save(user);
+        }
+
+    }
+
+    @Test
+    void updateUserById_User_NoChange() throws Exception {
+
+        UUID userId = UUID.randomUUID();
+        String accessToken = "testToken";
+        User user = User.builder().userId(userId).username("testuser").firstName("John").build();
+        UserPatchRequest userPatchRequest = new UserPatchRequest();
+        userPatchRequest.setFirstName("John");
+
+        try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class)) {
+            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
+
+
+            UserResponse response = userService.updateUserById(accessToken, userPatchRequest, userId);
+
+            assertNull(response);
+            verify(userRepository, never()).save(user);
         }
 
     }
@@ -366,7 +342,9 @@ public class UserServiceImplUnitTests {
 
         UUID userId = UUID.randomUUID();
         String accessToken = "testToken";
+
         User user = User.builder().userId(userId).username("testuser").firstName("John").build();
+
         UserPatchRequest userPatchRequest = new UserPatchRequest();
         userPatchRequest.setFirstName("Updated Name");
 
@@ -383,10 +361,10 @@ public class UserServiceImplUnitTests {
 
             userPatchRequest.setFirstName("Updated Name");
 
-            ResponseEntity<UserResponse> response = userService.updateUserById(accessToken, userId, userPatchRequest);
+            UserResponse response = userService.updateUserById(accessToken, userPatchRequest, userId);
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertEquals("Updated Name", response.getFirstName());
             verify(userRepository, times(1)).save(user);
         }
 
@@ -395,32 +373,54 @@ public class UserServiceImplUnitTests {
     @Test
     void updateUserById_UserNotFound() {
 
-        UUID userId = UUID.randomUUID();
-        String accessToken = "testToken";
-        UserPatchRequest userPatchRequest = new UserPatchRequest();
-        userPatchRequest.setFirstName("Updated Name");
+        try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class) ){
 
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+            UUID userId = UUID.randomUUID();
+            String accessToken = "testToken";
+            jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
 
-        assertThrows(ResourceNotFoundException.class, () ->
-                userService.updateUserById(accessToken, userId, userPatchRequest));
+            UserPatchRequest userPatchRequest = new UserPatchRequest();
+            userPatchRequest.setFirstName("Updated Name");
+
+            when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class, () ->
+                    userService.updateUserById(accessToken, userPatchRequest, userId));
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 
     @Test
     void updateUserById_UnauthorizedAccess() {
 
+
+        try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class)) {
+
         UUID userId = UUID.randomUUID();
         String accessToken = "testToken";
-        User user = User.builder().userId(userId).username("testuser").build();
+        jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(UUID.randomUUID());
+
+        User user = User.builder()
+                .userId(userId)
+                .username("testuser")
+                .build();
+
         UserPatchRequest userPatchRequest = new UserPatchRequest();
         userPatchRequest.setFirstName("Updated Name");
 
-        try (MockedStatic<JWTUtils> jwtUtils = Mockito.mockStatic(JWTUtils.class)) {
-            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-            jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(UUID.randomUUID());
 
-            assertThrows(UnauthorizedException.class, () ->
-                    userService.updateUserById(accessToken, userId, userPatchRequest));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(jwtUtilsMocked.hasAdminRole(accessToken)).thenReturn(false);
+
+
+        assertThrows(UnauthorizedException.class, () ->
+                userService.updateUserById(accessToken, userPatchRequest, userId));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
 
@@ -448,9 +448,9 @@ public class UserServiceImplUnitTests {
             when(userRepository.findById(userId)).thenReturn(Optional.of(user));
             jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
 
-            ResponseEntity<UserResponse> response = userService.updateUserById(accessToken, userId, userPatchRequest);
+            UserResponse response = userService.updateUserById(accessToken, userPatchRequest, userId);
 
-            assertEquals(204, response.getStatusCode().value());
+            assertNull(response);
             verify(userRepository, never()).save(user);
         }
 

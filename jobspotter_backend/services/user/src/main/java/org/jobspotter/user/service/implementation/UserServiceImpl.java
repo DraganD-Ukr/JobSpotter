@@ -23,7 +23,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -143,43 +142,6 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    /**
-     * Update user information. Updates user in keycloak(if user's property belongs to keycloak as well) and user db.
-     * @param userId user id
-     * @param userPatchRequest user patch request
-     * @return UserResponse - updated user representation or no content if no changes detected
-     */
-    @Override
-    public ResponseEntity<UserResponse> updateUser(UUID userId, UserPatchRequest userPatchRequest) {
-
-        User user = userRepository.findById(userId)
-                .orElseThrow( () -> new ResourceNotFoundException("User with id " + userId + " not found"));
-
-        if (!updateUserFromPatch(user, userPatchRequest)) {
-            log.info("Request to update user with id: {} was successful, however no changes detected", userId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-
-        log.info("Updating user with id: {}", userId);
-        userRepository.save(user);
-
-        UserResponse u = UserResponse.builder()
-                .userId(user.getUserId())
-                .username(user.getUsername())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
-                .about(user.getAbout())
-                .createdAt(user.getCreatedAt())
-                .lastUpdatedAt(LocalDateTime.now())
-                .userType(user.getUserType())
-                .build();
-
-        redisTemplate.opsForValue().set("users::"+ u.getUserId().toString(), u);
-
-        return ResponseEntity.ok(u);
-    }
 
     /**
      * Upload user profile picture to S3 bucket
@@ -298,13 +260,12 @@ public class UserServiceImpl implements UserService {
     /**
      * Update user profile by id. Updates user in keycloak(if user's property belongs to keycloak as well) and user db. Both user and admin can update user profile.
      * @param accessToken access token
-     * @param userId user id
      * @param userPatchRequest user patch request
      * @return UserResponse - updated user representation or no content if no changes detected
      * @throws Exception if user is not authorized, user not found or {@link JWTUtils} service fails
      */
     @Override
-    public ResponseEntity<UserResponse> updateUserById(String accessToken, UUID userId, UserPatchRequest userPatchRequest) throws Exception {
+    public UserResponse updateUserById(String accessToken, UserPatchRequest userPatchRequest, UUID userId) throws Exception {
 
         User user = userRepository.findById(userId)
                 .orElseThrow( () -> new ResourceNotFoundException("User with id " + userId + " not found"));
@@ -313,7 +274,7 @@ public class UserServiceImpl implements UserService {
 
         if (!updateUserFromPatch(user, userPatchRequest)) {
             log.info("Request to update user with id: {} was successful, however no changes detected", userId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            return null;
         }
 
         log.info("Updating user with id: {}", userId);
@@ -336,7 +297,7 @@ public class UserServiceImpl implements UserService {
         redisTemplate.opsForValue().set("users::"+ u.getUserId().toString(), u);
 
 
-        return ResponseEntity.ok(u);
+        return u;
 
 
     }
