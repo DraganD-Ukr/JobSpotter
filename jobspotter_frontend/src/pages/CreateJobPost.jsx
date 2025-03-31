@@ -41,7 +41,9 @@ export function CreateJobPost() {
           credentials: "include",
         });
         if (!res.ok) {
-          throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
+          throw new Error(
+            `Failed to fetch tags: ${res.status} ${res.statusText}`
+          );
         }
         const tagsData = await res.json();
         const newTagMap = new Map();
@@ -114,6 +116,12 @@ export function CreateJobPost() {
     );
     if (alreadySelected) return;
 
+    // Prevent adding more than 5 tags
+    if (jobData.tags.length >= 5) {
+      alert("You can select up to 5 tags only.");
+      return;
+    }
+
     // Otherwise, add it with a random color
     const newTagObj = {
       name: tagName,
@@ -139,7 +147,9 @@ export function CreateJobPost() {
       return;
     }
     // Convert the selected tags to enum values
-    const tagsAsEnums = jobData.tags.map((tagObj) => tagMapping.get(tagObj.name));
+    const tagsAsEnums = jobData.tags.map((tagObj) =>
+      tagMapping.get(tagObj.name)
+    );
     const payload = {
       ...jobData,
       tags: tagsAsEnums,
@@ -197,7 +207,9 @@ export function CreateJobPost() {
     <div className="my-10 border-1 rounded-4xl main-content min-h-screen p-6 bg-white text-black">
       <div className="max-w-2xl mx-auto border border-gray-300 rounded-md shadow-md p-6">
         <h1 className="text-2xl font-bold mb-4">Create Job Post</h1>
-        {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
+        {errorMessage && (
+          <div className="text-red-500 mb-4">{errorMessage}</div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Title */}
@@ -228,7 +240,9 @@ export function CreateJobPost() {
 
           {/* Tag Selection */}
           <div>
-            <label className="block mb-2 font-semibold">Available Tags</label>
+            <label className="block mb-2 font-semibold">
+              Available Tags
+            </label>
             <div className="flex flex-wrap gap-2">
               {allTags.map((tagName) => (
                 <button
@@ -249,7 +263,9 @@ export function CreateJobPost() {
 
           {/* Display Selected Tags with random color backgrounds */}
           <div className="mt-4">
-            <label className="block mb-2 font-semibold">Selected Tags</label>
+            <label className="block mb-2 font-semibold">
+              Selected Tags
+            </label>
             <div className="flex flex-wrap">
               {jobData.tags.map((tagObj, index) => (
                 <div
@@ -271,7 +287,9 @@ export function CreateJobPost() {
 
           {/* Address Dropdown */}
           <div>
-            <label className="block mb-1 font-semibold">Select Address</label>
+            <label className="block mb-1 font-semibold">
+              Select Address
+            </label>
             <select
               value={jobData.addressId}
               onChange={(e) =>
@@ -288,7 +306,8 @@ export function CreateJobPost() {
               <option value="">Select an address</option>
               {addresses.map((addr) => (
                 <option key={addr.addressId} value={addr.addressId}>
-                  {addr.streetAddress}, {addr.city}, {addr.county}, {addr.eirCode}
+                  {addr.streetAddress}, {addr.city}, {addr.county},{" "}
+                  {addr.eirCode}
                 </option>
               ))}
             </select>

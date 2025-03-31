@@ -28,8 +28,9 @@ import { Dashboard } from "./pages/Dashboard";
 import AdminReportManagementPopup from "./components/AdminReportManagementPopup";
 import { SearchReport } from "./pages/SearchReport";  
 import { UserReportFormPopup } from "./components/UserReportFormPopup";
-import  SearchReviews  from "./pages/SearchReviews";
-import  UserReviewPopup  from "./components/UserReviewPopup";
+import SearchReviews  from "./pages/SearchReviews";
+import UserReviewPopup  from "./components/UserReviewPopup";
+
 
 export default function App() {
   const location = useLocation();
@@ -74,6 +75,7 @@ export default function App() {
           <Route path="/searchreviews" element={<SearchReviews />} />
           <Route path="/userreviewpopup" element={<UserReviewPopup />} />
           <Route path="/assistance" element={<Assistance />} />
+
 
         </Routes>
       </div>
