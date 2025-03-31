@@ -100,13 +100,14 @@ public class AddressController {
             )
     })
     @PatchMapping("/{addressId}")
-    public ResponseEntity<?> updateAddress(
+    public ResponseEntity<AddressResponse> updateAddress(
             @RequestHeader("Authorization") String accessToken,
             @PathVariable Long addressId,
             @RequestBody @Valid AddressPatchRequest addressRequest
     ) throws Exception {
 
-        return addressService.updateAddress(accessToken, addressId, addressRequest);
+        AddressResponse addressResponse = addressService.updateAddress(accessToken, addressId, addressRequest);
+        return addressResponse != null ? ResponseEntity.ok(addressResponse) : ResponseEntity.noContent().build();
 
     }
 

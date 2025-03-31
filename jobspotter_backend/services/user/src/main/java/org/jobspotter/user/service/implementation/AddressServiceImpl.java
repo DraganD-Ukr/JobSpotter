@@ -131,7 +131,7 @@ public class AddressServiceImpl implements AddressService {
 
 
     @Override
-    public ResponseEntity<?> updateAddress(String accessToken, Long addressId, AddressPatchRequest addressRequest) throws Exception {
+    public AddressResponse updateAddress(String accessToken, Long addressId, AddressPatchRequest addressRequest) throws Exception {
 
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
@@ -163,19 +163,7 @@ public class AddressServiceImpl implements AddressService {
 
         Address unwrappedAddress = address.get();
 //        Unwrap the optional
-        Address addressToBeUpdated = new Address(
-                unwrappedAddress.getAddressId(),
-                unwrappedAddress.getUser(),
-                unwrappedAddress.getAddress(),
-                unwrappedAddress.getStreetAddress(),
-                unwrappedAddress.getCity(),
-                unwrappedAddress.getCounty(),
-                unwrappedAddress.getEirCode(),
-                unwrappedAddress.getLongitude(),
-                unwrappedAddress.getLatitude(),
-                unwrappedAddress.getAddressType(),
-                unwrappedAddress.isDefault()
-        ) ;
+
 
 
 //        Check if user exists and is authorized to update the address
@@ -185,26 +173,38 @@ public class AddressServiceImpl implements AddressService {
          }
 
 
-        if (updateAddressFields(addressRequest, addressToBeUpdated)){
+        if (updateAddressFields(addressRequest, unwrappedAddress)){
 
 //            Check for duplicate or HOME conflict
-            hasDuplicateOrHomeConflict(userAddresses, addressToBeUpdated);
+            hasDuplicateOrHomeConflict(userAddresses, unwrappedAddress);
 
 //            Update coordinates
-            Map<String, Double> coordinates = geoCodingService.getCoordinates(addressToBeUpdated.getAddress());
-            addressToBeUpdated.setLatitude(coordinates.get("lat"));
-            addressToBeUpdated.setLongitude(coordinates.get("lng"));
+            Map<String, Double> coordinates = geoCodingService.getCoordinates(unwrappedAddress.getAddress());
+            unwrappedAddress.setLatitude(coordinates.get("lat"));
+            unwrappedAddress.setLongitude(coordinates.get("lng"));
 
 //            Save the updated address
-            addressRepository.save(addressToBeUpdated);
+            addressRepository.save(unwrappedAddress);
             log.info("Address with ID {} updated successfully", addressId);
 
         } else {
             log.info("No changes detected in address with ID {}", addressId);
-            return ResponseEntity.ok("No changes detected in the address");
+            return null;
         }
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return AddressResponse.builder()
+                .addressId(unwrappedAddress.getAddressId())
+                .userId(unwrappedAddress.getUser().getUserId())
+                .address(unwrappedAddress.getAddress())
+                .streetAddress(unwrappedAddress.getStreetAddress())
+                .city(unwrappedAddress.getCity())
+                .county(unwrappedAddress.getCounty())
+                .eirCode(unwrappedAddress.getEirCode())
+                .latitude(unwrappedAddress.getLatitude())
+                .longitude(unwrappedAddress.getLongitude())
+                .addressType(unwrappedAddress.getAddressType())
+                .isDefault(unwrappedAddress.isDefault())
+                .build();
 
     }
 
@@ -299,7 +299,7 @@ public class AddressServiceImpl implements AddressService {
                 log.warn("User with id {} already has an address with type HOME", addressToUpdate.getUser().getUserId());
                 throw new ResourceAlreadyExistsException("User already has an address with type HOME");
             }
-            if (currAdr.getAddress().equals(addressToUpdate.getAddress())) {
+            if (currAdr.getAddress().equals(addressToUpdate.getAddress()) && currAdr.getAddressType().equals(AddressType.HOME)) {
                 log.warn("Duplicate address found when trying to add a new address for user with ID {}", addressToUpdate.getUser().getUserId());
                 throw new ResourceAlreadyExistsException("Duplicate address found, please provide a different address");
             }

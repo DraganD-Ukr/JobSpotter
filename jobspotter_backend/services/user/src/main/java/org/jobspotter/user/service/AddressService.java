@@ -31,7 +31,7 @@ public interface AddressService {
      * @param addressRequest the address request
      * @return the updated address, error response or no content
      */
-    ResponseEntity<?> updateAddress(String accessToken, Long addressId, AddressPatchRequest addressRequest) throws Exception;
+    AddressResponse updateAddress(String accessToken, Long addressId, AddressPatchRequest addressRequest) throws Exception;
 
     /**
      * Get an address by id
