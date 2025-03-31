@@ -214,10 +214,11 @@ public class UserController {
             @RequestBody @Valid UserPatchRequest userPatchRequest
     ) throws Exception {
 
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
-
         log.info("Updating user details");
-        return userService.updateUser(userId, userPatchRequest);
+
+        UserResponse res = userService.updateUserById(accessToken, userPatchRequest, JWTUtils.getUserIdFromToken(accessToken));
+
+        return res == null ? ResponseEntity.status(HttpStatus.NO_CONTENT).build() : ResponseEntity.ok(res);
 
     }
 
@@ -229,7 +230,9 @@ public class UserController {
     ) throws Exception {
 
         log.info("Updating user details");
-        return userService.updateUserById(accessToken, userId, userPatchRequest);
+        UserResponse res = userService.updateUserById(accessToken, userPatchRequest, userId);
+
+        return res == null ? ResponseEntity.status(HttpStatus.NO_CONTENT).build() : ResponseEntity.ok(res);
 
     }
 

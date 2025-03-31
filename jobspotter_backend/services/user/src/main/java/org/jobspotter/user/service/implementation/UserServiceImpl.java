@@ -19,8 +19,10 @@ import org.jobspotter.user.repository.UserRepository;
 import org.jobspotter.user.service.KeyCloakService;
 import org.jobspotter.user.service.S3BucketService;
 import org.jobspotter.user.service.UserService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    private final RedisTemplate<String, Object> redisTemplate;
     private final S3BucketService s3BucketService;
     private final KeyCloakService keyCloakService;
     private final UserRepository userRepository;
@@ -115,6 +118,7 @@ public class UserServiceImpl implements UserService {
      * @param userId user id
      * @return UserResponse - user representation
      */
+    @Cacheable(value = "users", key = "#userId")
     @Override
     public UserResponse getUserById(UUID userId) {
 
@@ -138,40 +142,6 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    /**
-     * Update user information. Updates user in keycloak(if user's property belongs to keycloak as well) and user db.
-     * @param userId user id
-     * @param userPatchRequest user patch request
-     * @return UserResponse - updated user representation or no content if no changes detected
-     */
-    @Override
-    public ResponseEntity<UserResponse> updateUser(UUID userId, UserPatchRequest userPatchRequest) {
-
-        User user = userRepository.findById(userId)
-                .orElseThrow( () -> new ResourceNotFoundException("User with id " + userId + " not found"));
-
-        if (!updateUserFromPatch(user, userPatchRequest)) {
-            log.info("Request to update user with id: {} was successful, however no changes detected", userId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-
-        log.info("Updating user with id: {}", userId);
-        userRepository.save(user);
-
-        return ResponseEntity.ok(UserResponse.builder()
-                .userId(user.getUserId())
-                .username(user.getUsername())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
-                .about(user.getAbout())
-                .createdAt(user.getCreatedAt())
-                .lastUpdatedAt(LocalDateTime.now())
-                .userType(user.getUserType())
-                .build()
-        );
-    }
 
     /**
      * Upload user profile picture to S3 bucket
@@ -222,7 +192,7 @@ public class UserServiceImpl implements UserService {
 
         List<User> users = userRepository.findAllByUserIdIn(userIds);
 
-        // Use stream to collect the data into a map
+//      Use stream to collect the data into a map
 
 
         return users.stream()
@@ -245,6 +215,7 @@ public class UserServiceImpl implements UserService {
      * @param userId user id
      * @throws Exception if user is not authorized to delete user, user not found or {@link KeyCloakServiceImpl} or {@link JWTUtils} service fails
      */
+    @CacheEvict(value = "users", key = "#userId")
     @Override
     public void deleteUser(String accessToken, UUID userId) throws Exception {
         authorizeUser(userId, accessToken);
@@ -256,6 +227,7 @@ public class UserServiceImpl implements UserService {
         log.info("User with Id: {} deleted successfully from user db", userId);
 
         keyCloakService.deleteUser(userId);
+
 
 //        TODO: delete user from all other services(notify job-post service, applicants who applied to jobs, etc)
 
@@ -288,13 +260,12 @@ public class UserServiceImpl implements UserService {
     /**
      * Update user profile by id. Updates user in keycloak(if user's property belongs to keycloak as well) and user db. Both user and admin can update user profile.
      * @param accessToken access token
-     * @param userId user id
      * @param userPatchRequest user patch request
      * @return UserResponse - updated user representation or no content if no changes detected
      * @throws Exception if user is not authorized, user not found or {@link JWTUtils} service fails
      */
     @Override
-    public ResponseEntity<UserResponse> updateUserById(String accessToken, UUID userId, UserPatchRequest userPatchRequest) throws Exception {
+    public UserResponse updateUserById(String accessToken, UserPatchRequest userPatchRequest, UUID userId) throws Exception {
 
         User user = userRepository.findById(userId)
                 .orElseThrow( () -> new ResourceNotFoundException("User with id " + userId + " not found"));
@@ -303,14 +274,14 @@ public class UserServiceImpl implements UserService {
 
         if (!updateUserFromPatch(user, userPatchRequest)) {
             log.info("Request to update user with id: {} was successful, however no changes detected", userId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            return null;
         }
 
         log.info("Updating user with id: {}", userId);
 
         userRepository.save(user);
 
-        return ResponseEntity.ok(UserResponse.builder()
+        UserResponse u = UserResponse.builder()
                 .userId(user.getUserId())
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
@@ -321,17 +292,24 @@ public class UserServiceImpl implements UserService {
                 .createdAt(user.getCreatedAt())
                 .lastUpdatedAt(LocalDateTime.now())
                 .userType(user.getUserType())
-                .build()
-        );
+                .build();
+
+        redisTemplate.opsForValue().set("users::"+ u.getUserId().toString(), u);
+
+
+        return u;
+
+
     }
 
 
     /**
-     * Get all users. Returns list of all users
+     * Get all users. Returns count of all users registered
      * @param accessToken admin access token
      * @return number of all users
      * @throws Exception if user is not authorized
      */
+    @Cacheable(value = "usersCount", key = "'usersCount'")
     @Override
     public Integer getTotalUsersCount(String accessToken) throws Exception {
         isAdmin(accessToken);

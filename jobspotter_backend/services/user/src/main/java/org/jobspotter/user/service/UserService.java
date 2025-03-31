@@ -1,6 +1,5 @@
 package org.jobspotter.user.service;
 import org.jobspotter.user.dto.*;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -39,13 +38,6 @@ public interface UserService {
      */
     UserResponse getUserById(UUID userId) throws Exception;
 
-    /**
-     * Update user
-     * @param userId UUID of the user
-     * @param userPatchRequest UserPatchRequest request
-     * @return UserResponse - User representation
-     */
-    ResponseEntity<UserResponse> updateUser(UUID userId, UserPatchRequest userPatchRequest);
 
     /**
      * Upload profile picture
@@ -88,12 +80,11 @@ public interface UserService {
     /**
      * Update user by id
      * @param accessToken AccessToken of the user
-     * @param userId UUID of the user
      * @param userPatchRequest UserPatchRequest request
      * @return UserResponse - User representation
      * @throws Exception
      */
-    ResponseEntity<UserResponse> updateUserById(String accessToken, UUID userId, UserPatchRequest userPatchRequest) throws Exception;
+    UserResponse updateUserById(String accessToken, UserPatchRequest userPatchRequest, UUID userId) throws Exception;
 
     /**
      * Get number of total users registered
