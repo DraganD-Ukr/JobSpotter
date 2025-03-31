@@ -1,9 +1,8 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { FaArrowRight } from "react-icons/fa";
 
 export function Register() {
-  const [registrationSuccessful, setRegistrationSuccessful] = useState(false);
-
   const [formValues, setFormValues] = useState({
     firstName: "",
     lastName: "",
@@ -35,7 +34,6 @@ export function Register() {
       hasNumber: /\d/.test(password),
     };
     setPasswordRequirements(updatedRequirements);
-
     return /^[A-Za-z0-9!@#$%^&*()_+]{8,}$/.test(password);
   };
 
@@ -93,20 +91,18 @@ export function Register() {
     const fieldValue = type === "checkbox" ? checked : value;
 
     // Update form values
-    setFormValues((prev) => ({
-      ...prev,
-      [name]: fieldValue,
-    }));
+    const updatedValues = { ...formValues, [name]: fieldValue };
+    setFormValues(updatedValues);
 
-    // Validates the changed field and update errors
+    // Validate the changed field and update errors
     const errorMessage = validateField(name, fieldValue);
     setErrors((prevErrors) => ({
       ...prevErrors,
       [name]: errorMessage,
     }));
 
-    // Checks overall form validity
-    checkFormValidity({ ...formValues, [name]: fieldValue });
+    // Check overall form validity
+    checkFormValidity(updatedValues);
   };
 
   const checkFormValidity = (updatedValues) => {
@@ -128,7 +124,8 @@ export function Register() {
       };
 
       try {
-        const response = await fetch("/api/v1/users/auth/register", {
+        // Register the user
+        const registerResponse = await fetch("/api/v1/users/auth/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -136,19 +133,50 @@ export function Register() {
           body: JSON.stringify(payload),
         });
 
-        if (response.ok) {
-          // If the API returns 201, update state to display the success message
-          if (response.status === 201) {
-            setRegistrationSuccessful(true);
+        if (registerResponse.ok && registerResponse.status === 201) {
+          // Registration successful – now automatically log in the user.
+          const loginResponse = await fetch("/api/v1/users/auth/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            // Make sure to include credentials so that cookies are set.
+            credentials: "include",
+            body: JSON.stringify({
+              username: formValues.username,
+              password: formValues.password,
+            }),
+          });
+
+          if (loginResponse.ok) {
+            // Now fetch user data to confirm login and set user session info.
+            const meResponse = await fetch("/api/v1/users/me", {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include", // ensures session cookie is sent
+            });
+
+            if (meResponse.ok) {
+              const userData = await meResponse.json();
+              if (userData.userId) {
+                sessionStorage.setItem("userId", userData.userId);
+              }
+            }
+            // Redirect immediately to SearchJobPost after successful login.
+            window.location.href = "/SearchJobPost";
           } else {
-            // In case the API returns a different success status
-            const data = await response.json();
-            console.log("User registered successfully:", data);
+            // Handle login error if registration succeeded but login failed.
+            console.error("Login failed after registration");
+            setErrors({ general: "Login failed. Please try to log in manually." });
           }
+        } else if (registerResponse.ok) {
+          // For any other success status, log the response.
+          const data = await registerResponse.json();
+          console.log("User registered successfully:", data);
         } else {
-          const errorData = await response.json();
+          const errorData = await registerResponse.json();
           console.error("Registration failed:", errorData);
-          if (response.status === 400 && errorData.message) {
+          if (registerResponse.status === 400 && errorData.message) {
             setErrors((prevErrors) => ({
               ...prevErrors,
               username: errorData.message,
@@ -156,7 +184,9 @@ export function Register() {
             }));
           } else {
             setErrors(
-              errorData.errors || { general: "Registration failed. Please try again." }
+              errorData.errors || {
+                general: "Registration failed. Please try again.",
+              }
             );
           }
         }
@@ -171,24 +201,6 @@ export function Register() {
     /^[A-Za-z0-9!@#$%^&*()_+]{8,}$/.test(formValues.password) &&
     formValues.password.length > 0;
 
-  // If registration is successful
-  if (registrationSuccessful) {
-    return (
-      <div className="register-page main-content min-h-screen p-4 flex items-center justify-center my-10 rounded-4xl border">
-        <div className="card w-full max-w-4xl text-center">
-          <h2 className="text-3xl font-bold mb-6">Registration Successful!</h2>
-          <p className="mb-4">Your account has been created successfully.</p>
-          <a
-            href="/login"
-            className="inline-block px-6 py-2 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition"
-          >
-            Proceed to Login
-          </a>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="register-page main-content min-h-screen p-4 flex items-center justify-center my-10 rounded-4xl border">
       <div className="card w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 overflow-hidden">
@@ -202,9 +214,9 @@ export function Register() {
           </p>
           <p className="mt-4 text-sm text-center">
             Already have an account?{" "}
-            <a href="/login" className="underline font-bold hover:opacity-90">
+            <Link to="/login" className="underline font-bold hover:opacity-90">
               Sign In <FaArrowRight className="inline ml-1" />
-            </a>
+            </Link>
           </p>
         </div>
 
@@ -294,57 +306,25 @@ export function Register() {
               {/* Password Requirements */}
               {passwordFocused && (
                 <ul className="mt-2 text-sm list-disc pl-5">
-                  <li
-                    className={
-                      passwordRequirements.minLength
-                        ? "text-green-600"
-                        : "text-red-500"
-                    }
-                  >
+                  <li className={passwordRequirements.minLength ? "text-green-600" : "text-red-500"}>
                     At least 8 characters long
                   </li>
-                  <li
-                    className={
-                      passwordRequirements.hasUppercase
-                        ? "text-green-600"
-                        : "text-red-500"
-                    }
-                  >
+                  <li className={passwordRequirements.hasUppercase ? "text-green-600" : "text-red-500"}>
                     Contains at least 1 uppercase letter
                   </li>
-                  <li
-                    className={
-                      passwordRequirements.hasLowercase
-                        ? "text-green-600"
-                        : "text-red-500"
-                    }
-                  >
+                  <li className={passwordRequirements.hasLowercase ? "text-green-600" : "text-red-500"}>
                     Contains at least 1 lowercase letter
                   </li>
-                  <li
-                    className={
-                      passwordRequirements.hasLetter
-                        ? "text-green-600"
-                        : "text-red-500"
-                    }
-                  >
+                  <li className={passwordRequirements.hasLetter ? "text-green-600" : "text-red-500"}>
                     Contains at least 1 letter
                   </li>
-                  <li
-                    className={
-                      passwordRequirements.hasNumber
-                        ? "text-green-600"
-                        : "text-red-500"
-                    }
-                  >
+                  <li className={passwordRequirements.hasNumber ? "text-green-600" : "text-red-500"}>
                     Contains at least 1 number
                   </li>
                 </ul>
               )}
               {areAllRequirementsMet && (
-                <p className="text-green-600 mt-2">
-                  Password requirements met!
-                </p>
+                <p className="text-green-600 mt-2">Password requirements met!</p>
               )}
             </div>
 
@@ -374,9 +354,9 @@ export function Register() {
               />
               <label className="ml-2 text-sm">
                 I agree to the{" "}
-                <a href="#" className="text-green-600 underline">
+                <Link to="/terms-of-service" className="text-green-600 underline">
                   Terms of Service
-                </a>
+                </Link>
               </label>
             </div>
             {errors.agreeToTerms && (
@@ -399,9 +379,9 @@ export function Register() {
 
           <p className="mt-4 text-center text-sm">
             Already have an account?{" "}
-            <a href="/login" className="text-green-600 font-bold hover:underline">
+            <Link to="/login" className="text-green-600 font-bold hover:underline">
               Sign In
-            </a>
+            </Link>
           </p>
         </div>
       </div>

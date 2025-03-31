@@ -1,7 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom"; // <-- Import Link from react-router-dom
 
 export function Login() {
-  const [loggedIn, setLoggedIn] = useState(false);
   const [formValues, setFormValues] = useState({
     username: "",
     password: "",
@@ -71,12 +71,14 @@ export function Login() {
 
           if (meResponse.ok) {
             const userData = await meResponse.json();
-            // 3) Store the userId in sessionStorage for Notification to detect
+            // 3) Store the userId in sessionStorage if it exists
             if (userData.userId) {
               sessionStorage.setItem("userId", userData.userId);
             }
-            // 4) Mark user as logged in
-            setLoggedIn(true);
+
+            // 4) Immediately redirect to your chosen route
+            window.location.href = "/SearchJobPost";
+            // Or any other route you prefer, e.g. "/dashboard"
           } else {
             const errorData = await meResponse.json();
             setErrors(
@@ -101,35 +103,7 @@ export function Login() {
     }
   };
 
-  // If login is successful, remove the form and display a success message with two buttons.
-  if (loggedIn) {
-    return (
-      <div className="login-page main-content min-h-screen p-4 flex items-center justify-center my-10 rounded-4xl border">
-        <div className="card w-full max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">Login Successful!</h2>
-          <p className="mb-4">
-            You have successfully logged in. Click one of the buttons below to proceed.
-          </p>
-          <div className="flex justify-center gap-4">
-            <button
-              onClick={() => (window.location.href = "/SearchJobPost")}
-              className="px-6 py-2 bg-gradient-to-r from-green-500 to-lime-500 text-white font-bold rounded-lg hover:opacity-90 transition"
-            >
-              Go to Job Posts
-            </button>
-            <button
-              onClick={() => (window.location.href = "/profile")}
-              className="px-6 py-2 bg-green-500 text-white font-bold rounded-lg hover:opacity-90 transition"
-            >
-              See Profiles
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Render the login form when not logged in.
+  // Render the login form
   return (
     <div className="login-page main-content min-h-screen p-4 flex items-center justify-center my-10 rounded-4xl border">
       {/* Outer container with two columns */}
@@ -140,12 +114,12 @@ export function Login() {
             Welcome Back!
           </h2>
           <p className="drop-shadow-sm">Don't have an account?</p>
-          <a
-            href="/register"
+          <Link
+            to="/register"
             className="mt-4 px-6 py-2 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-200 transition"
           >
             Sign Up
-          </a>
+          </Link>
         </div>
 
         {/* Right Section: Form */}
@@ -206,9 +180,9 @@ export function Login() {
                 <input type="checkbox" className="mr-2" />
                 Remember Me
               </label>
-              <a href="#" className="text-sm text-green-600 hover:underline">
+              <Link to="/forgot-password" className="text-sm text-green-600 hover:underline">
                 Forgot Password?
-              </a>
+              </Link>
             </div>
           </form>
         </div>

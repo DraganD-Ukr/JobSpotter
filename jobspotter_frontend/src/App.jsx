@@ -4,6 +4,7 @@ import Footer from "./components/Footer";
 import Notification from "./components/Notification";
 import HelpAndSupport from "./pages/HelpandSupport";
 import { Routes, Route, useLocation } from "react-router-dom";
+import Assistance from "./components/Assistance";
 
 import { Home } from "./pages/Home";
 import { About } from "./pages/About";
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="/userreportformpopup" element={<UserReportFormPopup />} />
           <Route path="/searchreviews" element={<SearchReviews />} />
           <Route path="/userreviewpopup" element={<UserReviewPopup />} />
+          <Route path="/assistance" element={<Assistance />} />
 
         </Routes>
       </div>

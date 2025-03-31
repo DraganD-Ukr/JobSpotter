@@ -16,7 +16,6 @@ import { MdDateRange } from "react-icons/md";
 import { ThemeContext } from "../components/ThemeContext";
 
 export function MyJobs() {
-  // ---------------------------TAG MAPPING (Dynamic via API)---------------------------
   const [tagMapping, setTagMapping] = useState(new Map());
   useEffect(() => {
     const fetchTags = async () => {
@@ -30,6 +29,7 @@ export function MyJobs() {
           throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
         }
         const tagsData = await res.json();
+
         const newTagMap = new Map();
         Object.keys(tagsData).forEach((enumValue) => {
           const friendlyName = tagsData[enumValue];
@@ -48,7 +48,6 @@ export function MyJobs() {
     fetchTags();
   }, []);
 
-  // ---------------------------STATE DECLARATIONS---------------------------
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -71,7 +70,6 @@ export function MyJobs() {
   const navigate = useNavigate();
   const { darkMode } = useContext(ThemeContext);
 
-  // ---------------------------Dynamic Tag Colors---------------------------
   const [tagColors, setTagColors] = useState({});
   const getTagColor = (tag) => {
     if (tagColors[tag]) {
@@ -96,16 +94,15 @@ export function MyJobs() {
     }
   };
 
-  // ---------------------------Fetch My Jobs---------------------------
   useEffect(() => {
     fetchMyJobs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, filters.sortBy]);
+  }, [page, filters.sortBy]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function fetchMyJobs() {
     setLoading(true);
     const size = 9;
     const endpoint = `/api/v1/job-posts/my-job-posts?pageNumber=${page}&size=${size}&sortBy=${filters.sortBy}`;
+
     fetch(endpoint, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
@@ -134,7 +131,6 @@ export function MyJobs() {
       .finally(() => setLoading(false));
   }
 
-  // ---------------------------Process Jobs---------------------------
   function processJobs(jobArray) {
     return jobArray.map((job) => {
       let friendlyTags = [];
@@ -154,7 +150,6 @@ export function MyJobs() {
     });
   }
 
-  // ---------------------------STATUS LOGIC---------------------------
   function getJobStatusInfo(job) {
     let statusColor = "text-gray-400";
     let statusText = "N/A";
@@ -205,26 +200,21 @@ export function MyJobs() {
     }
     return { applicantStatusColor, applicantStatusText };
   }
-  // ---------------------------END STATUS LOGIC---------------------------
 
-  // ---------------------------Toggle Card/List View---------------------------
   function toggleView() {
     setViewType((prev) => (prev === "card" ? "list" : "card"));
   }
 
-  // ---------------------------Search Submit Handler---------------------------
   function handleSearchSubmit(e) {
     e.preventDefault();
     fetchMyJobs();
   }
 
-  // ---------------------------Handle Filter Changes---------------------------
   function handleFilterChange(e) {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   }
 
-  // ---------------------------Tag Addition/Removal---------------------------
   function handleAddTag(tag) {
     if (tag && !filters.tags.includes(tag)) {
       setFilters((prev) => ({ ...prev, tags: [...prev.tags, tag] }));
@@ -237,7 +227,6 @@ export function MyJobs() {
     }));
   }
 
-  // ---------------------------Location Search---------------------------
   function handleLocationSearch() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
@@ -252,17 +241,16 @@ export function MyJobs() {
     }
   }
 
-  // ---------------------------Navigation---------------------------
   function handleViewDetails(jobId) {
     navigate(`/myJob/${jobId}`);
   }
 
-  // ---------------------------Pagination---------------------------
   function handlePageChange(newPage) {
     if (newPage >= 0 && newPage < totalPages) {
       setPage(newPage);
     }
   }
+
   function renderPaginationButtons() {
     const buttons = [];
     const maxButtons = 5;
@@ -277,7 +265,7 @@ export function MyJobs() {
         startPage = Math.max(0, endPage - maxButtons);
       }
       if (startPage > 0) {
-        buttons.push(
+        buttons.unshift(
           <button
             key="start-ellipsis"
             onClick={() => handlePageChange(startPage - 1)}
@@ -304,6 +292,7 @@ export function MyJobs() {
     }
     return buttons;
   }
+
   function renderPageButton(i) {
     return (
       <button
@@ -329,305 +318,346 @@ export function MyJobs() {
   }
 
   return (
+    // 1) Use a wide, centered container (max-w-7xl) to match SearchJobPost width.
     <div
-      className={`my-10 border-1 rounded-4xl main-content min-h-screen p-4 ${
+      className={`min-h-screen py-8 ${
         darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
       }`}
     >
-      {/* Search Bar & Toggle Button */}
-      <div className="flex justify-center mb-8">
-        <form onSubmit={handleSearchSubmit} className="flex">
-          <input
-            type="text"
-            value={filters.title}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, title: e.target.value }))
-            }
-            placeholder="Search your jobs by title..."
-            className="px-4 py-2 border rounded-l-md focus:outline-none"
-          />
-          <button
-            type="submit"
-            className="px-4 py-2 bg-green-500 text-white rounded-r-md hover:bg-green-600"
-          >
-            Search
-          </button>
-        </form>
-        <button
-          onClick={toggleView}
-          className="px-4 py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400 flex items-center ml-4"
-          id="toggle-view"
-        >
-          {viewType === "card" ? (
-            <>
-              <FaList className="mr-2" />
-              List View
-            </>
-          ) : (
-            <>
-              <FaTh className="mr-2" />
-              Card View
-            </>
-          )}
-        </button>
-      </div>
-
-      <div className="flex">
-        {/* Sidebar Filters */}
-        <div className="w-1/5 pr-12 border-r ml-42 mr-4">
-          <h3 className="text-xl font-bold mb-4">Filters</h3>
-          <form onSubmit={handleSearchSubmit}>
-            {/* Tags Filter */}
-            <div className="mb-4 p-4 border rounded-md">
-              <label className="block mb-2">Tags</label>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {filters.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className={`px-2 py-1 rounded-full flex items-center ${getTagColor(tag)}`}
-                  >
-                    <FaTag className="mr-2" />
-                    <span className="mr-2">
-                      {Array.from(tagMapping.entries()).find(
-                        ([, val]) => val === tag
-                      )?.[0] || tag}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      &times;
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <select
-                name="tags"
-                value=""
-                onChange={(e) => handleAddTag(e.target.value)}
-                className="w-full px-4 py-2 border rounded-md"
-              >
-                <option value="">Select a tag</option>
-                {Array.from(tagMapping.keys()).map((tag) => (
-                  <option key={tag} value={tagMapping.get(tag)}>
-                    {tag}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Job Status Filter */}
-            <div className="mb-4 p-4 border rounded-md">
-              <label className="block mb-2">Job Status</label>
-              <select
-                name="jobStatus"
-                value={filters.jobStatus}
-                onChange={handleFilterChange}
-                className="w-full px-4 py-2 border rounded-md"
-              >
-                <option value="">Select a status</option>
-                <option value="OPEN">Open</option>
-                <option value="ASSIGNED">Assigned</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="CANCELLED">Cancelled</option>
-              </select>
-            </div>
-
-            {/* Location Filter */}
-            <div className="mb-4 p-4 border rounded-md">
-              <label className="block mb-2">Location</label>
-              <input
-                type="text"
-                name="address"
-                placeholder="Enter address (lat,lng)"
-                className="w-full px-4 py-2 border rounded-md mb-2"
-                onChange={(e) => {
-                  const [lat, lng] = e.target.value.split(",");
-                  setFilters((prev) => ({
-                    ...prev,
-                    latitude: parseFloat(lat),
-                    longitude: parseFloat(lng),
-                  }));
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleLocationSearch}
-                className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-              >
-                Use Current Location
-              </button>
-              {filters.latitude && filters.longitude && (
-                <p className="text-sm text-green-500 mt-2 text-center">
-                  Using your current location
-                </p>
-              )}
-            </div>
-
-            {/* Radius Filter */}
-            <div className="mb-4 p-4 border rounded-md">
-              <label htmlFor="distance-range-slider" className="block mb-2 font-medium text-gray-700">
-                Radius (km)
-              </label>
-              <div className="relative w-full">
-                <input
-                  id="distance-range-slider"
-                  type="range"
-                  name="radius"
-                  min="0"
-                  max="500"
-                  value={filters.radius}
-                  onChange={handleFilterChange}
-                  className="w-full h-2 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #3b82f6 ${filters.radius / 5}%, #d1d5db ${filters.radius / 5}%)`,
-                  }}
-                />
-                <div className="absolute w-full top-4 flex justify-between">
-                  {[0, 100, 200, 300, 400, 500].map((value) => (
-                    <div key={value} className="relative">
-                      <div className="w-0.5 h-3 bg-gray-500 mx-auto"></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="flex justify-between text-xs text-gray-600 mt-1">
-                {[0, 100, 200, 300, 400, 500].map((value) => (
-                  <span key={value} className="w-8 text-center">{value}</span>
-                ))}
-              </div>
-              <p className="text-sm mt-2 text-gray-600">Radius: {filters.radius} km</p>
-            </div>
-
-            <button type="submit" className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
-              Apply Filters
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Top search bar + toggle, matching style from SearchJobPost */}
+        <div className="flex justify-center mb-8">
+          <form onSubmit={handleSearchSubmit} className="flex">
+            <input
+              type="text"
+              value={filters.title}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, title: e.target.value }))
+              }
+              placeholder="Search your jobs by title..."
+              className="px-4 py-2 border rounded-l-md focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 bg-green-500 text-white rounded-r-md hover:bg-green-600"
+            >
+              Search
             </button>
           </form>
+          <button
+            onClick={toggleView}
+            className="px-4 py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400 flex items-center ml-4"
+            id="toggle-view"
+          >
+            {viewType === "card" ? (
+              <>
+                <FaList className="mr-2" />
+                List View
+              </>
+            ) : (
+              <>
+                <FaTh className="mr-2" />
+                Card View
+              </>
+            )}
+          </button>
         </div>
 
-        {/* Jobs Listing */}
-        <div className="w-4/5 p-4 ml-4 mr-30">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold">
-              Showing {totalElements} Job{totalElements !== 1 ? "s" : ""}
-            </h2>
-            <div className="flex items-center space-x-2">
-              <label htmlFor="sortBy" className="font-medium">Sort By:</label>
-              <select
-                id="sortBy"
-                name="sortBy"
-                value={filters.sortBy}
-                onChange={(e) => setFilters((prev) => ({ ...prev, sortBy: e.target.value }))}
-                className="px-3 py-2 border rounded-md"
+        <div className="flex">
+          {/* 2) Filters on the left. Make it narrower or the same ratio as SearchJobPost */}
+          <div className="w-1/4 pr-8 border-r mr-8">
+            <h3 className="text-xl font-bold mb-4">Filters</h3>
+            <form onSubmit={handleSearchSubmit}>
+              {/* Tag Filter */}
+              <div className="mb-4 p-4 border rounded-md">
+                <label className="block mb-2">Tags</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {filters.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className={`px-2 py-1 rounded-full flex items-center ${getTagColor(tag)}`}
+                    >
+                      <FaTag className="mr-2" />
+                      <span className="mr-2">
+                        {Array.from(tagMapping.entries()).find(
+                          ([, val]) => val === tag
+                        )?.[0] || tag}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <select
+                  name="tags"
+                  value=""
+                  onChange={(e) => handleAddTag(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-md"
+                >
+                  <option value="">Select a tag</option>
+                  {Array.from(tagMapping.keys()).map((tag) => (
+                    <option key={tag} value={tagMapping.get(tag)}>
+                      {tag}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Job Status Filter */}
+              <div className="mb-4 p-4 border rounded-md">
+                <label className="block mb-2">Job Status</label>
+                <select
+                  name="jobStatus"
+                  value={filters.jobStatus}
+                  onChange={handleFilterChange}
+                  className="w-full px-4 py-2 border rounded-md"
+                >
+                  <option value="">Select a status</option>
+                  <option value="OPEN">Open</option>
+                  <option value="ASSIGNED">Assigned</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="CANCELLED">Cancelled</option>
+                </select>
+              </div>
+
+              {/* Location Filter */}
+              <div className="mb-4 p-4 border rounded-md">
+                <label className="block mb-2">Location</label>
+                <input
+                  type="text"
+                  name="address"
+                  placeholder="Enter address (lat,lng)"
+                  className="w-full px-4 py-2 border rounded-md mb-2"
+                  onChange={(e) => {
+                    const [lat, lng] = e.target.value.split(",");
+                    setFilters((prev) => ({
+                      ...prev,
+                      latitude: parseFloat(lat),
+                      longitude: parseFloat(lng),
+                    }));
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleLocationSearch}
+                  className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                >
+                  Use Current Location
+                </button>
+                {filters.latitude && filters.longitude && (
+                  <p className="text-sm text-green-500 mt-2 text-center">
+                    Using your current location
+                  </p>
+                )}
+              </div>
+
+              {/* Radius Filter */}
+              <div className="mb-4 p-4 border rounded-md">
+                <label
+                  htmlFor="distance-range-slider"
+                  className="block mb-2 font-medium text-gray-700"
+                >
+                  Radius (km)
+                </label>
+                <div className="relative w-full">
+                  <input
+                    id="distance-range-slider"
+                    type="range"
+                    name="radius"
+                    min="0"
+                    max="500"
+                    value={filters.radius}
+                    onChange={handleFilterChange}
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, #3b82f6 ${
+                        filters.radius / 5
+                      }%, #d1d5db ${filters.radius / 5}%)`,
+                    }}
+                  />
+                  <div className="absolute w-full top-4 flex justify-between">
+                    {[0, 100, 200, 300, 400, 500].map((value) => (
+                      <div key={value} className="relative">
+                        <div className="w-0.5 h-3 bg-gray-500 mx-auto"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs text-gray-600 mt-1">
+                  {[0, 100, 200, 300, 400, 500].map((value) => (
+                    <span key={value} className="w-8 text-center">
+                      {value}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-sm mt-2 text-gray-600">
+                  Radius: {filters.radius} km
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
               >
-                <option value="datePosted">Date Posted</option>
-                {/* Add more sort options as needed */}
-              </select>
-            </div>
+                Apply Filters
+              </button>
+            </form>
           </div>
 
-          {errorMessage && <div className="text-red-500 mb-4 text-center">{errorMessage}</div>}
+          {/* 3) Jobs listing on the right, fill the remaining space */}
+          <div className="w-3/4">
+            <div className="flex flex-col items-start mb-8">
+              <h2 className="text-2xl font-bold text-left mb-4">
+                {totalElements >= 1
+                  ? `Search returned ${totalElements} job posts`
+                  : "No job posts found"}
+              </h2>
+            </div>
 
-          {jobs.length === 0 ? (
-            <p className="text-center">No jobs found.</p>
-          ) : (
-            <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto" : "max-w-6xl mx-auto space-y-4"}>
-              {jobs.map((job) => {
-                // STATUS LOGIC: Retrieve job and applicant status info
-                const { statusColor, statusText, StatusIcon } = getJobStatusInfo(job);
-                const { applicantStatusColor, applicantStatusText } = getApplicantStatusInfo(job);
+            {errorMessage && (
+              <div className="text-red-500 mb-4 text-center">{errorMessage}</div>
+            )}
 
-                return (
-                  <div
-                    key={job.jobPostId}
-                    className={`card border border-gray-300 ${
-                      viewType === "card"
-                        ? "hover:shadow-md hover:border-green-500 transition rounded-md w-full max-w-sm flex flex-col p-4"
-                        : "rounded-lg shadow p-4 flex flex-col sm:flex-row justify-between"
-                    }`}
-                  >
-                    <h3 className="text-xl font-semibold">{job.title}</h3>
-                    {job.address && (
-                      <p className="flex items-center gap-1">
-                        <FaMapMarkerAlt className="text-red-500" /> {job.address}
-                      </p>
-                    )}
-                    {job.datePosted && (
-                      <p className="flex items-center gap-1">
-                        <MdDateRange className="text-blue-500" /> Posted: {new Date(job.datePosted).toLocaleDateString()}
-                      </p>
-                    )}
-                    {typeof job.maxApplicants !== "undefined" && (
-                      <p className="flex items-center gap-1">
-                        <FaUsers className="text-purple-500" /> Max Applicants: {job.maxApplicants}
-                      </p>
-                    )}
-                    {typeof job.relevantDistance !== "undefined" && (
-                      <p className="flex items-center gap-1">
-                        <FaRoute className="text-green-500" /> Distance: {parseFloat(job.relevantDistance).toFixed(2)} km
-                      </p>
-                    )}
-                    <p className="mt-2">
-                      <strong>Description:</strong> {job.description && job.description.length > 100 ? job.description.slice(0, 100) + "..." : job.description}
-                    </p>
-                    {job.tags && job.tags.length > 0 && (
-                      <p className="my-3 text-sm">
-                        <strong>Tags:</strong> {job.tags.join(", ")}
-                      </p>
-                    )}
+            {jobs.length === 0 ? (
+              <p className="text-center">No jobs found.</p>
+            ) : (
+              <div
+                className={
+                  viewType === "card"
+                    ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                    : "space-y-4"
+                }
+              >
+                {jobs.map((job) => {
+                  const { statusColor, statusText, StatusIcon } = getJobStatusInfo(job);
+                  const { applicantStatusColor, applicantStatusText } =
+                    getApplicantStatusInfo(job);
 
-                    {/* Status Indicators */}
-                    <p className="flex items-center mt-2 gap-1">
-                      <StatusIcon className={`${statusColor} mr-1`} />
-                      <strong className="mr-2">Job Status:</strong>
-                      <span className={`${statusColor}`}>{statusText}</span>
-                    </p>
-                    <p className="flex items-center mt-2 gap-1">
-                      {job.applicantStatus === "PENDING" && <FaClock className={`${applicantStatusColor} mr-1`} />}
-                      {job.applicantStatus === "ACCEPTED" && <FaCheckCircle className={`${applicantStatusColor} mr-1`} />}
-                      {job.applicantStatus === "REJECTED" && <FaTimesCircle className={`${applicantStatusColor} mr-1`} />}
-                      {job.applicantStatus !== "PENDING" &&
-                        job.applicantStatus !== "ACCEPTED" &&
-                        job.applicantStatus !== "REJECTED" && <FaCircle className={`${applicantStatusColor} mr-1`} />}
-                      <strong>Applicant Status:</strong> <span className={`${applicantStatusColor}`}>{applicantStatusText}</span>
-                    </p>
+                  return (
+                    <div
+                      key={job.jobPostId}
+                      className={`border border-gray-300 ${
+                        viewType === "card"
+                          ? "hover:shadow-md hover:border-green-500 transition rounded-md p-4"
+                          : "rounded-lg shadow p-4 flex flex-col sm:flex-row justify-between"
+                      }`}
+                    >
+                      <h3 className="text-xl font-semibold">{job.title}</h3>
+                      {job.address && (
+                        <p className="flex items-center gap-1">
+                          <FaMapMarkerAlt className="text-red-500" /> {job.address}
+                        </p>
+                      )}
+                      {job.datePosted && (
+                        <p className="flex items-center gap-1">
+                          <MdDateRange className="text-blue-500" /> Posted:{" "}
+                          {new Date(job.datePosted).toLocaleDateString()}
+                        </p>
+                      )}
+                      {typeof job.maxApplicants !== "undefined" && (
+                        <p className="flex items-center gap-1">
+                          <FaUsers className="text-purple-500" /> Max Applicants:{" "}
+                          {job.maxApplicants}
+                        </p>
+                      )}
+                      {typeof job.relevantDistance !== "undefined" && (
+                        <p className="flex items-center gap-1">
+                          <FaRoute className="text-green-500" /> Distance:{" "}
+                          {parseFloat(job.relevantDistance).toFixed(2)} km
+                        </p>
+                      )}
+                      <p className="mt-2">
+                        <strong>Description:</strong>{" "}
+                        {job.description && job.description.length > 100
+                          ? job.description.slice(0, 100) + "..."
+                          : job.description}
+                      </p>
+                      {job.tags && job.tags.length > 0 && (
+                        <p className="my-3 text-sm">
+                          <strong>Tags:</strong> {job.tags.join(", ")}
+                        </p>
+                      )}
 
-                    <div className="mt-4">
-                      <button
-                        onClick={() => handleViewDetails(job.jobPostId)}
-                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 w-full"
-                      >
-                        View More Details
-                      </button>
+                      {/* Status Indicators */}
+                      <p className="flex items-center mt-2 gap-1">
+                        <StatusIcon className={`${statusColor} mr-1`} />
+                        <strong className="mr-2">Job Status:</strong>
+                        <span className={statusColor}>{statusText}</span>
+                      </p>
+                      <p className="flex items-center mt-2 gap-1">
+                        {job.applicantStatus === "PENDING" && (
+                          <FaClock className={`${applicantStatusColor} mr-1`} />
+                        )}
+                        {job.applicantStatus === "ACCEPTED" && (
+                          <FaCheckCircle
+                            className={`${applicantStatusColor} mr-1`}
+                          />
+                        )}
+                        {job.applicantStatus === "REJECTED" && (
+                          <FaTimesCircle
+                            className={`${applicantStatusColor} mr-1`}
+                          />
+                        )}
+                        {job.applicantStatus !== "PENDING" &&
+                          job.applicantStatus !== "ACCEPTED" &&
+                          job.applicantStatus !== "REJECTED" && (
+                            <FaCircle className={`${applicantStatusColor} mr-1`} />
+                          )}
+                        <strong>Applicant Status:</strong>{" "}
+                        <span className={applicantStatusColor}>
+                          {applicantStatusText}
+                        </span>
+                      </p>
+
+                      <div className="mt-4">
+                        <button
+                          onClick={() => handleViewDetails(job.jobPostId)}
+                          className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 w-full"
+                        >
+                          View More Details
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-8">
-              <button
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page === 0}
-                className="w-24 px-4 py-2 mx-1 bg-gray-300 text-black rounded-l-full hover:bg-gray-400 disabled:opacity-50"
-              >
-                Previous
-              </button>
-              {renderPaginationButtons()}
-              <button
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page >= totalPages - 1}
-                className="w-24 px-4 py-2 mx-1 bg-gray-300 text-black rounded-r-full hover:bg-gray-400 disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          )}
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 0}
+                  className="w-32 px-4 py-2 mr-6 mx-1 bg-gray-300 text-black rounded-l-full rounded-r-md hover:bg-gray-400 disabled:opacity-50 flex justify-center"
+                  id="navigate-page"
+                  style={{
+                    clipPath: "polygon(100% 0%, 85% 50%, 100% 100%, 0% 100%, 0% 0%)"
+                  }}
+                >
+                  Previous
+                </button>
+                {renderPaginationButtons()}
+                <button
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page >= totalPages - 1}
+                  className="w-26 px-4 py-2 ml-6 mx-1 bg-gray-300 text-black rounded-r-full rounded-l-md hover:bg-gray-400 disabled:opacity-50 flex justify-center"
+                  id="navigate-page"
+                  style={{
+                    clipPath: "polygon(0% 0%, 15% 50%, 0% 100%, 100% 100%, 100% 0%)"
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

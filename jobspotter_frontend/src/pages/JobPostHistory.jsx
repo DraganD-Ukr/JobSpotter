@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link, data } from "react-router-dom";
 import { FaList, FaTh, FaTag, FaChevronDown, FaChevronUp, FaMapMarkerAlt, FaCheckCircle, FaClock, FaTimesCircle, FaUsers, FaCircle } from "react-icons/fa"; // Import icons for the toggle button and tags
-import { ThemeContext } from "../components/ThemeContext"; // Import ThemeContext for dark mode
 import { MdDateRange } from "react-icons/md";
 
 export function JobPostHistory() {
@@ -190,46 +189,6 @@ export function JobPostHistory() {
       tags: prev.tags.filter((t) => t !== tag),
     }));
   }
-
-  function getRandomColor() {
-    const colors = [
-      "bg-red-400",
-      "bg-red-500",
-      "bg-yellow-400",
-      "bg-yellow-500",
-      "bg-green-400",
-      "bg-green-500",
-      "bg-blue-400",
-      "bg-blue-500",
-      "bg-purple-400",
-      "bg-purple-500",
-      "bg-pink-400",
-      "bg-pink-500",
-      "bg-indigo-400",
-      "bg-indigo-500",
-      "bg-teal-400",
-      "bg-teal-500",
-      "bg-cyan-400",
-      "bg-cyan-500",
-      "bg-orange-400",
-      "bg-orange-500",
-      "bg-lime-400",
-      "bg-lime-500",
-    ];
-
-    return colors[Math.floor(Math.random() * colors.length)];
-  }
-
-  // ---------------------------------------JOB STATUS INDICATORS----------------------------------------
-
-  const statusVisualMapping = {
-    OPEN: { text: "Open", color: "text-green-500", icon: FaCircle },
-    ASSIGNED: { text: "Assigned", color: "text-blue-500", icon: FaCircle },
-    IN_PROGRESS: { text: "In Progress", color: "text-yellow-500", icon: FaCircle },
-    COMPLETED: { text: "Completed", color: "text-gray-500", icon: FaCircle },
-    CANCELLED: { text: "Cancelled", color: "text-red-500", icon: FaCircle },
-    "N/A": { text: "N/A", color: "text-gray-400", icon: FaCircle }, // Default or N/A status
-  };
 
   // ---------------------------------------PAGE SIZE----------------------------------------
   const handlePageSizeChange = (event) => {
@@ -521,7 +480,7 @@ export function JobPostHistory() {
             <p className="text-center">No jobs found.</p>
           ) : (
             <>
-              <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto" : "max-w-6xl mx-auto space-y-4"}>
+              <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-5 max-w-6xl mx-auto" : "max-w-6xl mx-auto space-y-4"}>
                 {jobPostsData.map((job) => {
                   let statusColor = "text-gray-400"; // Default color
                   let statusText = "N/A"; // Default status text

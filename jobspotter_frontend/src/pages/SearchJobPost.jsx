@@ -567,7 +567,7 @@ export function SearchJobPost() {
           {jobPostsData.length === 0 ? (
             <p className="text-center">No jobs found.</p>
           ) : (
-            <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto" : "max-w-6xl mx-auto space-y-4"}>
+            <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-5 max-w-6xl mx-auto" : "max-w-6xl mx-auto space-y-4"}>
               {jobPostsData.map((job) => {
                 // STATUS LOGIC
                 const { statusColor, statusText, StatusIcon } = getJobStatusInfo(job);
