@@ -41,4 +41,7 @@ public interface JobPostRepository extends JpaRepository<JobPost, Long> {
 
     @Query("SELECT COUNT(jp) FROM JobPost jp WHERE jp.status = :status")
     Integer getTotalJobPostsCountByStatus(JobStatus status);
+
+    @Query("SELECT j.title FROM JobPost j")
+    List<String> findAllTitles();
 }

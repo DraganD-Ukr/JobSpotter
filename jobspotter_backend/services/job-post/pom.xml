@@ -148,7 +148,15 @@
 			<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency>
 
-    </dependencies>
+		<!-- https://mvnrepository.com/artifact/com.redis/lettucemod -->
+		<dependency>
+			<groupId>com.redis</groupId>
+			<artifactId>lettucemod-spring</artifactId>
+			<version>4.2.1</version>
+		</dependency>
+
+
+	</dependencies>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
