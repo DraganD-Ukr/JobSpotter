@@ -121,7 +121,7 @@ class AddressServiceImplUnitTests {
                 .city(addressRequest.getCity())
                 .county(addressRequest.getCounty())
                 .eirCode(addressRequest.getEirCode())
-                .addressType(AddressType.WORK)
+                .addressType(addressRequest.getAddressType())
                 .isDefault(addressRequest.isDefault())
                 .build();
 
@@ -261,9 +261,16 @@ class AddressServiceImplUnitTests {
             when(geoCodingService.getCoordinates(anyString())).thenReturn(Map.of("lat", 3.0, "lng", 4.0));
             when(addressRepository.save(any(Address.class))).thenReturn(address);
 
-            ResponseEntity<?> response = addressService.updateAddress(accessToken, 1L, addressPatchRequest);
+            AddressResponse res = addressService.updateAddress(accessToken, 1L, addressPatchRequest);
 
-            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+            assertEquals(1L, res.getAddressId());
+            assertEquals(addressPatchRequest.getStreetAddress(), res.getStreetAddress());
+            assertEquals(addressPatchRequest.getCity(), res.getCity());
+            assertEquals(addressPatchRequest.getCounty(), res.getCounty());
+            assertEquals(addressPatchRequest.getEirCode(), res.getEirCode());
+            assertEquals(addressPatchRequest.getAddressType(), res.getAddressType());
+            assertEquals(addressPatchRequest.isDefault(), res.isDefault());
+
             verify(addressRepository, times(1)).save(any(Address.class));
         }
     }

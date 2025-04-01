@@ -8,6 +8,7 @@ import org.jobspotter.user.model.UserType;
 
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -21,6 +22,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class UserResponse implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     /**
      * The user id.

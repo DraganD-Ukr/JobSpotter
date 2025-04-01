@@ -1,6 +1,7 @@
 package org.jobspotter.user.service.implementation;
 
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.user.authUtils.JWTUtils;
+import org.jobspotter.user.cache.CacheConstants;
 import org.jobspotter.user.dto.*;
 import org.jobspotter.user.exception.*;
 import org.jobspotter.user.fileUtils.FileUtils;
@@ -20,7 +22,6 @@ import org.jobspotter.user.service.KeyCloakService;
 import org.jobspotter.user.service.S3BucketService;
 import org.jobspotter.user.service.UserService;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -118,14 +119,23 @@ public class UserServiceImpl implements UserService {
      * @param userId user id
      * @return UserResponse - user representation
      */
-    @Cacheable(value = "users", key = "#userId")
     @Override
     public UserResponse getUserById(UUID userId) {
 
+//        Try to hit redis cache first
+        UserResponse cachedUser = (UserResponse) redisTemplate.opsForValue().get("users::"+ userId.toString());
+
+//        If cache hit, return the value
+        if (cachedUser != null) {
+            return cachedUser;
+        }
+
+//        If cache miss, get the value from db and set it in cache
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
 
-        return UserResponse.builder()
+//        Convert user to response
+        UserResponse res = UserResponse.builder()
                 .userId(user.getUserId())
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
@@ -138,6 +148,11 @@ public class UserServiceImpl implements UserService {
                 .userType(user.getUserType())
                 .build();
 
+//        Set the value in cache with short ttl
+        redisTemplate.opsForValue().set("users::"+ userId.toString(), res, Duration.ofSeconds(CacheConstants.SHORT_TTL_SECONDS));
+
+//        Return the value
+        return res;
 
     }
 
@@ -228,7 +243,6 @@ public class UserServiceImpl implements UserService {
 
         keyCloakService.deleteUser(userId);
 
-
 //        TODO: delete user from all other services(notify job-post service, applicants who applied to jobs, etc)
 
     }
@@ -294,7 +308,7 @@ public class UserServiceImpl implements UserService {
                 .userType(user.getUserType())
                 .build();
 
-        redisTemplate.opsForValue().set("users::"+ u.getUserId().toString(), u);
+        redisTemplate.opsForValue().set("users::"+ u.getUserId().toString(), u, Duration.ofSeconds(CacheConstants.SHORT_TTL_SECONDS));
 
 
         return u;
@@ -309,11 +323,26 @@ public class UserServiceImpl implements UserService {
      * @return number of all users
      * @throws Exception if user is not authorized
      */
-    @Cacheable(value = "usersCount", key = "'usersCount'")
     @Override
     public Integer getTotalUsersCount(String accessToken) throws Exception {
+//        Check if user is admin
         isAdmin(accessToken);
-        return userRepository.getUsersCount();
+
+//        Try to hit redis cache first
+        Integer usersCount = (Integer) redisTemplate.opsForValue().get("users::count");
+
+//        If cache hit, return the value
+        if (usersCount != null) {
+            return usersCount;
+        }
+
+//        If cache miss, get the value from db and set it in cache
+        int count = userRepository.getUsersCount();
+//        Set the value in cache with short ttl
+        redisTemplate.opsForValue().set("users::count", count, Duration.ofSeconds(CacheConstants.SHORT_TTL_SECONDS));
+
+//        Return the value
+        return count;
     }
 
 

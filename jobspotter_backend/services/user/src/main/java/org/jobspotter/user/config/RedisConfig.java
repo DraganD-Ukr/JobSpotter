@@ -1,54 +1,88 @@
 package org.jobspotter.user.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.RedisSerializer;
+
+import java.time.Duration;
 
 @Configuration
 public class RedisConfig {
 
-    @Primary
     @Bean
-    public RedisTemplate<String, Object> genericRedisTemplate(RedisConnectionFactory connectionFactory) {
+    public RedisConnectionFactory redisConnectionFactory() {
+        return new LettuceConnectionFactory();
+    }
 
-        // Create a new RedisTemplate to perform operations on Redis.
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+    @Bean
+    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.activateDefaultTyping(
+                mapper.getPolymorphicTypeValidator(),
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY
+        );
 
-        // Set the RedisConnectionFactory to let Spring know how to connect to Redis.
-        redisTemplate.setConnectionFactory(connectionFactory);
+        RedisSerializer<Object> serializer = new GenericJackson2JsonRedisSerializer(mapper);
 
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(10))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));
 
-        // Create a custom ObjectMapper and register the JavaTimeModule
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(config)
+                .build();
+    }
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+
+        // Aids in letting spring know how to handshake with redis
+        template.setConnectionFactory(connectionFactory);
+
+        //Create a custom ObjectMapper and register the JavaTimeModule
+        // This module is used to handle Java 8 date and time types (like LocalDateTime) for serialization and deserialization
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-
-        // Define the default serializer to convert objects to JSON format.
-        // Use GenericJackson2JsonRedisSerializer for serializing the objects.
+        // Activate default typing for polymorphic types
+        objectMapper.activateDefaultTyping(
+                objectMapper.getPolymorphicTypeValidator(),
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY
+        );
+        // Define the default serializer to convert objects to JSON format
+        // Use GenericJackson2JsonRedisSerializer for serializing the objects
         RedisSerializer<Object> serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
 
-        // Set the default serializer for values in Redis.
-        // This means whenever object is stored (like User), they will be serialized to JSON.
-        redisTemplate.setDefaultSerializer(serializer);
+        // Makes sure objects are serialized to JSON that are stored in Redis
+        template.setDefaultSerializer(serializer);
 
-        // Set the serializer for keys as String. Redis stores keys as strings, so we use the default String serializer.
-        redisTemplate.setKeySerializer(redisTemplate.getStringSerializer());
+        // Set the serializer for keys as String so we can use the default String serializer
+        template.setKeySerializer(template.getStringSerializer());
 
-        // Set the serializer for values. This applies to every value we store in Redis.
-        redisTemplate.setValueSerializer(serializer);
+        // Set the serializer for values. This applies to every value we store in Redis
+        template.setValueSerializer(serializer);
 
-        // Set the serializer for hash keys. Hash keys in Redis are strings, so we use the String serializer.
-        redisTemplate.setHashKeySerializer(redisTemplate.getStringSerializer());
+        // Set the serializer for hash keys. Hash keys in Redis are strings, so we use the String serializer
+        template.setHashKeySerializer(template.getStringSerializer());
 
-        // Set the serializer for hash values. Just like regular values, these will be serialized to JSON.
-        redisTemplate.setHashValueSerializer(serializer);
+        // Set the serializer for hash values. Just like regular values, these will be serialized to JSON
+        template.setHashValueSerializer(serializer);
 
-        return redisTemplate;
+        return template;
     }
+
 
 }
