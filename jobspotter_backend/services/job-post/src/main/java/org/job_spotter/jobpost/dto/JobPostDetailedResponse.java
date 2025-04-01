@@ -19,7 +19,7 @@ public class JobPostDetailedResponse {
 
     private Long jobPostId;
     private UUID jobPosterId;
-    private Set<Tag> tags = new HashSet<>();
+    private Set<TagDto> tags = new HashSet<>();
     private String title;
     private String description;
     private String address;

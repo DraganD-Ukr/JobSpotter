@@ -19,6 +19,7 @@ import org.job_spotter.jobpost.repository.specification.JobPostSpecification;
 import org.job_spotter.jobpost.service.JobPostService;
 import org.job_spotter.jobpost.service.NotificationService;
 import org.job_spotter.jobpost.utils.GeoUtils;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -55,6 +56,7 @@ public class JobPostImpl implements JobPostService {
      * @return The job post with the given ID
      */
     @Override
+    @Cacheable(value = "jobPostCache", key = "#jobPostId")
     public JobPostDetailedResponse getJobPostById(Long jobPostId) {
 
 //        Fetch the job post from the repository
@@ -65,7 +67,14 @@ public class JobPostImpl implements JobPostService {
         return JobPostDetailedResponse.builder()
                 .jobPostId(jobPost.getJobPostId())
                 .jobPosterId(jobPost.getJobPosterId())
-                .tags(jobPost.getTags())
+                .tags(
+                        jobPost.getTags().stream()
+                        .map(tag -> TagDto.builder()
+                                .tagId(tag.getTagId())
+                                .name(tag.getName())
+                                .build())
+                        .collect(Collectors.toSet())
+                )
                 .title(jobPost.getTitle())
                 .description(jobPost.getDescription())
                 .address(jobPost.getAddress())
