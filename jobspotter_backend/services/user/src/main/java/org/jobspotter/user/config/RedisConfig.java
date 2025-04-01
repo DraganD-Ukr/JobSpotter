@@ -27,6 +27,7 @@ public class RedisConfig {
         // Create a custom ObjectMapper and register the JavaTimeModule
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
+
         // Define the default serializer to convert objects to JSON format.
         // Use GenericJackson2JsonRedisSerializer for serializing the objects.
         RedisSerializer<Object> serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
