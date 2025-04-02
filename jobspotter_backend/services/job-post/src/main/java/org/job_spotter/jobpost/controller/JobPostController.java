@@ -167,9 +167,27 @@ public class JobPostController {
     }
 
 
+    @Operation(
+            summary = "Get suggestions/autocomplete for job post titles",
+            description = "Get suggestions/autocomplete for job post titles. "
+                    + "This method returns a list of job post titles that match the search criteria."
+                    + " - Title must be provided"
+
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully returned title suggestions",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = List.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @GetMapping("/title-suggestions")
     public ResponseEntity<List<String>> searchTitleSuggestions(
-            @RequestParam(value = "title", required = false) String title
+            @RequestParam(value = "title") String title
     ) {
         return ResponseEntity.ok(searchTitleSuggestionService.suggestTitles(title));
     }
