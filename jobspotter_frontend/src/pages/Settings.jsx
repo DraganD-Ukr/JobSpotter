@@ -21,6 +21,14 @@ export function Settings() {
             <div className="flex justify-between items-center">
               <span>Dark Mode</span>
               <LightDarkToggle />
+
+
+
+
+      {/*language*/}
+
+
+
             </div>
           </div>
         </div>

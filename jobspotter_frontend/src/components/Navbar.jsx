@@ -170,6 +170,8 @@ export default function Navbar() {
                 >
                   View Job Post History
                 </Link>
+
+        
                 <div className="h-px w-full bg-gray-300 dark:bg-gray-600" />
               </div>
             </div>
@@ -182,7 +184,7 @@ export default function Navbar() {
                 className="absolute top-full mt-6 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-lg transform origin-bottom scale-0 opacity-0 transition-all ease-in-out duration-300 group-hover:scale-100 group-hover:opacity-100"
               >
                 <Link
-                  to="/myJobs"
+                  to="/MyJobs"
                   className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   View My Jobs
@@ -202,12 +204,7 @@ export default function Navbar() {
                   Create Job Post
                 </Link>
 
-                <Link
-                  to="/Testpage"
-                  className="block px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                 Test page
-                </Link>
+      
 
                
               </div>

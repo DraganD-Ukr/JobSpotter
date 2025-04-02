@@ -35,8 +35,13 @@ import UserReviewPopup  from "./components/UserReviewPopup";
 export default function App() {
   const location = useLocation();
   const isJobPostPage =
-    location.pathname === "/SearchJobPost" ||
-    location.pathname === "/JobPostHistory";
+  location.pathname === "/SearchJobPost" ||
+  location.pathname === "/JobPostHistory" ||
+  location.pathname === "/MyJobs" ||
+  location.pathname === "/SearchReviews" ||
+  location.pathname === "/CreateJobPost";
+
+
 
   return (
     <ThemeProvider>
@@ -75,7 +80,6 @@ export default function App() {
           <Route path="/searchreviews" element={<SearchReviews />} />
           <Route path="/userreviewpopup" element={<UserReviewPopup />} />
           <Route path="/assistance" element={<Assistance />} />
-
 
         </Routes>
       </div>
