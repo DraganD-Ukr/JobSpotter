@@ -16,6 +16,7 @@ import org.job_spotter.jobpost.model.Applicant;
 import org.job_spotter.jobpost.model.JobStatus;
 import org.job_spotter.jobpost.model.JobTagEnum;
 import org.job_spotter.jobpost.service.JobPostService;
+import org.job_spotter.jobpost.service.SearchTitleSuggestionService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,7 @@ import java.util.UUID;
 public class JobPostController {
 
     private final JobPostService jobPostService;
+    private final SearchTitleSuggestionService searchTitleSuggestionService;
 
     //-----------------------------------------------------------------------------------------------------------------
     //                                           Job Post Viewing Endpoints
@@ -162,6 +164,14 @@ public class JobPostController {
 
         Page<JobPostSearchResponse> results = jobPostService.searchJobPosts(title, tags, latitude, longitude, radius, pageNumber, size);
         return ResponseEntity.ok(results);
+    }
+
+
+    @GetMapping("/title-suggestions")
+    public ResponseEntity<List<String>> searchTitleSuggestions(
+            @RequestParam(value = "title", required = false) String title
+    ) {
+        return ResponseEntity.ok(searchTitleSuggestionService.suggestTitles(title));
     }
 
 

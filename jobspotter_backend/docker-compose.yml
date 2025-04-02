@@ -109,11 +109,12 @@ services:
 #        ----------------------Redis-------------------------
 
   redis:
-    image: redis:latest
+    image: redis/redis-stack:latest  # ✅ Use Redis Stack (Includes RediSearch)
     container_name: jobSpotter_redis
     restart: unless-stopped
     ports:
       - "6379:6379"
+      - "8001:8001"  # RedisInsight UI (Optional)
     volumes:
       - jobSpotter_redis:/data
     networks:
