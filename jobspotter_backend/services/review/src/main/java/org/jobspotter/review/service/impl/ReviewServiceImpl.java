@@ -1,7 +1,7 @@
 package org.jobspotter.review.service.impl;
 
 
-import feign.FeignException;
+import feign.FeignException.FeignClientException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.jobspotter.review.client.JobPostServiceClient;
@@ -48,10 +48,10 @@ public class ReviewServiceImpl implements ReviewService {
 //        Try to get the job post from the job-post service and handle response exceptions
         try {
             jobPost = jobPostServiceClient.getJobPostById(reviewRequest.getJobPostId()).getBody();
-        } catch (FeignException.FeignClientException e) {
+        } catch (FeignClientException e) {
 
             if (e.status() == 404) {
-                log.warn("Job post not found with id: " + reviewRequest.getJobPostId());
+                log.warn("Job post not found with id: {}", reviewRequest.getJobPostId());
                 throw new ResourceNotFoundException("Job post not found with id: " + reviewRequest.getJobPostId());
 
             } else{
