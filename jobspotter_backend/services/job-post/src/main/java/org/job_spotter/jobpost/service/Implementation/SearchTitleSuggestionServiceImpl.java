@@ -38,6 +38,7 @@ public class SearchTitleSuggestionServiceImpl implements SearchTitleSuggestionSe
         }
 
         return suggestions.stream()
+                .filter(sug -> sug.getString().charAt(0) == title.charAt(0))
                 .map(Suggestion::getString)
                 .toList();
     }
