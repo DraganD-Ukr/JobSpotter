@@ -12,18 +12,22 @@ import {
   FaTimesCircle,
   FaCircle,
   FaCheckCircle,
-  FaClock
+  FaClock,
 } from "react-icons/fa";
-import { ThemeContext } from "../components/ThemeContext";
 import { MdDateRange } from "react-icons/md";
+import { useTranslation } from "react-i18next";
+import { ThemeContext } from "../components/ThemeContext";
 
 let tagMappingCache = null;
 
 export function SearchJobPost() {
+  const { t, i18n } = useTranslation();
+  const { darkMode } = useContext(ThemeContext);
+
   const [jobPostsData, setJobPostsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [viewType, setViewType] = useState("card"); // "card" or "list"
+  const [viewType, setViewType] = useState("card");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -37,6 +41,7 @@ export function SearchJobPost() {
   });
 
   const [tagMapping, setTagMapping] = useState(new Map());
+  const [suggestions, setSuggestions] = useState([]);
 
   // Fetch dynamic tag mapping (cached)
   useEffect(() => {
@@ -78,12 +83,12 @@ export function SearchJobPost() {
         setTagMapping(newTagMap);
       } catch (error) {
         console.error("Error fetching tags:", error);
-        setErrorMessage("Failed to load job tags.");
+        setErrorMessage(t("failedToLoadJobTags"));
       }
     };
 
     fetchTags();
-  }, []);
+  }, [t]);
 
   // Collapsable filters
   const [isTagsCollapsed, setIsTagsCollapsed] = useState(false);
@@ -97,8 +102,6 @@ export function SearchJobPost() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("title") || "";
   const [localQuery, setLocalQuery] = useState(initialQuery);
-
-  const { darkMode } = useContext(ThemeContext);
 
   const [tagColors, setTagColors] = useState({});
   const getTagColor = (tag) => {
@@ -171,40 +174,40 @@ export function SearchJobPost() {
   // --- STATUS LOGIC ---
   function getJobStatusInfo(job) {
     let statusColor = "text-gray-400";
-    let statusText = "N/A";
+    let statusText = t("nA");
     let StatusIcon = FaCircle;
 
     switch (job.status) {
       case "OPEN":
         statusColor = "text-green-500";
-        statusText = "Open";
+        statusText = t("open");
         break;
       case "ASSIGNED":
         statusColor = "text-blue-500";
-        statusText = "Assigned";
+        statusText = t("assigned");
         break;
       case "IN_PROGRESS":
         statusColor = "text-yellow-500";
-        statusText = "In Progress";
+        statusText = t("inProgress");
         break;
       case "COMPLETED":
         statusColor = "text-gray-500";
-        statusText = "Completed";
+        statusText = t("completed");
         break;
       case "CANCELLED":
         statusColor = "text-red-500";
-        statusText = "Cancelled";
+        statusText = t("cancelled");
         break;
       default:
         statusColor = "text-gray-400";
-        statusText = "N/A";
+        statusText = t("nA");
     }
     return { statusColor, statusText, StatusIcon };
   }
 
   function getApplicantStatusInfo(job) {
     let applicantStatusColor = "text-gray-400";
-    let applicantStatusText = job.applicantStatus || "N/A";
+    let applicantStatusText = job.applicantStatus || t("nA");
 
     switch (job.applicantStatus) {
       case "PENDING":
@@ -225,6 +228,41 @@ export function SearchJobPost() {
 
   function toggleView() {
     setViewType((prev) => (prev === "card" ? "list" : "card"));
+  }
+
+  // Handle typed input for suggestions
+  function handleLocalQueryChange(e) {
+    const value = e.target.value;
+    setLocalQuery(value);
+    fetchSuggestions(value);
+  }
+
+  // Fetch suggestions from /api/v1/job-posts/title-suggestions
+  function fetchSuggestions(value) {
+    if (!value) {
+      setSuggestions([]);
+      return;
+    }
+    fetch(`/api/v1/job-posts/title-suggestions?title=${encodeURIComponent(value)}`, {
+      method: "GET",
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch suggestions");
+        return res.json();
+      })
+      .then((data) => {
+        setSuggestions(Array.isArray(data) ? data : []);
+      })
+      .catch((error) => {
+        console.error("Error fetching suggestions:", error);
+      });
+  }
+
+  // When user clicks a suggestion, set it as the query
+  function handleSuggestionClick(suggestion) {
+    setLocalQuery(suggestion);
+    setSuggestions([]);
   }
 
   function handleSearchSubmit(e) {
@@ -344,7 +382,7 @@ export function SearchJobPost() {
         }));
       });
     } else {
-      alert("Geolocation is not supported by this browser.");
+      alert(t("geolocationNotSupported"));
     }
   }
 
@@ -379,7 +417,7 @@ export function SearchJobPost() {
   if (loading) {
     return (
       <div className="main-content min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+        <p>{t("loading")}</p>
       </div>
     );
   }
@@ -392,19 +430,46 @@ export function SearchJobPost() {
     >
       {/* Top Search Bar, Toggle View, and Page Size */}
       <div className="flex justify-center mb-8">
-        <form onSubmit={handleSearchSubmit} className="flex">
-          <input
-            type="text"
-            value={localQuery}
-            onChange={(e) => setLocalQuery(e.target.value)}
-            placeholder="Search jobs by title..."
-            className="px-4 py-2 border rounded-l-md focus:outline-none"
-          />
+        <form onSubmit={handleSearchSubmit} className="flex relative">
+          <div className="relative">
+            <input
+              type="text"
+              value={localQuery}
+              onChange={handleLocalQueryChange}
+              placeholder={t("searchJobsPlaceholder")}
+              className={`px-4 py-2 border rounded-l-md focus:outline-none ${
+                darkMode
+                  ? "bg-gray-800 text-white border-gray-700"
+                  : "bg-white text-black border-gray-300"
+              }`}
+            />
+            {suggestions.length > 0 && (
+              <ul
+                className={`absolute top-full left-0 w-full border rounded-md shadow-md z-10 ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-700 text-white"
+                    : "bg-white border-gray-300 text-black"
+                }`}
+              >
+                {suggestions.map((item, index) => (
+                  <li
+                    key={index}
+                    onClick={() => handleSuggestionClick(item)}
+                    className={`px-4 py-2 cursor-pointer ${
+                      darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"
+                    }`}
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <button
             type="submit"
             className="px-4 py-2 bg-green-500 text-white rounded-r-md hover:bg-green-600"
           >
-            Search
+            {t("search")}
           </button>
         </form>
         <button
@@ -415,18 +480,18 @@ export function SearchJobPost() {
           {viewType === "card" ? (
             <>
               <FaList className="mr-2" />
-              List View
+              {t("listView")}
             </>
           ) : (
             <>
               <FaTh className="mr-2" />
-              Card View
+              {t("cardView")}
             </>
           )}
         </button>
         <div className="flex items-center ml-10">
           <label htmlFor="pageSize" className="mr-2">
-            Show Results:
+            {t("showResults")}:
           </label>
           <select
             id="pageSize"
@@ -445,30 +510,63 @@ export function SearchJobPost() {
       <div className="flex">
         {/* Filters Column */}
         <div className="w-1/5 pr-12 border-r ml-4 mr-4">
-          <h3 className="text-xl font-bold mb-4">Filters</h3>
+          <h3 className="text-xl font-bold mb-4">{t("filters")}</h3>
           <form onSubmit={handleSearchSubmit}>
             {/* Tags Section */}
             <div className="mb-4 p-4 border rounded-md">
-              <div className="flex justify-between items-center cursor-pointer" onClick={toggleTagsCollapse}>
-                <h4 className="text-lg font-semibold">Tags</h4>
-                {isTagsCollapsed ? <FaChevronUp className="text-gray-500" /> : <FaChevronDown className="text-gray-500" />}
+              <div
+                className="flex justify-between items-center cursor-pointer"
+                onClick={toggleTagsCollapse}
+              >
+                <h4 className="text-lg font-semibold">{t("tags")}</h4>
+                {isTagsCollapsed ? (
+                  <FaChevronUp className="text-gray-500" />
+                ) : (
+                  <FaChevronDown className="text-gray-500" />
+                )}
               </div>
-              <div className={`transition-all ease-in-out duration-500 overflow-hidden ${isTagsCollapsed ? "max-h-screen opacity-100" : "max-h-0 opacity-0"}`}>
+              <div
+                className={`transition-all ease-in-out duration-500 overflow-hidden ${
+                  isTagsCollapsed ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+                }`}
+              >
                 <div className="flex flex-wrap gap-2 mb-2">
                   {filters.tags.map((tag) => (
-                    <span key={tag} className={`px-2 py-1 rounded-full flex items-center ${getTagColor(tag)}`}>
+                    <span
+                      key={tag}
+                      className={`px-2 py-1 rounded-full flex items-center ${getTagColor(
+                        tag
+                      )}`}
+                    >
                       <FaTag className="mr-2" />
                       <span className="mr-2">
-                        {Array.from(tagMapping.entries()).find(([key, value]) => value === tag)?.[0]}
+                        {
+                          Array.from(tagMapping.entries()).find(
+                            ([, value]) => value === tag
+                          )?.[0]
+                        }
                       </span>
-                      <button type="button" onClick={() => handleRemoveTag(tag)} className="text-red-500 hover:text-red-700">
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="text-red-500 hover:text-red-700"
+                      >
                         &times;
                       </button>
                     </span>
                   ))}
                 </div>
-                <select name="tags" value="" onChange={(e) => handleAddTag(e.target.value)} className="w-full px-4 py-2 border rounded-md">
-                  <option value="">Select a tag</option>
+                <select
+                  name="tags"
+                  value=""
+                  onChange={(e) => handleAddTag(e.target.value)}
+                  className={`w-full px-4 py-2 border rounded-md ${
+                    darkMode
+                      ? "bg-gray-800 text-white border-gray-700"
+                      : "bg-white text-black border-gray-300"
+                  }`}
+                >
+                  <option value="">{t("selectATag")}</option>
                   {Array.from(tagMapping.keys()).map((tag) => (
                     <option key={tag} value={tagMapping.get(tag)}>
                       {tag}
@@ -480,16 +578,31 @@ export function SearchJobPost() {
 
             {/* Location Section */}
             <div className="mb-4 p-4 border rounded-md">
-              <div className="flex justify-between items-center cursor-pointer" onClick={toggleLocationCollapse}>
-                <h4 className="text-lg font-semibold">Location</h4>
-                {isLocationCollapsed ? <FaChevronUp className="text-gray-500" /> : <FaChevronDown className="text-gray-500" />}
+              <div
+                className="flex justify-between items-center cursor-pointer"
+                onClick={toggleLocationCollapse}
+              >
+                <h4 className="text-lg font-semibold">{t("location")}</h4>
+                {isLocationCollapsed ? (
+                  <FaChevronUp className="text-gray-500" />
+                ) : (
+                  <FaChevronDown className="text-gray-500" />
+                )}
               </div>
-              <div className={`transition-all ease-in-out duration-500 overflow-hidden ${isLocationCollapsed ? "max-h-screen opacity-100" : "max-h-0 opacity-0"}`}>
+              <div
+                className={`transition-all ease-in-out duration-500 overflow-hidden ${
+                  isLocationCollapsed ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+                }`}
+              >
                 <input
                   type="text"
                   name="address"
-                  placeholder="Enter address (lat,lng)"
-                  className="w-full px-4 py-2 border rounded-md mb-2"
+                  placeholder={t("enterAddressLatLng")}
+                  className={`w-full px-4 py-2 border rounded-md mb-2 ${
+                    darkMode
+                      ? "bg-gray-800 text-white border-gray-700"
+                      : "bg-white text-black border-gray-300"
+                  }`}
                   onChange={(e) => {
                     const [lat, lng] = e.target.value.split(",");
                     setFilters((prev) => ({
@@ -504,11 +617,11 @@ export function SearchJobPost() {
                   onClick={handleLocationSearch}
                   className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
                 >
-                  Use Current Location
+                  {t("useCurrentLocation")}
                 </button>
                 {filters.latitude && filters.longitude && (
                   <p className="text-sm text-green-500 mt-2 text-center">
-                    Using your current location
+                    {t("usingCurrentLocation")}
                   </p>
                 )}
               </div>
@@ -516,8 +629,13 @@ export function SearchJobPost() {
 
             {/* Radius Section */}
             <div className="mb-4 p-4 border rounded-md">
-              <label htmlFor="distance-range-slider" className="block mb-2 font-medium text-gray-700">
-                Radius (km)
+              <label
+                htmlFor="distance-range-slider"
+                className={`block mb-2 font-medium ${
+                  darkMode ? "text-white" : "text-gray-700"
+                }`}
+              >
+                {t("radiusKm")}
               </label>
               <div className="relative w-full">
                 <input
@@ -530,7 +648,9 @@ export function SearchJobPost() {
                   onChange={handleFilterChange}
                   className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #3b82f6 ${filters.radius / 5}%, #d1d5db ${filters.radius / 5}%)`,
+                    background: `linear-gradient(to right, #3b82f6 ${
+                      filters.radius / 5
+                    }%, #d1d5db ${filters.radius / 5}%)`,
                   }}
                 />
                 <div className="absolute w-full top-4 flex justify-between">
@@ -541,16 +661,31 @@ export function SearchJobPost() {
                   ))}
                 </div>
               </div>
-              <div className="flex justify-between text-xs text-gray-600 mt-1">
+              <div
+                className={`flex justify-between text-xs mt-1 ${
+                  darkMode ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
                 {[0, 100, 200, 300, 400, 500].map((value) => (
-                  <span key={value} className="w-8 text-center">{value}</span>
+                  <span key={value} className="w-8 text-center">
+                    {value}
+                  </span>
                 ))}
               </div>
-              <p className="text-sm mt-2 text-gray-600">Radius: {filters.radius} km</p>
+              <p
+                className={`text-sm mt-2 ${
+                  darkMode ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                {t("radius")}: {filters.radius} km
+              </p>
             </div>
 
-            <button type="submit" className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
-              Apply Filters
+            <button
+              type="submit"
+              className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+            >
+              {t("applyFilters")}
             </button>
           </form>
         </div>
@@ -560,8 +695,8 @@ export function SearchJobPost() {
           <div className="flex flex-col items-start mb-8">
             <h2 className="text-2xl font-bold text-left mb-4">
               {totalElements >= 1
-                ? `Search returned ${totalElements} job posts`
-                : "No job posts found"}
+                ? t("searchReturnedJobPosts", { count: totalElements })
+                : t("noJobPostsFound")}
             </h2>
           </div>
 
@@ -570,9 +705,15 @@ export function SearchJobPost() {
           )}
 
           {jobPostsData.length === 0 ? (
-            <p className="text-center">No jobs found.</p>
+            <p className="text-center">{t("noJobPostsFound")}</p>
           ) : (
-            <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
+            <div
+              className={
+                viewType === "card"
+                  ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                  : "space-y-4"
+              }
+            >
               {jobPostsData.map((job) => {
                 const { statusColor, statusText, StatusIcon } = getJobStatusInfo(job);
                 const { applicantStatusColor, applicantStatusText } = getApplicantStatusInfo(job);
@@ -580,13 +721,20 @@ export function SearchJobPost() {
                 return (
                   <Link to={`/job/${job.jobPostId}`} key={job.jobPostId}>
                     <div
-                      className={`card border border-gray-300 ${
+                      className={`card border ${
+                        darkMode
+                          ? "border-gray-700 hover:border-green-500"
+                          : "border-gray-300 hover:border-green-500"
+                      } ${
                         viewType === "card"
-                          ? "hover:shadow-md hover:border-green-500 transition rounded-md p-4"
+                          ? "hover:shadow-md transition rounded-md p-4"
                           : "rounded-lg shadow p-4 flex flex-col sm:flex-row justify-between"
                       }`}
                     >
-                      <h3 className="text-xl font-semibold">{job.title}</h3>
+                      {/* Updated Title */}
+                      <h3 className="text-xl font-semibold">
+                        {t("jobTitle", { defaultValue: job.title })}
+                      </h3>
                       {job.address && (
                         <p className="flex items-center gap-1">
                           <FaMapMarkerAlt className="text-red-500" /> {job.address}
@@ -594,38 +742,39 @@ export function SearchJobPost() {
                       )}
                       {job.datePosted && (
                         <p className="flex items-center gap-1">
-                          <MdDateRange className="text-blue-500" /> Posted:{" "}
+                          <MdDateRange className="text-blue-500" /> {t("posted")}:{" "}
                           {new Date(job.datePosted).toLocaleDateString()}
                         </p>
                       )}
                       {typeof job.maxApplicants !== "undefined" && (
                         <p className="flex items-center gap-1">
-                          <FaUsers className="text-purple-500" /> Max Applicants:{" "}
+                          <FaUsers className="text-purple-500" /> {t("maxApplicants")}:{" "}
                           {job.maxApplicants}
                         </p>
                       )}
                       {typeof job.relevantDistance !== "undefined" && (
                         <p className="flex items-center gap-1">
-                          <FaRoute className="text-green-500" /> Distance:{" "}
+                          <FaRoute className="text-green-500" /> {t("distance")}:{" "}
                           {parseFloat(job.relevantDistance).toFixed(2)} km
                         </p>
                       )}
+                      {/* Description */}
                       <p className="mt-2">
-                        <strong>Description:</strong>{" "}
+                        <strong>{t("description")}:</strong>{" "}
                         {job.description && job.description.length > 100
-                          ? job.description.slice(0, 100) + "..."
-                          : job.description}
+                          ? t("jobDescription", { defaultValue: job.description.slice(0, 100) + "..." })
+                          : t("jobDescription", { defaultValue: job.description })}
                       </p>
                       {job.tags && job.tags.length > 0 && (
                         <p className="my-3 text-sm">
-                          <strong>Tags:</strong> {job.tags.join(", ")}
+                          <strong>{t("tagsLabel")}:</strong> {job.tags.join(", ")}
                         </p>
                       )}
 
                       {/* Status Indicators */}
                       <p className="flex items-center mt-2 gap-1">
                         <StatusIcon className={`${statusColor} mr-1`} />
-                        <strong className="mr-2">Job Status:</strong>
+                        <strong className="mr-2">{t("jobStatus")}:</strong>
                         <span className={statusColor}>{statusText}</span>
                       </p>
                       <p className="flex items-center mt-2 gap-1">
@@ -643,17 +792,15 @@ export function SearchJobPost() {
                           job.applicantStatus !== "REJECTED" && (
                             <FaCircle className={`${applicantStatusColor} mr-1`} />
                           )}
-                        <strong>Applicant Status:</strong>{" "}
-                        <span className={applicantStatusColor}>
-                          {applicantStatusText}
-                        </span>
+                        <strong>{t("applicantStatus")}:</strong>{" "}
+                        <span className={applicantStatusColor}>{applicantStatusText}</span>
                       </p>
 
                       <div className="flex justify-end mt-4">
                         <Link
                           to={`/userreportformpopup?jobId=${job.jobPostId || ""}&reportedUserId=${job.jobPosterId}`}
                           className="text-red-500 hover:text-red-700"
-                          title="Report this job post"
+                          title={t("reportJobPost")}
                           onClick={(e) => e.stopPropagation()}
                         >
                           <FaTimesCircle size={20} />
@@ -675,7 +822,7 @@ export function SearchJobPost() {
               id="navigate-page"
               style={{ clipPath: "polygon(100% 0%, 85% 50%, 100% 100%, 0% 100%, 0% 0%)" }}
             >
-              Previous
+              {t("previous")}
             </button>
             {renderPaginationButtons()}
             <button
@@ -685,7 +832,7 @@ export function SearchJobPost() {
               id="navigate-page"
               style={{ clipPath: "polygon(0% 0%, 15% 50%, 0% 100%, 100% 100%, 100% 0%)" }}
             >
-              Next
+              {t("next")}
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 const colorPool = [
   "bg-red-200",
@@ -16,6 +17,8 @@ function getRandomColorClass() {
 }
 
 export function CreateJobPost() {
+  const { t } = useTranslation();
+
   const [jobData, setJobData] = useState({
     tags: [],
     title: "",
@@ -42,7 +45,9 @@ export function CreateJobPost() {
         });
         if (!res.ok) {
           throw new Error(
-            `Failed to fetch tags: ${res.status} ${res.statusText}`
+            `${t("failedToLoadJobTags", {
+              defaultValue: "Failed to load job tags.",
+            })}: ${res.status} ${res.statusText}`
           );
         }
         const tagsData = await res.json();
@@ -57,9 +62,9 @@ export function CreateJobPost() {
       }
     };
     fetchTags();
-  }, []);
+  }, [t]);
 
-  // Convert our dynamic Map to an array of friendly tag strings
+  // Convert dynamic Map to an array of friendly tag strings
   const allTags = useMemo(() => Array.from(tagMapping.keys()), [tagMapping]);
 
   useEffect(() => {
@@ -75,7 +80,11 @@ export function CreateJobPost() {
       credentials: "include",
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch user info");
+        if (!res.ok) {
+          throw new Error(
+            t("failedToFetchUser", { defaultValue: "Failed to fetch user info" })
+          );
+        }
         return res.json();
       })
       .then((data) => setUser(data))
@@ -93,7 +102,13 @@ export function CreateJobPost() {
       credentials: "include",
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch addresses");
+        if (!res.ok) {
+          throw new Error(
+            t("failedToFetchAddresses", {
+              defaultValue: "Failed to fetch addresses",
+            })
+          );
+        }
         return res.json();
       })
       .then((data) => setAddresses(data))
@@ -110,19 +125,20 @@ export function CreateJobPost() {
 
   // When a user clicks on a tag from the all-tags list
   function handleSelectTag(tagName) {
-    // Check if it's already selected
     const alreadySelected = jobData.tags.some(
       (tagObj) => tagObj.name === tagName
     );
     if (alreadySelected) return;
 
-    // Prevent adding more than 5 tags
     if (jobData.tags.length >= 5) {
-      alert("You can select up to 5 tags only.");
+      alert(
+        t("maxTagsAlert", {
+          defaultValue: "You can select up to 5 tags only.",
+        })
+      );
       return;
     }
 
-    // Otherwise, add it with a random color
     const newTagObj = {
       name: tagName,
       color: getRandomColorClass(),
@@ -143,7 +159,7 @@ export function CreateJobPost() {
   function handleSubmit(e) {
     e.preventDefault();
     if (jobData.tags.length === 0) {
-      alert("Please add at least one tag.");
+      alert(t("noTagAlert", { defaultValue: "Please add at least one tag." }));
       return;
     }
     // Convert the selected tags to enum values
@@ -170,7 +186,11 @@ export function CreateJobPost() {
         }
       })
       .then(() => {
-        alert("Job post created successfully!");
+        alert(
+          t("jobPostCreated", {
+            defaultValue: "Job post created successfully!",
+          })
+        );
         // Reset form
         setJobData({
           tags: [],
@@ -190,7 +210,7 @@ export function CreateJobPost() {
   if (loading) {
     return (
       <div className="main-content flex items-center justify-center min-h-screen">
-        <p>Loading user...</p>
+        <p>{t("loadingUser", { defaultValue: "Loading user..." })}</p>
       </div>
     );
   }
@@ -198,7 +218,11 @@ export function CreateJobPost() {
   if (!user) {
     return (
       <div className="main-content flex items-center justify-center min-h-screen">
-        <p>Error loading user. Please try again later.</p>
+        <p>
+          {t("errorLoadingUser", {
+            defaultValue: "Error loading user. Please try again later.",
+          })}
+        </p>
       </div>
     );
   }
@@ -206,7 +230,9 @@ export function CreateJobPost() {
   return (
     <div className="my-10 border-1 rounded-4xl main-content min-h-screen p-6 bg-white text-black">
       <div className="max-w-2xl mx-auto border border-gray-300 rounded-md shadow-md p-6">
-        <h1 className="text-2xl font-bold mb-4">Create Job Post</h1>
+        <h1 className="text-2xl font-bold mb-4">
+          {t("createJobPost", { defaultValue: "Create Job Post" })}
+        </h1>
         {errorMessage && (
           <div className="text-red-500 mb-4">{errorMessage}</div>
         )}
@@ -218,11 +244,8 @@ export function CreateJobPost() {
             name="title"
             value={jobData.title}
             onChange={handleChange}
-            placeholder="Job Title"
-            className="
-              w-full border border-gray-300 rounded-md p-2
-              focus:outline-none focus:ring-2 focus:ring-green-500
-            "
+            placeholder={t("jobTitle", { defaultValue: "Job Title" })}
+            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
           />
 
           {/* Description */}
@@ -230,18 +253,15 @@ export function CreateJobPost() {
             name="description"
             value={jobData.description}
             onChange={handleChange}
-            placeholder="Job Description"
+            placeholder={t("jobDescription", { defaultValue: "Job Description" })}
             rows={3}
-            className="
-              w-full border border-gray-300 rounded-md p-2
-              focus:outline-none focus:ring-2 focus:ring-green-500
-            "
+            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
           />
 
           {/* Tag Selection */}
           <div>
             <label className="block mb-2 font-semibold">
-              Available Tags
+              {t("availableTags", { defaultValue: "Available Tags" })}
             </label>
             <div className="flex flex-wrap gap-2">
               {allTags.map((tagName) => (
@@ -249,11 +269,7 @@ export function CreateJobPost() {
                   key={tagName}
                   type="button"
                   onClick={() => handleSelectTag(tagName)}
-                  className="
-                    px-2 py-1 rounded-md border border-gray-300
-                    bg-gray-100 text-black hover:bg-gray-200
-                    transition focus:outline-none focus:ring-2 focus:ring-green-500
-                  "
+                  className="px-2 py-1 rounded-md border border-gray-300 bg-gray-100 text-black hover:bg-gray-200 transition focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   {tagName}
                 </button>
@@ -261,10 +277,10 @@ export function CreateJobPost() {
             </div>
           </div>
 
-          {/* Display Selected Tags with random color backgrounds */}
+          {/* Display Selected Tags */}
           <div className="mt-4">
             <label className="block mb-2 font-semibold">
-              Selected Tags
+              {t("selectedTags", { defaultValue: "Selected Tags" })}
             </label>
             <div className="flex flex-wrap">
               {jobData.tags.map((tagObj, index) => (
@@ -288,7 +304,7 @@ export function CreateJobPost() {
           {/* Address Dropdown */}
           <div>
             <label className="block mb-1 font-semibold">
-              Select Address
+              {t("selectAddress", { defaultValue: "Select Address" })}
             </label>
             <select
               value={jobData.addressId}
@@ -298,12 +314,11 @@ export function CreateJobPost() {
                   addressId: parseInt(e.target.value, 10),
                 }))
               }
-              className="
-                w-full border border-gray-300 rounded-md p-2
-                focus:outline-none focus:ring-2 focus:ring-green-500
-              "
+              className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
-              <option value="">Select an address</option>
+              <option value="">
+                {t("selectAnAddress", { defaultValue: "Select an address" })}
+              </option>
               {addresses.map((addr) => (
                 <option key={addr.addressId} value={addr.addressId}>
                   {addr.streetAddress}, {addr.city}, {addr.county},{" "}
@@ -317,14 +332,11 @@ export function CreateJobPost() {
           <button
             type="submit"
             disabled={saving}
-            className="
-              bg-green-500 text-white px-4 py-2 rounded-md
-              hover:bg-green-600 transition
-              focus:outline-none focus:ring-2 focus:ring-green-500
-              disabled:opacity-50
-            "
+            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
           >
-            {saving ? "Creating..." : "Create Job Post"}
+            {saving
+              ? t("creating", { defaultValue: "Creating..." })
+              : t("createJobPost", { defaultValue: "Create Job Post" })}
           </button>
         </form>
       </div>

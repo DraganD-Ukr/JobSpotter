@@ -1,3 +1,4 @@
+import "./i18n"; 
 import { ThemeProvider } from "./components/ThemeContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -28,20 +29,17 @@ import { Dashboard } from "./pages/Dashboard";
 import AdminReportManagementPopup from "./components/AdminReportManagementPopup";
 import { SearchReport } from "./pages/SearchReport";  
 import { UserReportFormPopup } from "./components/UserReportFormPopup";
-import SearchReviews  from "./pages/SearchReviews";
-import UserReviewPopup  from "./components/UserReviewPopup";
-
+import SearchReviews from "./pages/SearchReviews";
+import UserReviewPopup from "./components/UserReviewPopup";
 
 export default function App() {
   const location = useLocation();
   const isJobPostPage =
-  location.pathname === "/SearchJobPost" ||
-  location.pathname === "/JobPostHistory" ||
-  location.pathname === "/MyJobs" ||
-  location.pathname === "/SearchReviews" ||
-  location.pathname === "/CreateJobPost";
-
-
+    location.pathname === "/SearchJobPost" ||
+    location.pathname === "/JobPostHistory" ||
+    location.pathname === "/MyJobs" ||
+    location.pathname === "/SearchReviews" ||
+    location.pathname === "/CreateJobPost";
 
   return (
     <ThemeProvider>
@@ -74,13 +72,12 @@ export default function App() {
           <Route path="/helpandsupport" element={<HelpAndSupport />} />
           <Route path="/users/:userId" element={<UserProfile />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/adminreportmanagementpopup" element={<AdminReportManagementPopup />}/>
+          <Route path="/adminreportmanagementpopup" element={<AdminReportManagementPopup />} />
           <Route path="/searchreport" element={<SearchReport />} />
           <Route path="/userreportformpopup" element={<UserReportFormPopup />} />
           <Route path="/searchreviews" element={<SearchReviews />} />
           <Route path="/userreviewpopup" element={<UserReviewPopup />} />
           <Route path="/assistance" element={<Assistance />} />
-
         </Routes>
       </div>
       <Footer />
