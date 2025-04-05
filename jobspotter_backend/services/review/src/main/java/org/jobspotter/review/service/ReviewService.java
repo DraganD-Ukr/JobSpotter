@@ -1,12 +1,10 @@
 package org.jobspotter.review.service;
 
-import org.jobspotter.review.dto.RatingsResponse;
-import org.jobspotter.review.dto.ReviewEditRequest;
-import org.jobspotter.review.dto.ReviewPostRequest;
-import org.jobspotter.review.dto.ReviewResponse;
+import org.jobspotter.review.dto.*;
 import org.jobspotter.review.model.ReviewerRole;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface ReviewService {
@@ -22,4 +20,9 @@ public interface ReviewService {
     void deleteReview(UUID userId, Long reviewId);
 
     Page<ReviewResponse> getReviewsByJobPostId(Long jobPostId, int pageNum, int pageSize);
+
+    List<TopRatedUser> getTopRatedApplicants();
+
+    List<TopRatedUser> getTopRatedJobPosters();
+
 }

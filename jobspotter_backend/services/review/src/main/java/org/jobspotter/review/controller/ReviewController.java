@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.UUID;
 
 @Validated
@@ -254,6 +255,55 @@ public class ReviewController {
         return ResponseEntity.noContent().build();
     }
 
+
+    @Operation(
+            summary = "Get top rated applicants.",
+            description = "Get top rated applicants based on the provided page number and page size. " +
+                    "You can get the top rated applicants by providing the page number and page size."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved top rated applicants",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TopRatedUser.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/top-rated-applicants")
+    public ResponseEntity<List<TopRatedUser>> getTopRatedApplicants() {
+
+        List<TopRatedUser> result = reviewService.getTopRatedApplicants();
+        return ResponseEntity.ok(result);
+
+    }
+
+
+    @Operation(
+            summary = "Get top rated job posters.",
+            description = "Get top rated job posters based on the provided page number and page size. " +
+                    "You can get the top rated job posters by providing the page number and page size."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved top rated job posters",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TopRatedUser.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/top-rated-job-posters")
+    public ResponseEntity<List<TopRatedUser>> getTopRatedJobPosters() {
+
+        List<TopRatedUser> result = reviewService.getTopRatedJobPosters();
+        return ResponseEntity.ok(result);
+
+    }
 
 
 }

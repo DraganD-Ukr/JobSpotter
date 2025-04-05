@@ -39,7 +39,7 @@ public class RedisConfig {
         RedisSerializer<Object> serializer = new GenericJackson2JsonRedisSerializer(mapper);
 
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofSeconds(CacheConstants.DEFAULT_TTL_SECONDS))
+                .entryTtl(Duration.ofSeconds(CacheConstants.SHORT_TTL_SECONDS))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));
 
         return RedisCacheManager.builder(connectionFactory)

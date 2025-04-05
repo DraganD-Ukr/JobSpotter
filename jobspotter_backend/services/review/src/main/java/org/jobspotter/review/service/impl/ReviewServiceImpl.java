@@ -5,6 +5,7 @@ import feign.FeignException.FeignClientException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.jobspotter.review.client.JobPostServiceClient;
+import org.jobspotter.review.client.UserServiceClient;
 import org.jobspotter.review.dto.*;
 import org.jobspotter.review.exception.*;
 import org.jobspotter.review.model.Rating;
@@ -17,16 +18,21 @@ import org.jobspotter.review.repository.ReviewSpecRepository;
 import org.jobspotter.review.service.ReviewService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -37,6 +43,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final RatingRepository ratingRepository;
     private final JobPostServiceClient jobPostServiceClient;
     private final ReviewSpecRepository reviewSpecRepository;
+    private final UserServiceClient userServiceClient;
 
     @Override
     @Transactional
@@ -229,10 +236,90 @@ public class ReviewServiceImpl implements ReviewService {
 
     }
 
+    @Cacheable(value = "topRatedApplicants", key = "'topRatedApplicants'")
+    @Override
+    public List<TopRatedUser> getTopRatedApplicants() {
+
+        List<Object[]> rawApplicants = ratingRepository.findTop10RatedApplicants();
+
+        // Extract user IDs
+        List<UUID> userIds = rawApplicants.stream()
+                .map(obj -> (UUID) obj[0])
+                .toList();
+
+        // Fetch all user details in a single call
+        ResponseEntity<Map<UUID, UserBasicInfoResponse>> userInfoMapResponse = userServiceClient.getUsersBasicInfoByIds(userIds);
+        if (userInfoMapResponse.getBody() == null) {
+            log.warn("User info not found for user IDs: {}", userIds);
+            throw new ResourceNotFoundException("User info not found for user IDs: " + userIds);
+        }
+
+        Map<UUID, UserBasicInfoResponse> userInfoMap = userInfoMapResponse.getBody();
+
+        // Map results to DTO
+        return mapTopRatedUsers(rawApplicants, userInfoMap);
+    }
+
+    @Cacheable(value = "topRatedJobPosters", key = "'topRatedJobPosters'")
+    @Override
+    public List<TopRatedUser> getTopRatedJobPosters() {
+
+        List<Object[]> rawJobPosters = ratingRepository.findTop10RatedJobPosters();
+
+        // Extract user IDs
+        List<UUID> userIds = rawJobPosters.stream()
+                .map(obj -> (UUID) obj[0])
+                .toList();
+
+        // Fetch all user details in a single call
+        ResponseEntity<Map<UUID, UserBasicInfoResponse>> userInfoMapResponse = userServiceClient.getUsersBasicInfoByIds(userIds);
+
+        if (userInfoMapResponse.getBody() == null) {
+            log.warn("User info not found for user IDs: {}", userIds);
+            throw new ResourceNotFoundException("User info not found for user IDs: " + userIds);
+        }
+
+        Map<UUID, UserBasicInfoResponse> userInfoMap = userInfoMapResponse.getBody();
+
+        // Map results to DTO
+        return mapTopRatedUsers(rawJobPosters, userInfoMap);
+    }
+
 
 
 
     /* -------------------------------------------Helper Methods-------------------------------------------------------*/
+
+    /**
+     * Maps the raw user data to a list of TopRatedUser DTOs.
+     * @param rawUsers Array of raw user data. ([0] - userId, [1] - averageRating, [2] - numberOfReviews)
+     * @param userInfoMap Map of user IDs to UserBasicInfoResponse returned by user-service .
+     * @return List of TopRatedUser DTOs.
+     */
+    private List<TopRatedUser> mapTopRatedUsers(List<Object[]> rawUsers, Map<UUID, UserBasicInfoResponse> userInfoMap) {
+
+        return rawUsers.stream()
+                .map(obj -> {
+                    UUID userId = (UUID) obj[0];
+                    Double averageRating = ((Number) obj[1]).doubleValue();
+                    BigDecimal bd = BigDecimal.valueOf(averageRating).setScale(2, RoundingMode.HALF_UP);
+                    averageRating = bd.doubleValue();
+
+                    Integer numberOfReviews = (Integer) obj[2];
+
+                    UserBasicInfoResponse userInfo = userInfoMap.get(userId);
+
+                    return new TopRatedUser(
+                            userId,
+                            userInfo != null ? userInfo.getFirstName() : "Unknown",
+                            userInfo != null ? userInfo.getLastName() : "Unknown",
+                            averageRating,
+                            numberOfReviews
+                    );
+                })
+                .collect(Collectors.toList());
+
+    }
 
     private void updateReviewFromDto(Review review, ReviewEditRequest reviewRequest, Rating rating) {
 
