@@ -236,7 +236,26 @@ public class ReviewController {
 
 
 
-
+    @Operation(
+            summary = "Delete review.",
+            description = "Deletes review of specified review id. You must be the owner of the review to delete it. " +
+                    "You can only delete your own reviews."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Successfully deleted review"),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Not Found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<HttpStatus> deleteReview(
             @RequestHeader("Authorization") String accessToken,
