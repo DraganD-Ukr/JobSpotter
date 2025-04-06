@@ -96,6 +96,8 @@
 			<version>2.6.0</version>
 		</dependency>
 
+
+		<!--		Monitoring        -->
 		<dependency>
 			<groupId>io.zipkin.reporter2</groupId>
 			<artifactId>zipkin-reporter-brave</artifactId>
@@ -109,6 +111,11 @@
 			<artifactId>micrometer-tracing-bridge-brave</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 
 	</dependencies>
 	<dependencyManagement>
