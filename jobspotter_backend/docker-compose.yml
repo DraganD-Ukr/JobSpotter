@@ -120,6 +120,16 @@ services:
     networks:
       - jobSpotter-net
 
+#        ----------------------Tools--------------------------
+  #----------------------Zipkin------------------------
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: jobSpotter_zipkin
+    ports:
+      - "9411:9411"  # Expose Zipkin UI on port 9411
+    networks:
+      - jobSpotter-net
+
 #        ----------------------Network------------------------
 
 
