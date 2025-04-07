@@ -18,8 +18,7 @@ import java.util.UUID;
 public class ReviewPostRequest {
 
     @Schema(description = "UUID of the user that is leaving the review")
-    @NotNull
-    @Pattern(regexp = "^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$", message = "Invalid UUID format")
+    @NotNull(message = "Reviewer user id is required")
     private UUID reviewedUserId;
 
     @Schema(description = "UUID of the user that is being reviewed")
