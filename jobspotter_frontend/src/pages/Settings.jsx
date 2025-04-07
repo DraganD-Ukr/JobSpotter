@@ -39,12 +39,15 @@ export function Settings() {
               <span>{t("selectLanguage")}</span>
               <select
                 onChange={handleLanguageChange}
-                defaultValue={i18n.language}
-                className="border rounded p-1"
+                value={i18n.language}
+                className={`border rounded p-1 ${
+                  darkMode
+                    ? "bg-gray-800 text-white border-gray-700"
+                    : "bg-white text- border-gray-300"
+                }`}
               >
                 <option value="en">English</option>
                 <option value="fr">Français</option>
-                {/* Add more languages as needed */}
               </select>
             </div>
           </div>

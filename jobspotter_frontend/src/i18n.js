@@ -50,7 +50,7 @@ const resources = {
       geolocationNotSupported: "Geolocation is not supported by this browser.",
       failedToFetchUser: "Failed to fetch user info",
       failedToFetchAddresses: "Failed to fetch addresses",
-
+      
       // Sort By keys
       sortBy: "Sort by:",
       datePostedOption: "Date Posted",
@@ -58,11 +58,11 @@ const resources = {
       titleOption: "Title",
       statusOption: "Status",
 
-      // Dynamic job post keys 
+      // Dynamic job post keys
       jobTitle: "{{defaultValue}}",
       jobDescription: "{{defaultValue}}",
 
-      // CreateJobPost
+      // CreateJobPost specific keys
       createJobPost: "Create Job Post",
       availableTags: "Available Tags",
       selectedTags: "Selected Tags",
@@ -74,11 +74,18 @@ const resources = {
       loadingUser: "Loading user...",
       errorLoadingUser: "Error loading user. Please try again later.",
       jobPostCreated: "Job post created successfully!",
+      
+      // Footer keys
+      allRightsReserved: "All Rights Reserved.",
+      about: "About",
+      contact: "Contact",
+      privacyPolicy: "Privacy Policy",
+      termsOfService: "Terms of Service",
+      helpAndSupport: "Help & Support",
     },
   },
   fr: {
     translation: {
-
       // Settings keys
       settingsTitle: "Paramètres",
       darkModeToggle: "Basculer le mode sombre",
@@ -125,7 +132,7 @@ const resources = {
       geolocationNotSupported: "La géolocalisation n'est pas prise en charge par ce navigateur.",
       failedToFetchUser: "Échec de la récupération des informations utilisateur",
       failedToFetchAddresses: "Échec de la récupération des adresses",
-
+      
       // Sort By keys
       sortBy: "Trier par :",
       datePostedOption: "Date de publication",
@@ -137,7 +144,7 @@ const resources = {
       jobTitle: "{{defaultValue}}",
       jobDescription: "{{defaultValue}}",
 
-      // CreateJobPost
+      // CreateJobPost specific keys
       createJobPost: "Créer une annonce d'emploi",
       availableTags: "Étiquettes disponibles",
       selectedTags: "Étiquettes sélectionnées",
@@ -149,6 +156,14 @@ const resources = {
       loadingUser: "Chargement de l'utilisateur...",
       errorLoadingUser: "Erreur lors du chargement de l'utilisateur. Veuillez réessayer plus tard.",
       jobPostCreated: "Annonce d'emploi créée avec succès !",
+      
+      // Footer keys
+      allRightsReserved: "Tous droits réservés.",
+      about: "À propos",
+      contact: "Contact",
+      privacyPolicy: "Politique de confidentialité",
+      termsOfService: "Conditions d'utilisation",
+      helpAndSupport: "Aide & Support",
     },
   },
 };
