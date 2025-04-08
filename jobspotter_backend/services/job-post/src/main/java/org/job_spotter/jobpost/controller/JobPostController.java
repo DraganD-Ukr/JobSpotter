@@ -15,8 +15,10 @@ import org.job_spotter.jobpost.exception.InvalidRequestException;
 import org.job_spotter.jobpost.model.Applicant;
 import org.job_spotter.jobpost.model.JobStatus;
 import org.job_spotter.jobpost.model.JobTagEnum;
+import org.job_spotter.jobpost.service.Implementation.TagImpl;
 import org.job_spotter.jobpost.service.JobPostService;
 import org.job_spotter.jobpost.service.SearchTitleSuggestionService;
+import org.job_spotter.jobpost.service.TagService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +38,7 @@ public class JobPostController {
 
     private final JobPostService jobPostService;
     private final SearchTitleSuggestionService searchTitleSuggestionService;
+    private final TagService tagService;
 
     //-----------------------------------------------------------------------------------------------------------------
     //                                           Job Post Viewing Endpoints
@@ -53,7 +56,7 @@ public class JobPostController {
     })
     @GetMapping("/tags")
     public ResponseEntity<Map<String, String>> getAllJobTags() {
-        return ResponseEntity.ok(JobTagEnum.getAllEnumValues());
+        return ResponseEntity.ok(tagService.getJobTags());
     }
 
 

@@ -15,7 +15,6 @@ public interface JobPostService {
 
     MyJobPostDetailedResponse getMyJobPostDetails(String accessToken, Long jobPostId) throws Exception;
 
-
     //Job Post Search Queries
     Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize);
 
