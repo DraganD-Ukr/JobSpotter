@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -162,6 +163,12 @@ public class UserServiceImplUnitTests {
             jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
             when(userRepository.findById(userId)).thenReturn(Optional.ofNullable(user));
 
+            // Mock the opsForValue() method to return the mocked ValueOperations
+            when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+            // Now, you can use doNothing() on the set() method of ValueOperations
+            doNothing().when(valueOperations).set(any(), any(), any(Duration.class));
+
             UserResponse result = userService.getUserById(userId);
 
             assertEquals(user.getUserId(), result.getUserId());
@@ -180,6 +187,10 @@ public class UserServiceImplUnitTests {
 
             jwtUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(UUID.randomUUID());
             when(userRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
+
+            // Mock the opsForValue() method to return the mocked ValueOperations
+            when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
 
             assertThrows(ResourceNotFoundException.class, () -> userService.getUserById(userId));
 
@@ -302,7 +313,7 @@ public class UserServiceImplUnitTests {
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
             // Now, you can use doNothing() on the set() method of ValueOperations
-            doNothing().when(valueOperations).set(any(), any());
+            doNothing().when(valueOperations).set(any(), any(), any(Duration.class));
 
             userPatchRequest.setFirstName("Updated Name");
 
@@ -357,7 +368,7 @@ public class UserServiceImplUnitTests {
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
             // Now, you can use doNothing() on the set() method of ValueOperations
-            doNothing().when(valueOperations).set(any(), any());
+            doNothing().when(valueOperations).set(any(), any(), any(Duration.class));
 
             userPatchRequest.setFirstName("Updated Name");
 
@@ -608,6 +619,14 @@ public class UserServiceImplUnitTests {
 
         when(jwtUtilsMocked.hasAdminRole(accessToken)).thenReturn(true);
         when(userRepository.getUsersCount()).thenReturn(totalUsers);
+
+        // Mock the opsForValue() method to return the mocked ValueOperations
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        when(valueOperations.get(any())).thenReturn(null);
+
+        // Now, you can use doNothing() on the set() method of ValueOperations
+        doNothing().when(valueOperations).set(any(), any(), any(Duration.class));
 
         int response = userService.getTotalUsersCount(accessToken);
 
