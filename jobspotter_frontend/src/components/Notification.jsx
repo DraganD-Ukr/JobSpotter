@@ -1,108 +1,147 @@
 import React, { useState, useEffect } from "react";
-import { Bell } from "lucide-react";
 import NotificationPopup from "./NotificationPopup";
-import axios from 'axios'; 
+import { Bell } from "lucide-react";
 
+// Utility to get read notifications from localStorage
+const getReadNotifications = () => {
+  const stored = localStorage.getItem("readNotifications");
+  return stored ? JSON.parse(stored) : [];
+};
 
-function Notification() {
-  // Controls whether the popup is visible
+// Utility to mark a notification as read in localStorage
+const markNotificationAsReadLocal = (id) => {
+  const readNotifications = getReadNotifications();
+  if (!readNotifications.includes(id)) {
+    readNotifications.push(id);
+    localStorage.setItem("readNotifications", JSON.stringify(readNotifications));
+  }
+};
+
+function Notification({ variant = "icon" }) {
+  const [notifications, setNotifications] = useState([]);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
 
-  const [notifications, setNotifications] = useState([]);
+  // Filter notifications to only include unread ones
+  const filteredNotifications = notifications.filter(
+    (notif) => !getReadNotifications().includes(notif.notificationID)
+  );
 
-  // Track unread notifications count
-  const unreadNotifications = notifications.filter(notif => !notif.read);
-  const unreadCount = unreadNotifications.length;
+  // Count unread notifications
+  const unreadCount = filteredNotifications.length;
 
   useEffect(() => {
-    // Initialize the EventSource connection to listen for notifications
+    // 1) Fetch existing notifications from the backend
+    fetch("/api/v1/notifications", { credentials: "include" })
+      .then((res) => {
+
+        if (!res.ok) {
+          console.error(`Error fetching notifications: ${res.status} ${res.statusText}`);
+          return [];
+        }
+        return res.json();
+      })
+      .then((data) => {
+        // Ensure data is an array
+        if (!Array.isArray(data)) {
+          console.warn("Notifications endpoint didn't return an array. Using empty array.");
+          data = [];
+        }
+        const unread = data.filter(
+          (notif) => !getReadNotifications().includes(notif.notificationID)
+        );
+        setNotifications(unread);
+      })
+      .catch((error) => {
+        console.error("Error fetching notifications:", error);
+        setNotifications([]);
+      });
+
+    // 2) Set up Server-Sent Events (SSE) for real-time notifications
     const eventSource = new EventSource("/api/v1/notifications/stream", {
-      withCredentials: true, // Ensure cookies are sent with the request if necessary
+      withCredentials: true,
     });
-
     eventSource.onopen = () => {
-      console.log("Connection to notification stream established.");
+      console.log("Connected to notifications stream.");
     };
-
     eventSource.addEventListener("notification", (event) => {
-      const newNotification = JSON.parse(event.data); // Parse the incoming notification data
-      setNotifications((prevNotifications) => [...prevNotifications, newNotification]); // Add the new notification to the state
+      const newNotification = JSON.parse(event.data);
+      if (!getReadNotifications().includes(newNotification.notificationID)) {
+        setNotifications((prev) => [...prev, newNotification]);
+      }
     });
-
-    // Handle any errors during the connection
     eventSource.onerror = (err) => {
-      console.error("EventSource failed:", err);
+      console.error("EventSource error:", err);
       eventSource.close();
     };
 
-    // Clean up when the component is unmounted
     return () => {
       eventSource.close();
     };
   }, []);
 
-  // Toggle popup visibility
-  const togglePopup = () => {
-    setIsPopupVisible((prev) => !prev);
-    // Mark notifications as read when the user opens the popup
-    if (!isPopupVisible) {
-      setNotifications((prevNotifications) =>
-        prevNotifications.map((notification) => ({
-          ...notification,
-          read: true,
-        }))
-      );
-    }
+  // Toggle the popup visibility
+  const togglePopup = () => setIsPopupVisible((prev) => !prev);
+
+  // Mark an individual notification as read
+  const handleMarkAsRead = (notificationID) => {
+    markNotificationAsReadLocal(notificationID);
+    setNotifications((prev) =>
+      prev.filter((notif) => notif.notificationID !== notificationID)
+    );
   };
 
-  // Close the notification popup
-  const handleCloseNotificationPopup = () => {
-    setIsPopupVisible(false);
+  // Mark all notifications as read
+  const handleMarkAllRead = () => {
+    filteredNotifications.forEach((notif) => {
+      markNotificationAsReadLocal(notif.notificationID);
+    });
+    setNotifications([]);
   };
 
-  // Mark notification as read and send an API request to update status
-  const handleMarkAsRead = async (notificationID) => {
-    console.log(notifications);
+  // If variant="text", display a plain text link
+  if (variant === "text") {
+    return (
+      <div>
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            togglePopup();
+          }}
+          className="block text-sm hover:text-green-400"
+        >
+          Notifications {unreadCount > 0 && `(${unreadCount})`}
+        </a>
+        <NotificationPopup
+          isNotificationPopupVisible={isPopupVisible}
+          notifications={filteredNotifications}
+          handleCloseNotificationPopup={() => setIsPopupVisible(false)}
+          handleMarkAllRead={handleMarkAllRead}
+          handleMarkAsRead={handleMarkAsRead}
+        />
+      </div>
+    );
+  }
 
-    try {
-      // API request to mark the notification as read on the server
-      await axios.get(`/api/v1/notifications/${notificationID}/mark-read-or-unread`, {
-        read: true,
-      });
-
-      // Remove the notification from the state after marking as read
-      setNotifications((prevNotifications) =>
-        prevNotifications.filter((notification) => notification.notificationID !== notificationID)
-      );
-    } catch (error) {
-      console.error("Error marking notification as read", error);
-    }
-  };
-
+  // Default (icon variant) display
   return (
     <div className="relative group inline-block">
-      {/* Bell Button */}
       <button
         onClick={togglePopup}
-        className="bg-gradient-to-r from-green-500 to-lime-500 p-2 rounded-full shadow hover:opacity-80 transition duration-300"
+        className="bg-gradient-to-r from-green-500 to-lime-500 p-2 rounded-full shadow hover:opacity-80 transition duration-300 text-white"
       >
         <Bell size={24} className="text-white" />
-        {/* Unread Notifications Badge */}
         {unreadCount > 0 && (
-          <div className="absolute top-0 right-0 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
             {unreadCount}
-          </div>
+          </span>
         )}
       </button>
-
-      {/* Notification Popup */}
       <NotificationPopup
         isNotificationPopupVisible={isPopupVisible}
-        notifications={notifications}
-        errorMessage=""
-        errorBoxAnimation={{}}
-        handleCloseNotificationPopup={handleCloseNotificationPopup}
-        handleMarkAllRead={() => setNotifications([])}
+        notifications={filteredNotifications}
+        handleCloseNotificationPopup={() => setIsPopupVisible(false)}
+        handleMarkAllRead={handleMarkAllRead}
         handleMarkAsRead={handleMarkAsRead}
       />
     </div>

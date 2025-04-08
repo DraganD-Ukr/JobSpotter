@@ -11,6 +11,8 @@ import {
   FaCheckCircle,
   FaClock,
   FaTimesCircle,
+  FaChevronDown,
+  FaChevronUp
 } from "react-icons/fa";
 import { MdDateRange } from "react-icons/md";
 import { useTranslation } from "react-i18next";
@@ -21,7 +23,7 @@ export function MyJobs() {
   const navigate = useNavigate();
   const { darkMode } = useContext(ThemeContext);
 
-  // ---------------------------------------TAG MAPPING (Dynamic via API)----------------------------------------
+  // ---------------- TAG MAPPING (Dynamic via API) ----------------
   const [tagMapping, setTagMapping] = useState(new Map());
   useEffect(() => {
     const fetchTags = async () => {
@@ -35,11 +37,13 @@ export function MyJobs() {
           throw new Error(`Failed to fetch tags: ${res.status} ${res.statusText}`);
         }
         const tagsData = await res.json();
+
+        // STORE the mapping as enumValue -> friendlyName
         const newTagMap = new Map();
         Object.keys(tagsData).forEach((enumValue) => {
           const friendlyName = tagsData[enumValue];
           if (friendlyName) {
-            newTagMap.set(friendlyName, enumValue);
+            newTagMap.set(enumValue, friendlyName);
           } else {
             console.warn(`Tag object missing friendlyName for enumValue: ${enumValue}`);
           }
@@ -49,11 +53,9 @@ export function MyJobs() {
         console.error("Error fetching tags:", error);
       }
     };
-
     fetchTags();
   }, []);
 
-  // ---------------------------------------STATE DECLARATIONS----------------------------------------
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -64,8 +66,10 @@ export function MyJobs() {
   const [totalElements, setTotalElements] = useState(0);
   const [pageSize, setPageSize] = useState(9);
   const [filters, setFilters] = useState({
+
+
     title: "",
-    tags: [],
+    tags: [],     
     latitude: "",
     longitude: "",
     radius: 50,
@@ -73,12 +77,35 @@ export function MyJobs() {
     jobStatus: "",
   });
 
-  // ---------------------------------------Collapsable filters----------------------------------------
+  // ---------------- TAG COLOR HELPERS (for UI) ----------------
+  const [tagColors, setTagColors] = useState({});
+  function getRandomColor() {
+    const colors = [
+      "bg-red-400", "bg-red-500", "bg-yellow-400", "bg-yellow-500",
+      "bg-green-400", "bg-green-500", "bg-blue-400", "bg-blue-500",
+      "bg-purple-400", "bg-purple-500", "bg-pink-400", "bg-pink-500",
+      "bg-indigo-400", "bg-indigo-500", "bg-teal-400", "bg-teal-500",
+      "bg-cyan-400", "bg-cyan-500", "bg-orange-400", "bg-orange-500",
+      "bg-lime-400", "bg-lime-500"
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
+  function getTagColor(tag) {
+    if (tagColors[tag]) {
+      return tagColors[tag];
+    }
+    const newColor = getRandomColor();
+    setTagColors((prev) => ({ ...prev, [tag]: newColor }));
+    return newColor;
+  }
+
+  // ---------------- Collapsable Filters (Tags, Status) ----------------
   const [isTagsCollapsed, setIsTagsCollapsed] = useState(false);
   const [isStatusCollapsed, setIsStatusCollapsed] = useState(false);
   const toggleTagsCollapse = () => setIsTagsCollapsed(!isTagsCollapsed);
   const toggleStatusCollapse = () => setIsStatusCollapsed(!isStatusCollapsed);
 
+  // -------------- MAIN DATA FETCH (INCLUDES FILTERS) --------------
   useEffect(() => {
     fetchMyJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -86,8 +113,34 @@ export function MyJobs() {
 
   function fetchMyJobs() {
     setLoading(true);
-    const size = 9;
-    const endpoint = `/api/v1/job-posts/my-job-posts?pageNumber=${page}&size=${size}&sortBy=${filters.sortBy}`;
+
+    // Build a query string that includes all filters
+    const urlParams = new URLSearchParams();
+
+    // Title
+    if (filters.title) {
+      urlParams.append("title", filters.title);
+    }
+    // Tags
+    if (filters.tags.length > 0) {
+      urlParams.append("tags", filters.tags.join(",")); 
+    }
+    // Location & radius
+    if (filters.latitude && filters.longitude) {
+      urlParams.append("latitude", filters.latitude);
+      urlParams.append("longitude", filters.longitude);
+      urlParams.append("radius", filters.radius);
+    }
+    // Job Status
+    if (filters.jobStatus) {
+      urlParams.append("jobStatus", filters.jobStatus);
+    }
+    // Sorting & pagination
+    urlParams.append("pageNumber", page);
+    urlParams.append("size", 9);
+    urlParams.append("sortBy", filters.sortBy);
+
+    const endpoint = `/api/v1/job-posts/my-job-posts?${urlParams.toString()}`;
 
     fetch(endpoint, {
       method: "GET",
@@ -117,25 +170,20 @@ export function MyJobs() {
       .finally(() => setLoading(false));
   }
 
-  function processJobs(jobArray) {
-    return jobArray.map((job) => {
-      let friendlyTags = [];
-      if (Array.isArray(job.tags)) {
-        friendlyTags = job.tags.map((enumVal) => {
-          const raw =
-            typeof enumVal === "string"
-              ? enumVal
-              : enumVal.tagName || enumVal.name || enumVal.value;
-          const match = [...tagMapping.entries()].find(
-            ([, enumKey]) => enumKey === raw
-          );
-          return match ? match[0] : raw;
-        });
-      }
+  // Convert the job's array of tag objects into friendly names using tagMapping
+  function processJobs(jobs) {
+    return jobs.map((job) => {
+      if (!Array.isArray(job.tags)) return job;
+      const friendlyTags = job.tags.map((tagObj) => {
+        const enumVal = tagObj.tagName || tagObj.name || tagObj.value;
+        // looks up friendly name from enumVal -> friendlyName
+        return tagMapping.get(enumVal) || enumVal;
+      });
       return { ...job, tags: friendlyTags };
     });
   }
 
+  // ------------------- Status Info -------------------
   function getJobStatusInfo(job) {
     let statusColor = "text-gray-400";
     let statusText = t("nA", { defaultValue: "N/A" });
@@ -187,12 +235,14 @@ export function MyJobs() {
     return { applicantStatusColor, applicantStatusText };
   }
 
+  // ------------------- UI Handlers -------------------
   function toggleView() {
     setViewType((prev) => (prev === "card" ? "list" : "card"));
   }
 
   function handleSearchSubmit(e) {
     e.preventDefault();
+    // Re-fetch with updated filters
     fetchMyJobs();
   }
 
@@ -201,16 +251,16 @@ export function MyJobs() {
     setFilters((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleAddTag(tag) {
-    if (tag && !filters.tags.includes(tag)) {
-      setFilters((prev) => ({ ...prev, tags: [...prev.tags, tag] }));
+  function handleAddTag(enumValue) {
+    if (enumValue && !filters.tags.includes(enumValue)) {
+      setFilters((prev) => ({ ...prev, tags: [...prev.tags, enumValue] }));
     }
   }
 
-  function handleRemoveTag(tag) {
+  function handleRemoveTag(enumValue) {
     setFilters((prev) => ({
       ...prev,
-      tags: prev.tags.filter((t) => t !== tag),
+      tags: prev.tags.filter((existing) => existing !== enumValue),
     }));
   }
 
@@ -232,6 +282,7 @@ export function MyJobs() {
     navigate(`/myJob/${jobId}`);
   }
 
+  // ------------------- Pagination Helpers -------------------
   function handlePageChange(newPage) {
     if (newPage >= 0 && newPage < totalPages) {
       setPage(newPage);
@@ -296,6 +347,7 @@ export function MyJobs() {
     );
   }
 
+  // ------------------- Loading State -------------------
   if (loading) {
     return (
       <div className="main-content flex items-center justify-center min-h-screen">
@@ -351,49 +403,75 @@ export function MyJobs() {
       <div className="flex">
         {/* Filters Column */}
         <div className="w-1/5 pr-12 border-r ml-42 mr-4">
-          <h3 className="text-xl font-bold mb-4">{t("filters", { defaultValue: "Filters" })}</h3>
+          <h3 className="text-xl font-bold mb-4">
+            {t("filters", { defaultValue: "Filters" })}
+          </h3>
           <form onSubmit={handleSearchSubmit}>
-            {/* Tag Filter */}
+            {/* TAGS SECTION */}
             <div className="mb-4 p-4 border rounded-md">
-              <label className="block mb-2">{t("tags", { defaultValue: "Tags" })}</label>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {filters.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className={`px-2 py-1 rounded-full flex items-center ${getTagColor(tag)}`}
-                  >
-                    <FaTag className="mr-2" />
-                    <span className="mr-2">
-                      {Array.from(tagMapping.entries()).find(([key, value]) => value === tag)?.[0] || tag}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      &times;
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <select
-                name="tags"
-                value=""
-                onChange={(e) => handleAddTag(e.target.value)}
-                className="w-full px-4 py-2 border rounded-md"
+              <div
+                className="flex justify-between items-center cursor-pointer"
+                onClick={toggleTagsCollapse}
               >
-                <option value="">{t("selectATag", { defaultValue: "Select a tag" })}</option>
-                {Array.from(tagMapping.keys()).map((tag) => (
-                  <option key={tag} value={tagMapping.get(tag)}>
-                    {tag}
-                  </option>
-                ))}
-              </select>
+                <h4 className="text-lg font-semibold">{t("tags")}</h4>
+                {isTagsCollapsed ? (
+                  <FaChevronUp className="text-gray-500" />
+                ) : (
+                  <FaChevronDown className="text-gray-500" />
+                )}
+              </div>
+              <div
+                className={`transition-all ease-in-out duration-500 overflow-hidden ${
+                  isTagsCollapsed ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+                }`}
+              >
+                {/* Render any selected tags */}
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {filters.tags.map((enumValue) => (
+                    <span
+                      key={enumValue}
+                      className={`px-2 py-1 rounded-full flex items-center ${getTagColor(enumValue)}`}
+                    >
+                      <FaTag className="mr-2" />
+                      <span className="mr-2">
+                        {tagMapping.get(enumValue) || enumValue}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(enumValue)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                {/* Tag select */}
+                <select
+                  name="tags"
+                  value=""
+                  onChange={(e) => handleAddTag(e.target.value)}
+                  className={`w-full px-4 py-2 border rounded-md ${
+                    darkMode
+                      ? "bg-gray-800 text-white border-gray-700"
+                      : "bg-white text-black border-gray-300"
+                  }`}
+                >
+                  <option value="">{t("selectATag")}</option>
+                  {Array.from(tagMapping.entries()).map(([enumVal, friendlyName]) => (
+                    <option key={enumVal} value={enumVal}>
+                      {friendlyName}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Job Status Filter */}
             <div className="mb-4 p-4 border rounded-md">
-              <label className="block mb-2">{t("jobStatus", { defaultValue: "Job Status" })}</label>
+              <label className="block mb-2">
+                {t("jobStatus", { defaultValue: "Job Status" })}
+              </label>
               <select
                 name="jobStatus"
                 value={filters.jobStatus}
@@ -411,7 +489,9 @@ export function MyJobs() {
 
             {/* Location Filter */}
             <div className="mb-4 p-4 border rounded-md">
-              <label className="block mb-2">{t("location", { defaultValue: "Location" })}</label>
+              <label className="block mb-2">
+                {t("location", { defaultValue: "Location" })}
+              </label>
               <input
                 type="text"
                 name="address"
@@ -498,7 +578,10 @@ export function MyJobs() {
           <div className="flex flex-col items-start mb-8">
             <h2 className="text-2xl font-bold text-left mb-4">
               {totalElements >= 1
-                ? t("searchReturnedJobPosts", { count: totalElements, defaultValue: `Search returned ${totalElements} job posts` })
+                ? t("searchReturnedJobPosts", {
+                    count: totalElements,
+                    defaultValue: `Search returned ${totalElements} job posts`
+                  })
                 : t("noJobPostsFound", { defaultValue: "No job posts found" })}
             </h2>
           </div>
@@ -512,10 +595,19 @@ export function MyJobs() {
               {t("noJobPostsFound", { defaultValue: "No jobs found." })}
             </p>
           ) : (
-            <div className={viewType === "card" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
+            <div
+              className={
+                viewType === "card"
+                  ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                  : "space-y-4"
+              }
+            >
               {jobs.map((job) => {
                 const { statusColor, statusText, StatusIcon } = getJobStatusInfo(job);
-                const { applicantStatusColor, applicantStatusText } = getApplicantStatusInfo(job);
+                const {
+                  applicantStatusColor,
+                  applicantStatusText
+                } = getApplicantStatusInfo(job);
 
                 return (
                   <div
@@ -530,48 +622,68 @@ export function MyJobs() {
                     <h3 className="text-xl font-semibold">
                       {t("jobTitle", { defaultValue: job.title })}
                     </h3>
+                    {/* Address */}
                     <p className="flex items-center gap-1">
                       <FaMapMarkerAlt className="text-red-500" /> {job.address}
                     </p>
+                    {/* Date Posted */}
                     <p className="flex items-center gap-1">
                       <MdDateRange className="text-blue-500" />{" "}
-                      {t("posted", { defaultValue: "Posted" })}: {new Date(job.datePosted).toLocaleDateString()}
+                      {t("posted", { defaultValue: "Posted" })}:
+                      {" " + new Date(job.datePosted).toLocaleDateString()}
                     </p>
+                    {/* Max Applicants */}
                     <p className="flex items-center gap-1">
                       <FaUsers className="text-purple-500" />{" "}
-                      {t("maxApplicants", { defaultValue: "Max Applicants" })}: {job.maxApplicants}
+                      {t("maxApplicants", { defaultValue: "Max Applicants" })}:
+                      {" " + job.maxApplicants}
                     </p>
+                    {/* Description snippet */}
                     <p className="mt-2">
                       <strong>{t("description", { defaultValue: "Description" })}:</strong>{" "}
                       {job.description && job.description.length > 100
-                        ? t("jobDescription", { defaultValue: job.description.slice(0, 100) + "..." })
+                        ? t("jobDescription", {
+                            defaultValue: job.description.slice(0, 100) + "..."
+                          })
                         : t("jobDescription", { defaultValue: job.description })}
                     </p>
+                    {/* Tags display */}
                     {job.tags && job.tags.length > 0 && (
                       <p className="my-3 text-sm">
                         <strong>{t("tagsLabel", { defaultValue: "Tags" })}:</strong>{" "}
-                        {job.tags
-                          .map((tag) =>
-                            Array.from(tagMapping.entries()).find(([key, value]) => value === tag)?.[0]
-                          )
-                          .join(", ")}
+                        {job.tags.join(", ")}
                       </p>
                     )}
+                    {/* Status Info */}
                     <p className="flex items-center mt-2 gap-1">
                       <StatusIcon className={`${statusColor} mr-1`} />
-                      <strong className="mr-2">{t("jobStatus", { defaultValue: "Job Status" })}:</strong>{" "}
+                      <strong className="mr-2">
+                        {t("jobStatus", { defaultValue: "Job Status" })}:
+                      </strong>{" "}
                       <span className={statusColor}>{statusText}</span>
                     </p>
+                    {/* Applicant Status */}
                     <p className="flex items-center mt-2 gap-1">
-                      {job.applicantStatus === "PENDING" && <FaClock className={`${applicantStatusColor} mr-1`} />}
-                      {job.applicantStatus === "ACCEPTED" && <FaCheckCircle className={`${applicantStatusColor} mr-1`} />}
-                      {job.applicantStatus === "REJECTED" && <FaTimesCircle className={`${applicantStatusColor} mr-1`} />}
+                      {job.applicantStatus === "PENDING" && (
+                        <FaClock className={`${applicantStatusColor} mr-1`} />
+                      )}
+                      {job.applicantStatus === "ACCEPTED" && (
+                        <FaCheckCircle className={`${applicantStatusColor} mr-1`} />
+                      )}
+                      {job.applicantStatus === "REJECTED" && (
+                        <FaTimesCircle className={`${applicantStatusColor} mr-1`} />
+                      )}
                       {job.applicantStatus !== "PENDING" &&
                         job.applicantStatus !== "ACCEPTED" &&
-                        job.applicantStatus !== "REJECTED" && <FaCircle className={`${applicantStatusColor} mr-1`} />}
-                      <strong>{t("applicantStatus", { defaultValue: "Applicant Status" })}:</strong>{" "}
+                        job.applicantStatus !== "REJECTED" && (
+                          <FaCircle className={`${applicantStatusColor} mr-1`} />
+                        )}
+                      <strong>
+                        {t("applicantStatus", { defaultValue: "Applicant Status" })}:
+                      </strong>{" "}
                       <span className={applicantStatusColor}>{applicantStatusText}</span>
                     </p>
+                    {/* View Details Button */}
                     <div className="mt-4">
                       <button
                         onClick={() => handleViewDetails(job.jobPostId)}
@@ -613,4 +725,3 @@ export function MyJobs() {
     </div>
   );
 }
-

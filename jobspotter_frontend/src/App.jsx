@@ -31,6 +31,7 @@ import { SearchReport } from "./pages/SearchReport";
 import { UserReportFormPopup } from "./components/UserReportFormPopup";
 import SearchReviews from "./pages/SearchReviews";
 import UserReviewPopup from "./components/UserReviewPopup";
+import HelpAndSupportIcon from "./components/HelpAndSupportIcon";
 
 export default function App() {
   const location = useLocation();
@@ -44,11 +45,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <Navbar />
-      <div
-        className={`p-4 min-h-screen ${
-          isJobPostPage ? "mx-20" : "container mx-auto"
-        }`}
-      >
+      <div className={`p-4 min-h-screen ${isJobPostPage ? "mx-20" : "container mx-auto"}`}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/notification" element={<Notification />} />
@@ -80,6 +77,7 @@ export default function App() {
           <Route path="/assistance" element={<Assistance />} />
         </Routes>
       </div>
+      <HelpAndSupportIcon />
       <Footer />
     </ThemeProvider>
   );

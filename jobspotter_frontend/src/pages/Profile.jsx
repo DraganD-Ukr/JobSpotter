@@ -41,18 +41,116 @@ export default function Profile() {
   const { darkMode } = useContext(ThemeContext);
   const navigate = useNavigate();
 
+
+  const [showUploadPanel, setShowUploadPanel] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFilePreview, setSelectedFilePreview] = useState("");
+  const [profileImageVersion, setProfileImageVersion] = useState(Date.now());
+
+  // Toggle the upload panel
+  const toggleUploadPanel = () => {
+    if (showUploadPanel) {
+      setSelectedFile(null);
+      setSelectedFilePreview("");
+    }
+    setShowUploadPanel(!showUploadPanel);
+  };
+
+  // Convert file to Base64 for local preview
+  const handleFileChange = (file) => {
+    if (!file) {
+      setSelectedFile(null);
+      setSelectedFilePreview("");
+      return;
+    }
+    setSelectedFile(file);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setSelectedFilePreview(e.target.result); 
+    };
+    reader.readAsDataURL(file);
+  };
+
+  //Send multipart/form-data instead of JSON
+  const handleConfirmUpload = async () => {
+    try {
+      if (!selectedFile) {
+        alert("Please select an image before uploading.");
+        return;
+      }
+      // Create a FormData object and append the raw file
+      const formData = new FormData();
+      formData.append("profileImage", selectedFile);
+
+      const res = await fetch("/api/v1/users/me/profile-image", {
+        method: "PUT",
+        credentials: "include",
+        body: formData, // Let fetch auto-set the Content-Type
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to update profile image. Status: ${res.status}`);
+      }
+
+      alert("Profile image updated successfully.");
+      setProfileImageVersion(Date.now());
+      setSelectedFile(null);
+      setSelectedFilePreview("");
+      setShowUploadPanel(false);
+      fetchUserData();
+    } catch (error) {
+      console.error("Error updating profile image:", error);
+      alert("Error updating profile image: " + error.message);
+    }
+  };
+
+  // DELETE to remove the existing profile image
+  const handleDeleteProfileImage = async () => {
+    try {
+      const res = await fetch("/api/v1/users/me/profile-image", {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to delete profile image. Status: ${res.status}`);
+      }
+
+      alert("Profile image deleted successfully.");
+      setProfileImageVersion(Date.now());
+      setSelectedFile(null);
+      setSelectedFilePreview("");
+      fetchUserData();
+    } catch (error) {
+      console.error("Error deleting profile image:", error);
+      alert("Error deleting profile image: " + error.message);
+    }
+  };
+
+  // handle drag & drop events
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileChange(e.dataTransfer.files[0]);
+    }
+  };
+
   // Fetch user info & addresses on mount
   useEffect(() => {
     fetchUserData();
     fetchUserAddresses();
   }, []);
 
-  // Recalculate completeness whenever user or addresses change
+  // Recompute completeness whenever user or addresses change
   useEffect(() => {
     setProfileCompleteness(calculateCompleteness());
   }, [user, addresses]);
 
-  // Check if textual form data is edited
+  // Track if textual form data is edited
   useEffect(() => {
     if (!originalData) return;
     setIsEdited(checkEdited(formData));
@@ -78,7 +176,7 @@ export default function Profile() {
     }
   };
 
-  // 2) Fetch addresses (read-only for completeness)
+  // 2) Fetch addresses
   const fetchUserAddresses = async () => {
     try {
       const res = await fetch("/api/v1/users/addresses", {
@@ -99,24 +197,18 @@ export default function Profile() {
   // 3) Calculate completeness:
   function calculateCompleteness() {
     if (!user) return 0;
-    const total = 6; // (firstName, lastName, email, phoneNumber, about, addresses)
+    const total = 6; // firstName, lastName, email, phoneNumber, about, addresses
     let filled = 0;
-
     if (user.firstName?.trim()) filled++;
     if (user.lastName?.trim()) filled++;
     if (user.email?.trim()) filled++;
     if (user.phoneNumber?.trim()) filled++;
     if (user.about?.trim()) filled++;
-
-    // Check if user has at least 1 address
-    if (addresses.length > 0) {
-      filled++;
-    }
-
+    if (addresses.length > 0) filled++;
     return Math.round((filled / total) * 100);
   }
 
-  // Missing items for textual fields + addresses
+  // Which fields are missing
   function getMissingItems() {
     if (!user) return [];
     const missing = [];
@@ -141,12 +233,13 @@ export default function Profile() {
     );
   }
 
-  // Handle input changes for the 5 textual fields
+  // Handle changes to the textual fields
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Reset form
   const resetForm = () => {
     if (!originalData) return;
     setFormData(getDefaultFormData(originalData));
@@ -158,7 +251,7 @@ export default function Profile() {
     setEditing(false);
   };
 
-  // Save changes for the 5 textual fields
+  // Save changes for textual fields
   const handleSave = async () => {
     if (!originalData) return;
 
@@ -203,7 +296,7 @@ export default function Profile() {
     }
   };
 
-  // If complete show "Proceed" button
+  // If complete, show "Proceed" button
   const handleDismissProgressBar = () => {
     setShowProgressBar(false);
     navigate("/searchjobpost");
@@ -240,7 +333,7 @@ export default function Profile() {
     </div>
   );
 
-  // For dark mode, use container classes normally
+  // Handle dark mode styling
   const containerClasses = darkMode
     ? "bg-gray-900 text-white"
     : "bg-gray-100 text-black";
@@ -252,10 +345,10 @@ export default function Profile() {
         <div className="w-4/5 p-4 ml-4 mr-30">
           {/* Banner */}
           <div
-            className={`relative w-full h-48 md:h-52 lg:h-56 flex items-center ${editing ? "border border-white border-dashed" : ""}`}
-            style={{
-              background: bannerColor,
-            }}
+            className={`relative w-full h-48 md:h-52 lg:h-56 flex items-center ${
+              editing ? "border border-white border-dashed" : ""
+            }`}
+            style={{ background: bannerColor }}
           >
             {editing && (
               <div className="absolute top-4 right-4 flex items-center space-x-2 text-white">
@@ -277,8 +370,9 @@ export default function Profile() {
           <div className="relative px-4 -mt-28 flex items-end">
             <div className="relative w-24 h-24">
               <div className="absolute inset-0 rounded-full p-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
+                {/* Pass profileImageVersion as key to force reload of image */}
                 <div className="w-full h-full rounded-full bg-white dark:bg-gray-900 p-1">
-                  <MyProfilePicture userId={user.userId} darkMode={darkMode} />
+                  <MyProfilePicture userId={user.userId} darkMode={darkMode} key={profileImageVersion} />
                 </div>
               </div>
             </div>
@@ -292,9 +386,87 @@ export default function Profile() {
             </div>
           </div>
 
+          {/* Profile Image Upload/Delete Section */}
+          <div className={`mt-4 mb-8 p-4 rounded shadow ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+            <div className="flex items-center gap-4">
+              {/* Upload" & "Delete buttons outside the panel */}
+              <button
+                onClick={toggleUploadPanel}
+                className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+              >
+                {showUploadPanel ? "Cancel" : "Upload"}
+              </button>
+              <button
+                onClick={handleDeleteProfileImage}
+                className="px-4 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
+
+            {/* Concealed upload panel appears only after clicking "Upload" */}
+            {showUploadPanel && (
+              <div
+                className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded relative"
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              >
+                <div className="text-sm mb-2 text-gray-700 dark:text-gray-200">
+                  Drag and drop an image file here or click the box below.
+                </div>
+
+                {/* The "drop zone" or clickable area */}
+                <label
+                  htmlFor="fileInput"
+                  className="flex flex-col items-center justify-center 
+                             border-2 border-dashed border-gray-400 dark:border-gray-500 
+                             rounded p-4 cursor-pointer hover:bg-gray-200 
+                             dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 
+                             transition"
+                >
+                  {selectedFilePreview ? (
+                    <img
+                      src={selectedFilePreview}
+                      alt="Preview"
+                      className="max-h-32 object-contain"
+                    />
+                  ) : (
+                    <span className="text-center text-xs md:text-sm">
+                      Click to select a file
+                    </span>
+                  )}
+                  <input
+                    id="fileInput"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) handleFileChange(file);
+                    }}
+                  />
+                </label>
+
+                {/* Confirmation Button */}
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={handleConfirmUpload}
+                    disabled={!selectedFile}
+                    className={`px-4 py-2 rounded text-white text-sm ${
+                      selectedFile
+                        ? "bg-green-600 hover:bg-green-700"
+                        : "bg-gray-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Confirm Upload
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Progress Bar */}
-          <div className="flex flex-col items-start mb-8 mt-6">
-            <h2 className="text-2xl font-bold text-center mb-4">My Profile</h2>
+          <div className="flex flex-col items-start mb-8">
             {showProgressBar && (
               <div className="mt-2 w-full space-y-1">
                 <div className="flex items-center gap-2">
@@ -318,7 +490,9 @@ export default function Profile() {
                 </div>
                 <p className="text-sm">Profile completion: {profileCompleteness}%</p>
                 {profileCompleteness < 100 && missingItems.length > 0 && (
-                  <p className="text-xs text-red-500">Missing: {missingItems.join(", ")}</p>
+                  <p className="text-xs text-red-500">
+                    Missing: {missingItems.join(", ")}
+                  </p>
                 )}
               </div>
             )}
@@ -326,9 +500,7 @@ export default function Profile() {
 
           {/* My Information Section */}
           <div
-            className={`border border-gray-300 hover:shadow-md hover:border-green-500 transition rounded-lg p-6 ${
-              darkMode ? "bg-transparent" : "bg-white"
-            }`}
+            className={`border border-gray-300 hover:shadow-md hover:border-green-500 transition rounded-lg p-6 ${darkMode ? "bg-transparent" : "bg-white"}`}
           >
             <h2 className="font-semibold text-lg mb-4">My Information</h2>
             {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
@@ -360,7 +532,9 @@ export default function Profile() {
                     onClick={handleSave}
                     disabled={!isEdited}
                     className={`px-6 py-2 rounded text-white ${
-                      isEdited ? "bg-green-500 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"
+                      isEdited
+                        ? "bg-green-500 hover:bg-green-600"
+                        : "bg-gray-400 cursor-not-allowed"
                     }`}
                   >
                     Save Changes
