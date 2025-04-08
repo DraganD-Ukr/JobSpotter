@@ -201,7 +201,7 @@ public class JobPostImpl implements JobPostService {
      * Returns a paginated list of job posts created by the user with response optimised for large lists
      * Details can then be fetched on with another method using the given jobPostId
      *
-     * @param userId The user ID of the job poster
+     * @param accessToken The access token of the user
      * @param title  The title of the job post
      * @param tags  The tags associated with the job post
      * @param status The status of the job post
@@ -210,9 +210,14 @@ public class JobPostImpl implements JobPostService {
      * @return Page of MyJobPostSearchResponse
      */
     @Override
-    public Page<MyJobPostSearchResponse> searchMyJobPosts(UUID userId, String title, String tags, String status, int pageNumber, int pageSize) {
+    public Page<MyJobPostSearchResponse> searchMyJobPosts(String accessToken, String title, String tags, String status, int pageNumber, int pageSize) throws Exception {
         //TODO: Sort By and Sort Direction
         //TODO: Trim Discription For better request performance
+
+
+        // Get the user ID from the access token
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
 
         // Check if the Page number and size are valid
         checkIfPageNumberAndSizeAreValid(pageNumber, pageSize);
@@ -248,7 +253,11 @@ public class JobPostImpl implements JobPostService {
     //This Function returns Job post based on job p[ost worked on response DTO which incudes job post details and applicant details from
     //applicant model
     @Override
-    public Page<JobPostsUserWorkedOnSearchResponse> searchJobsUserWorkedOn(UUID userId, String title, String status, String sortBy, String sortDirection, int page, int size) {
+    public Page<JobPostsUserWorkedOnSearchResponse> searchJobsUserWorkedOn(String accessToken, String title, String status, String sortBy, String sortDirection, int page, int size) throws Exception {
+
+        // Get the user ID from the access token
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
 
         // Check if the Page number and size are valid
         checkIfPageNumberAndSizeAreValid(page, size);
@@ -449,7 +458,7 @@ public class JobPostImpl implements JobPostService {
     }
 
     @Override
-    public HttpStatus applyToJobPost(UUID userId, Long jobPostId, JobPostApplyRequest jobPostApplyRequest) {
+    public void applyToJobPost(UUID userId, Long jobPostId, JobPostApplyRequest jobPostApplyRequest) {
 
         // Find the job post
         JobPost jobPost = getJobPostByID(jobPostId);
@@ -506,14 +515,14 @@ public class JobPostImpl implements JobPostService {
                 .createdAt(LocalDateTime.now())
                 .build(), KafkaTopic.APPLICANT_APPLIED);
 
-        return HttpStatus.CREATED;
+        log.info("User applied to job post successfully");
     }
 
 
 
     @Transactional
     @Override
-    public JobPost takeApplicantsAction(UUID userId, Long jobPostId, List<ApplicantActionRequest> applicantsActionRequest) {
+    public void takeApplicantsAction(UUID userId, Long jobPostId, List<ApplicantActionRequest> applicantsActionRequest) {
 
 //        TODO: Refactor for readability and efficiency
 
@@ -600,7 +609,6 @@ public class JobPostImpl implements JobPostService {
         jobPostRepository.save(jobPost);
 
         log.info("All applicant actions processed successfully.");
-        return jobPost; // Optionally return the updated job post
     }
 
 
@@ -681,7 +689,7 @@ public class JobPostImpl implements JobPostService {
 
     @Transactional
     @Override
-    public HttpStatus startJobPost(UUID userId, Long jobPostId) {
+    public void startJobPost(UUID userId, Long jobPostId) {
 //        Get the job post from the database
         JobPost jobPost = getJobPostByID(jobPostId);
 
@@ -742,12 +750,11 @@ public class JobPostImpl implements JobPostService {
                 );
 
         log.info("Job post started successfully");
-        return HttpStatus.NO_CONTENT;
     }
 
     @Transactional
     @Override
-    public HttpStatus cancelJobPost(String accessToken, Long jobPostId) throws Exception {
+    public void cancelJobPost(String accessToken, Long jobPostId) throws Exception {
 
 //      Get the job post from the database
         JobPost jobPost = getJobPostByID(jobPostId);
@@ -781,13 +788,12 @@ public class JobPostImpl implements JobPostService {
                 .build(), KafkaTopic.JOB_POST_CANCEL);
 
         log.info("Job post cancelled successfully");
-        return HttpStatus.NO_CONTENT;
     }
 
 
 
     @Override
-    public HttpStatus finishJobPost(UUID userId, Long jobPostId) {
+    public void finishJobPost(UUID userId, Long jobPostId) {
 
         JobPost jobPost = getJobPostByID(jobPostId);
 
@@ -819,7 +825,7 @@ public class JobPostImpl implements JobPostService {
                 .build(), KafkaTopic.JOB_POST_FINISH)
         );
 
-        return HttpStatus.NO_CONTENT;
+        log.info("Job post finished successfully");
     }
 
     @Override
@@ -929,6 +935,8 @@ public class JobPostImpl implements JobPostService {
             throw new UnauthorizedException("You are not authorized to take actions.");
         }
     }
+
+
 
     private static void checkJobPostStatus(JobPost jobPost, JobStatus jobStatus) {
         if (jobPost.getStatus() != jobStatus) {

@@ -198,9 +198,8 @@ public class JobPostController {
             @RequestParam(defaultValue = "10") int size
     ) throws Exception {
         log.info("Getting my job posts");
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
-        return ResponseEntity.ok(jobPostService.searchMyJobPosts(userId, title, tags, status, pageNumber, size));
+        return ResponseEntity.ok(jobPostService.searchMyJobPosts(accessToken, title, tags, status, pageNumber, size));
     }
 
 
@@ -222,7 +221,7 @@ public class JobPostController {
         log.info("Getting my worked jobs");
         UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
-        return ResponseEntity.ok(jobPostService.searchJobsUserWorkedOn(userId, title, status, sortBy, sortDirection, page, size));
+        return ResponseEntity.ok(jobPostService.searchJobsUserWorkedOn(accessToken, title, status, sortBy, sortDirection, page, size));
     }
 
     //-----------------------------------------------------------------------------------------------------------------
