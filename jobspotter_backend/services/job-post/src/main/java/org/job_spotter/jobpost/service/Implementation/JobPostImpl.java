@@ -99,6 +99,7 @@ public class JobPostImpl implements JobPostService {
      */
 
     @Override
+    @Cacheable(value = "myJobPostCache", key = "T(org.job_spotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     public MyJobPostDetailedResponse getMyJobPostDetails(String accessToken, Long jobPostId) throws Exception {
 
         // Fetch the job post from the repository
