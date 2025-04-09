@@ -10,7 +10,7 @@ spring:
             keyResolver: "#{@ipKeyResolver}" # Uses IP address as key (overriden bean in Gateway)
             redis-rate-limiter:
               replenish-rate: 10 # Requests allowed per second
-              burst-capacity: 20 # Max requests allowed in a burst (rate limiter will kick in after this)
+              burst-capacity: 15 # Max requests allowed in a burst (rate limiter will kick in after this)
               requestedTokens: 1 # Number of tokens to be consumed per request
               redis:
                 timeWindow: 5 # Cooldown time in seconds
