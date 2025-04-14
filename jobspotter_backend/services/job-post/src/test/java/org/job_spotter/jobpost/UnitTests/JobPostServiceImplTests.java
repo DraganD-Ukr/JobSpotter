@@ -26,12 +26,15 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,10 +48,13 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mockStatic;
 
 /**
- * Unit tests for {@link JobPostImpl#getJobPostById(Long)} method.
+ * Unit tests for  method.
  */
 @ExtendWith(MockitoExtension.class)
 public class JobPostServiceImplTests {
+
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Mock
     private JWTUtils jwtUtils;
@@ -89,14 +95,29 @@ public class JobPostServiceImplTests {
      * </p>
      */
     @Test
-    void getDetailedJobPostById_Success() {
-
+    void getDetailedJobPostById_Success() throws Exception {
+        String accessToken = "dummyToken"; // Mocked token
         JobPost expectedJobPost = getDummyJobPost();
 
         when(jobPostRepository.findById(1L)).thenReturn(Optional.of(expectedJobPost));
+        when(jwtUtils.hasAdminRole(accessToken)).thenReturn(false);
 
-        JobPostDetailedResponse respondedJobPost = jobPostImpl.getJobPostById(1L);
+        ValueOperations<String, Object> valueOperations = mock(ValueOperations.class);
+        ZSetOperations<String, Object> zSetOperations = mock(ZSetOperations.class);
 
+        when(redisTemplate.hasKey(anyString())).thenReturn(false); // Simulate key doesn't exist yet
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);
+
+        // Mock void method correctly
+        doNothing().when(valueOperations).set(anyString(), any(), any(Duration.class));
+
+        // incrementScore returns Double so normal mocking is fine
+        when(zSetOperations.incrementScore(anyString(), any(), anyDouble())).thenReturn(1.0);
+
+
+
+        JobPostDetailedResponse respondedJobPost = jobPostImpl.getJobPostById(accessToken, 1L , "127.0.0.1"); // example IP
 
         assertAll("Verify JobPostDetailedResponse",
                 () -> assertEquals(expectedJobPost.getJobPostId(), respondedJobPost.getJobPostId()),
@@ -128,6 +149,7 @@ public class JobPostServiceImplTests {
     }
 
 
+
     /**
      * Testing for a job post not found scenario.
      * <p>
@@ -136,16 +158,20 @@ public class JobPostServiceImplTests {
      * </p>
      */
     @Test
-    void getDetailedJobPostById_JobPostNotFound() {
+    void getDetailedJobPostById_JobPostNotFound() throws Exception {
+        String accessToken = "dummyToken";
         Long nonExistingId = 2L;
+
         when(jobPostRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> jobPostImpl.getJobPostById(nonExistingId));
+                () -> jobPostImpl.getJobPostById(accessToken, nonExistingId, "0"));
+
         assertTrue(exception.getMessage().contains("Job post not found with id " + nonExistingId));
 
         verify(jobPostRepository).findById(nonExistingId);
     }
+
 
 
     // Test Methods for getMyJobPostDetails
@@ -162,22 +188,22 @@ public class JobPostServiceImplTests {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     void getMyJobPostDetails_Success(boolean isAdmin) throws Exception {
-        // Arrange: Create a dummy job post.
         String accessToken = "dummyToken";
 
         JobPost testJobPost = getDummyJobPostWithApplicant();
 
-        // Stub repository to return our dummy job post.
         when(jobPostRepository.findById(1L)).thenReturn(Optional.of(testJobPost));
 
-        try(MockedStatic<JWTUtils> jwtUtilsMockedStatic = mockStatic(JWTUtils.class)){
 
+        try (MockedStatic<JWTUtils> jwtUtilsMockedStatic = mockStatic(JWTUtils.class)) {
+            // Mock static getUserIdFromToken
             adminJobPosterTestToggle(isAdmin, testJobPost, jwtUtilsMockedStatic, accessToken);
 
-            // Act: Call the method.
+            // Also mock jwtUtils.hasAdminRole here (non-static method)
+            when(jwtUtils.hasAdminRole(accessToken)).thenReturn(isAdmin);
+
             var responseJobPost = jobPostImpl.getMyJobPostDetails(accessToken, 1L);
 
-            // Assert: Group assertions to verify the responseJobPost.
             assertAll("Verify MyJobPostDetailedResponse",
                     () -> assertEquals(testJobPost.getJobPostId(), responseJobPost.getJobPostId()),
                     () -> assertEquals(testJobPost.getJobPosterId(), responseJobPost.getJobPosterId()),
@@ -191,14 +217,13 @@ public class JobPostServiceImplTests {
                     () -> assertEquals(testJobPost.getLastUpdatedAt(), responseJobPost.getLastUpdatedAt()),
                     () -> assertEquals(testJobPost.getMaxApplicants(), responseJobPost.getMaxApplicants()),
                     () -> assertEquals(testJobPost.getStatus(), responseJobPost.getStatus()),
-                    // Verify that the applicant is mapped correctly.
                     () -> assertEquals(1, responseJobPost.getApplicants().size())
             );
 
             verify(jobPostRepository).findById(1L);
         }
-
     }
+
 
 
 
@@ -1058,7 +1083,7 @@ public class JobPostServiceImplTests {
                 .message("Old message")
                 .build();
 
-        Set<Applicant> applicants = new HashSet<>(Set.of(applicant));
+        Set<Applicant> applicants = new HashSet<>(Collections.singletonList(applicant));
 
         JobPost jobPost = JobPost.builder()
                 .jobPostId(jobPostId)
@@ -1069,17 +1094,22 @@ public class JobPostServiceImplTests {
                 .build();
 
         when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
-        when(jwtUtils.hasAdminRole(accessToken)).thenReturn(true); // Make user admin to skip applicant check
+        when(jwtUtils.hasAdminRole(accessToken)).thenReturn(true); // Make user admin to skip user check
 
-        // Act
-        jobPostImpl.updateApplicantMessage(accessToken, jobPostId, applicantId, newMessage);
+        try (MockedStatic<JWTUtils> jwtUtilsMockedStatic = mockStatic(JWTUtils.class)) {
+            jwtUtilsMockedStatic.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(applicantUserId);
 
-        // Assert
-        assertEquals(newMessage, applicant.getMessage());
+            // Act
+            jobPostImpl.updateApplicantMessage(accessToken, jobPostId, applicantId, newMessage);
 
-        verify(applicantRepository).save(applicant);
-        verify(jobPostRepository).findById(jobPostId);
+            // Assert
+            assertEquals(newMessage, applicant.getMessage());
+
+            verify(applicantRepository).save(applicant);
+            verify(jobPostRepository).findById(jobPostId);
+        }
     }
+
 
     //Delete Applicant
     //==================================================================================================================
@@ -1127,7 +1157,7 @@ public class JobPostServiceImplTests {
      * Testing for a successful deletion of an applicant when the job post is not open.
      * <p>
      * Given a valid job post and applicant exist in the repository but the job post is not open,
-     * when deleteApplicant is called then a nvalidApplicant_ThrowsResourceNotFoundException( is thrown.
+     * when deleteApplicant is called then a invalidApplicant_ThrowsResourceNotFoundException is thrown.
      * </p>
      */
     //Applicant Not Found
@@ -1296,7 +1326,7 @@ public class JobPostServiceImplTests {
         UUID jobPosterId = UUID.randomUUID();
         Long jobPostId = 1L;
 
-        Set<Applicant> applicants = new HashSet<>(Set.of(
+        Set<Applicant> applicants = new HashSet<>(Arrays.asList(
                 Applicant.builder().applicantId(100L).status(ApplicantStatus.PENDING).build(),
                 Applicant.builder().applicantId(101L).status(ApplicantStatus.ACCEPTED).build()
         ));
