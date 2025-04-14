@@ -11,9 +11,11 @@ import java.util.UUID;
 public interface JobPostService {
 
     //Job Post View Queries
-    JobPostDetailedResponse getJobPostById(Long jobPostId);
+    JobPostDetailedResponse getJobPostById(String accessToken, Long jobPostId, String ipAddress) throws Exception;
 
     MyJobPostDetailedResponse getMyJobPostDetails(String accessToken, Long jobPostId) throws Exception;
+
+    List<JobPostTop10> getTop10JobPosts();
 
     //Job Post Search Queries
     Page<JobPostSearchResponse> searchJobPosts(String title, String tags, Double latitude, Double longitude, Double radius, int pageNumber, int pageSize);

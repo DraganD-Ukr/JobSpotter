@@ -25,10 +25,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -44,6 +47,9 @@ public class JobPostImpl implements JobPostService {
     private final ApplicantRepository applicantRepository;
     private final JobPostSpecificationRepository jobPostSpecificationRepository;
     private final NotificationService notificationService;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private static final String TOP_JOB_POSTS_KEY = "top10:jobposts";
 
     //----------------------------------------------------------------------------------------------------------------
     //                                     Job Post Get View Queries implementation
@@ -52,16 +58,20 @@ public class JobPostImpl implements JobPostService {
     /**
      * Get a job post by its ID
      *
-     * @param jobPostId The ID of the job post
+     * @param accessToken The ID of the job post
+     * @param jobPostId   The ID of the job post
      * @return The job post with the given ID
      */
     @Override
     @Cacheable(value = "jobPostCache", key = "#jobPostId")
-    public JobPostDetailedResponse getJobPostById(Long jobPostId) {
+    public JobPostDetailedResponse getJobPostById(String accessToken, Long jobPostId, String ipAddress) throws Exception {
 
-//        Fetch the job post from the repository
         JobPost jobPost = getJobPostByID(jobPostId);
 
+        // Check if the user is an admin if not, than increment the daily job post view
+        if(!jwtUtils.hasAdminRole(accessToken)) {
+            incrementDailyJobPostView(accessToken,jobPostId, ipAddress);
+        }
 
 //        Create the JobPostResponse object
         return JobPostDetailedResponse.builder()
@@ -130,6 +140,52 @@ public class JobPostImpl implements JobPostService {
                 .maxApplicants(jobPost.getMaxApplicants())
                 .status(jobPost.getStatus())
                 .build();
+    }
+
+    /**
+     * Get the top 10 job posts based on the number of applicants
+     * Uses Redis to store the top 10 job posts
+     *
+     * @return A list of the top 10 job posts
+     */
+    @Override
+    public List<JobPostTop10> getTop10JobPosts() {
+        Set<Object> topJobPostIds = redisTemplate.opsForZSet()
+                .reverseRange(TOP_JOB_POSTS_KEY, 0, 9); // Top 10 highest scores
+
+        if (topJobPostIds == null || topJobPostIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> jobPostIds = topJobPostIds.stream()
+                .filter(Objects::nonNull)
+                .map(id -> Long.parseLong(id.toString()))
+                .toList();
+
+        List<JobPost> jobPosts = jobPostRepository.findAllById(jobPostIds);
+
+        return jobPosts.stream()
+                .map(jobPost -> {
+                    Double viewCountDouble = redisTemplate.opsForZSet()
+                            .score(TOP_JOB_POSTS_KEY, jobPost.getJobPostId());
+                    Long viewCount = (viewCountDouble != null) ? viewCountDouble.longValue() : 0L;
+
+                    return JobPostTop10.builder()
+                            .jobPostId(jobPost.getJobPostId())
+                            .title(jobPost.getTitle())
+                            .tags(jobPost.getTags())
+                            .description(jobPost.getDescription())
+                            .address(jobPost.getAddress())
+                            .longitude(jobPost.getLongitude())
+                            .latitude(jobPost.getLatitude())
+                            .applicantsCount(jobPost.getApplicants().size())
+                            .maxApplicants(jobPost.getMaxApplicants())
+                            .datePosted(jobPost.getDatePosted().toString())
+                            .lastUpdatedAt(jobPost.getLastUpdatedAt().toString())
+                            .viewCount(viewCount) // <-- Add view count here
+                            .build();
+                })
+                .toList();
     }
 
     //----------------------------------------------------------------------------------------------------------------
@@ -883,6 +939,43 @@ public class JobPostImpl implements JobPostService {
 //----------------------------------------------------------------------------------------------------------------
 //                                              Helper methods
 //----------------------------------------------------------------------------------------------------------------
+
+//Cache Methods
+//----------------------------------------------------------------------------------------------------------------
+private void incrementDailyJobPostView(String accessTocken,Long jobPostId, String ipAddress) {
+    if (ipAddress == null || ipAddress.isEmpty()) {
+        return; // No IP? Don't proceed.
+    }
+
+    String viewKey;
+
+    try {
+        UUID userId = JWTUtils.getUserIdFromToken(accessTocken); // Try to get the logged-in user ID
+        if (userId != null) {
+            viewKey = "viewed:user:" + userId + ":job:" + jobPostId;
+        } else {
+            viewKey = "viewed:ip:" + ipAddress + ":job:" + jobPostId;
+        }
+    } catch (Exception e) {
+        // No user (anonymous), fallback to IP
+        viewKey = "viewed:ip:" + ipAddress + ":job:" + jobPostId;
+    }
+
+    Boolean hasViewed = redisTemplate.hasKey(viewKey);
+
+    if (Boolean.FALSE.equals(hasViewed)) {
+        // First view today
+        redisTemplate.opsForValue().set(viewKey, "1", Duration.ofHours(24));
+        redisTemplate.opsForZSet().incrementScore(TOP_JOB_POSTS_KEY, jobPostId, 1);
+    } else {
+        log.info("View already recorded today for key: {}", viewKey);
+    }
+}
+
+@Scheduled(cron = "0 0 0 * * *")
+public void resetTopViews() {
+    redisTemplate.delete(TOP_JOB_POSTS_KEY);
+}
 
 
 // Validation Methods
