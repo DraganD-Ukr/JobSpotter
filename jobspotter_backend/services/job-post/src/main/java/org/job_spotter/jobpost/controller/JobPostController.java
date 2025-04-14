@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +15,9 @@ import org.job_spotter.jobpost.dto.*;
 import org.job_spotter.jobpost.exception.InvalidRequestException;
 import org.job_spotter.jobpost.model.Applicant;
 import org.job_spotter.jobpost.model.JobStatus;
-import org.job_spotter.jobpost.model.JobTagEnum;
 import org.job_spotter.jobpost.service.JobPostService;
 import org.job_spotter.jobpost.service.SearchTitleSuggestionService;
+import org.job_spotter.jobpost.service.TagService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,7 @@ public class JobPostController {
 
     private final JobPostService jobPostService;
     private final SearchTitleSuggestionService searchTitleSuggestionService;
+    private final TagService tagService;
 
     //-----------------------------------------------------------------------------------------------------------------
     //                                           Job Post Viewing Endpoints
@@ -53,7 +55,23 @@ public class JobPostController {
     })
     @GetMapping("/tags")
     public ResponseEntity<Map<String, String>> getAllJobTags() {
-        return ResponseEntity.ok(JobTagEnum.getAllEnumValues());
+        return ResponseEntity.ok(tagService.getJobTags());
+    }
+
+    //Get top 10 job posts
+    @Operation(
+            summary = "Get top 10 job posts",
+            description = "Returns a list of the top 10 job posts."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved top 10 job posts",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = List.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+    })
+    @GetMapping("/top-10")
+    public ResponseEntity<List<JobPostTop10>> getTop10JobPosts() {
+        return ResponseEntity.ok(jobPostService.getTop10JobPosts());
     }
 
 
@@ -64,6 +82,8 @@ public class JobPostController {
                     + "This method returns detailed job post information."
                     + "This method is used by applicants to view job post details."
                     + "Therefore does not contain information about other applicants."
+                    + "This method calculates the the ammount of views incured for a particular job post."
+                    + "If no authorization token is provided, the virtual view is calculated based on IP address."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully got job post by id",
@@ -81,11 +101,15 @@ public class JobPostController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<JobPostDetailedResponse> getJobPostDetails(
-            @PathVariable Long id
-    ) {
+            @PathVariable Long id,
+            HttpServletRequest request,
+            @RequestHeader(value = "Authorization", required = false) String accessToken
+    ) throws Exception {
         log.info("Getting job post by id: {}", id);
 
-        return ResponseEntity.ok(jobPostService.getJobPostById(id));
+        String ipAddress = getClientIp(request);
+
+        return ResponseEntity.ok(jobPostService.getJobPostById(accessToken,id, ipAddress));
     }
 
 
@@ -768,6 +792,15 @@ public class JobPostController {
     @GetMapping("applicants/count")
     public ResponseEntity<Integer> getTotalApplicantsCount() {
         return ResponseEntity.ok(jobPostService.getTotalApplicantsCount());
+    }
+
+    //Helper method to get client IP address
+    private String getClientIp(HttpServletRequest request) {
+        String ipAddress = request.getHeader("X-Forwarded-For");
+        if (ipAddress == null || ipAddress.isEmpty()) {
+            ipAddress = request.getRemoteAddr();
+        }
+        return ipAddress;
     }
 
 }
