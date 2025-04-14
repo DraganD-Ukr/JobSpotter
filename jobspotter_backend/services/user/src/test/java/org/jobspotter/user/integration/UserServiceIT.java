@@ -1,6 +1,7 @@
 package org.jobspotter.user.integration;
 
 import com.redis.testcontainers.RedisContainer;
+import dasniko.testcontainers.keycloak.KeycloakContainer;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import lombok.extern.slf4j.Slf4j;
@@ -51,8 +52,7 @@ public class UserServiceIT {
     private RedisTemplate<String, String> redisTemplate;
 
     @Container
-    private static final RedisContainer redis = new RedisContainer(DockerImageName.parse("redis:7.0.11-alpine"))
-            .withExposedPorts(6379)
+    private static final RedisContainer redis = new RedisContainer(DockerImageName.parse("redis/redis-stack:latest"))
             .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(Logger.class)))
             .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*\\n", 1));
 
@@ -63,11 +63,17 @@ public class UserServiceIT {
             .withPassword("testpass");
 
 
+    @Container
+    private static final KeycloakContainer keycloak = new KeycloakContainer()
+            .withRealmImportFile(Paths.get("realm-export.json").toString())
+            .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(Logger.class)));
+
 
     @DynamicPropertySource
     static void configureTestDatabase(DynamicPropertyRegistry registry) {
         postgres.start();
         redis.start();
+        keycloak.start();
 
 
 
@@ -77,11 +83,11 @@ public class UserServiceIT {
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
 
-        String redisPort = String.valueOf(redis.getMappedPort(6379));
+        String redisPort = String.valueOf(redis.getFirstMappedPort());
         String redisHost = redis.getHost();
 
         registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port",  () -> redis.getMappedPort(6379) );
+        registry.add("spring.data.redis.port", redis::getFirstMappedPort);
         log.info("DynamicPropertySource - spring.data.redis.host set to: {}", redisHost);
         log.info("DynamicPropertySource - spring.data.redis.port set to: {}", redisPort);
 
@@ -92,9 +98,10 @@ public class UserServiceIT {
         registry.add("aws.s3.bucket", () -> System.getenv("AWS_S3_BUCKET"));
 
 //        Add keycloak properties from environment variables
-        registry.add("keycloak.admin.client-id", () -> System.getenv("KEYCLOAK_ADMIN_CLIENT_ID"));
-        registry.add("keycloak.admin.username", () -> System.getenv("KEYCLOAK_ADMIN_USERNAME"));
-        registry.add("keycloak.admin.password", () -> System.getenv("KEYCLOAK_ADMIN_PASSWORD"));
+        registry.add("keycloak.admin.client-id", () -> "JobSpotter-API");
+        registry.add("keycloak.host-url", () -> "http://localhost:" + keycloak.getFirstMappedPort());
+        registry.add("keycloak.admin.username", keycloak::getAdminUsername);
+        registry.add("keycloak.admin.password", keycloak::getAdminPassword);
 
 
         // Disable Config Server
@@ -103,11 +110,14 @@ public class UserServiceIT {
     }
 
 
+
     @BeforeEach
     void setUpBeforeEach() {
         baseUrl = "http://localhost:" + port + "/api/v1/users";
     }
 
+
+//    -------------------------------------------Keycloak Admin User Setup--------------------------------------------------
 
 
 
@@ -139,7 +149,7 @@ public class UserServiceIT {
 //        The keycloak instance used for testing should have an admin user with the following credentials
 //        Alternatively, later, keycloak instance can be spun up using docker-compose and the admin user can be created
         UserLoginRequest loginRequest = new UserLoginRequest(
-                "admin1", "Admin@123"
+                "administrator_1", "Password123"
         );
 
         adminAccessToken = given()
@@ -159,6 +169,11 @@ public class UserServiceIT {
     @Test
     @Order(1)
     void shouldRegisterUserSuccessfully() {
+
+        log.info(keycloak.getAdminUsername());
+        log.info(keycloak.getAdminPassword());
+
+
         UserRegisterRequest request = new UserRegisterRequest(
                 "john_doe",
                 "John",
@@ -664,6 +679,7 @@ public class UserServiceIT {
                 .eirCode("G02 Y5X6")
                 .county(County.Galway)
                 .isDefault(false)
+                .addressType(AddressType.WORK)
                 .build();
 
         given()
@@ -671,11 +687,10 @@ public class UserServiceIT {
                 .pathParam("addressId", addressId)
                 .contentType(ContentType.JSON)
                 .body(updatedAddress)
-                .when()
-                .patch(baseUrl + "/addresses/{addressId}")
+                        .patch(baseUrl + "/addresses/{addressId}")
                 .then()
                 .log().body()
-                .statusCode(HttpStatus.NO_CONTENT.value());
+                .statusCode(HttpStatus.OK.value());
 
 
         given()
@@ -690,19 +705,32 @@ public class UserServiceIT {
                 .body("city", equalTo(updatedAddress.getCity()))
                 .body("eirCode", equalTo(updatedAddress.getEirCode()))
                 .body("county", equalTo(updatedAddress.getCounty().toString()))
-                .body("addressType", equalTo(addressRequest.getAddressType().toString()))
+                .body("addressType", equalTo(updatedAddress.getAddressType().toString()))
                 .body("default", equalTo(updatedAddress.isDefault()));
     }
 
     @Test
     @Order(25)
-    void shouldUpdateUserAddressWithoutChangesSuccessfully() {
+    void shouldUpdateUserAddressWithoutChangesSuccess() {
+
+
+        AddressResponse currAdr = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .pathParam("addressId", addressId)
+                .contentType(ContentType.JSON)
+                .when()
+                .get(baseUrl + "/addresses/{addressId}")
+                .then()
+                .log().body()
+                .statusCode(HttpStatus.OK.value())
+                .extract().as(AddressResponse.class);
+
 
         AddressPatchRequest updatedAddress = AddressPatchRequest.builder()
-                .streetAddress("New Street")
-                .city("Galway")
-                .eirCode("G02 Y5X6")
-                .county(County.Galway)
+                .streetAddress(currAdr.getStreetAddress())
+                .city(currAdr.getCity())
+                .eirCode(currAdr.getEirCode())
+                .county(currAdr.getCounty())
                 .build();
 
         given()
@@ -714,7 +742,7 @@ public class UserServiceIT {
                 .patch(baseUrl + "/addresses/{addressId}")
                 .then()
                 .log().body()
-                .statusCode(HttpStatus.OK.value());
+                .statusCode(HttpStatus.NO_CONTENT.value());
     }
 
     @Test

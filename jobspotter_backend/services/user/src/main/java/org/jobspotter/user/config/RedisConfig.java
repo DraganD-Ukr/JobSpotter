@@ -19,9 +19,10 @@ import java.time.Duration;
 @Configuration
 public class RedisConfig {
 
-    @Bean
+
     public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory();
+        LettuceConnectionFactory factory = new LettuceConnectionFactory();
+        return factory;
     }
 
     @Bean
