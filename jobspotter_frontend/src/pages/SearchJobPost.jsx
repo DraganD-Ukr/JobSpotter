@@ -13,6 +13,7 @@ import {
   FaCircle,
   FaCheckCircle,
   FaClock,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import { MdDateRange } from "react-icons/md";
 import { useTranslation } from "react-i18next";
@@ -203,26 +204,6 @@ export function SearchJobPost() {
         statusText = t("nA");
     }
     return { statusColor, statusText, StatusIcon };
-  }
-
-  function getApplicantStatusInfo(job) {
-    let applicantStatusColor = "text-gray-400";
-    let applicantStatusText = job.applicantStatus || t("nA");
-
-    switch (job.applicantStatus) {
-      case "PENDING":
-        applicantStatusColor = "text-yellow-500";
-        break;
-      case "ACCEPTED":
-        applicantStatusColor = "text-green-500";
-        break;
-      case "REJECTED":
-        applicantStatusColor = "text-red-500";
-        break;
-      default:
-        applicantStatusColor = "text-gray-400";
-    }
-    return { applicantStatusColor, applicantStatusText };
   }
   // --- END STATUS LOGIC ---
 
@@ -716,8 +697,6 @@ export function SearchJobPost() {
             >
               {jobPostsData.map((job) => {
                 const { statusColor, statusText, StatusIcon } = getJobStatusInfo(job);
-                const { applicantStatusColor, applicantStatusText } = getApplicantStatusInfo(job);
-
                 return (
                   <Link to={`/job/${job.jobPostId}`} key={job.jobPostId}>
                     <div
@@ -771,39 +750,22 @@ export function SearchJobPost() {
                         </p>
                       )}
 
-                      {/* Status Indicators */}
+                      {/* Status Indicator */}
                       <p className="flex items-center mt-2 gap-1">
                         <StatusIcon className={`${statusColor} mr-1`} />
                         <strong className="mr-2">{t("jobStatus")}:</strong>
                         <span className={statusColor}>{statusText}</span>
                       </p>
-                      <p className="flex items-center mt-2 gap-1">
-                        {job.applicantStatus === "PENDING" && (
-                          <FaClock className={`${applicantStatusColor} mr-1`} />
-                        )}
-                        {job.applicantStatus === "ACCEPTED" && (
-                          <FaCheckCircle className={`${applicantStatusColor} mr-1`} />
-                        )}
-                        {job.applicantStatus === "REJECTED" && (
-                          <FaTimesCircle className={`${applicantStatusColor} mr-1`} />
-                        )}
-                        {job.applicantStatus !== "PENDING" &&
-                          job.applicantStatus !== "ACCEPTED" &&
-                          job.applicantStatus !== "REJECTED" && (
-                            <FaCircle className={`${applicantStatusColor} mr-1`} />
-                          )}
-                        <strong>{t("applicantStatus")}:</strong>{" "}
-                        <span className={applicantStatusColor}>{applicantStatusText}</span>
-                      </p>
 
                       <div className="flex justify-end mt-4">
+                        {/*Yellow warning icon */}
                         <Link
                           to={`/userreportformpopup?jobId=${job.jobPostId || ""}&reportedUserId=${job.jobPosterId}`}
-                          className="text-red-500 hover:text-red-700"
+                          className="text-yellow-500 hover:text-yellow-600"
                           title={t("reportJobPost")}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <FaTimesCircle size={20} />
+                          <FaExclamationTriangle size={20} />
                         </Link>
                       </div>
                     </div>
@@ -840,3 +802,4 @@ export function SearchJobPost() {
     </div>
   );
 }
+

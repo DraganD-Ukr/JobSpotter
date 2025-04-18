@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom"; // <-- Import Link from react-router-dom
+import { Link } from "react-router-dom"; 
 
 export function Login() {
   const [formValues, setFormValues] = useState({
@@ -78,7 +78,6 @@ export function Login() {
 
             // 4) Immediately redirect to your chosen route
             window.location.href = "/SearchJobPost";
-            // Or any other route you prefer, e.g. "/dashboard"
           } else {
             const errorData = await meResponse.json();
             setErrors(

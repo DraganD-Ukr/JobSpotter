@@ -1,43 +1,58 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Sun, Moon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import trollImage from "../assets/troll.jpg";
 import { ThemeContext } from "./ThemeContext";
 import Notification from "./Notification";
 import ProfilePicture from "../components/ProfilePicture";
 
+/*  helpers  */
+function getJobStatusInfo(job) {
+  switch (job.status) {
+    case "OPEN":
+      return { statusColor: "text-green-500", statusText: "OPEN" };
+    case "ASSIGNED":
+      return { statusColor: "text-blue-500", statusText: "ASSIGNED" };
+    case "IN_PROGRESS":
+      return { statusColor: "text-yellow-500", statusText: "IN_PROGRESS" };
+    case "COMPLETED":
+      return { statusColor: "text-gray-500", statusText: "COMPLETED" };
+    case "CANCELLED":
+      return { statusColor: "text-red-500", statusText: "CANCELLED" };
+    default:
+      return { statusColor: "text-gray-400", statusText: "N/A" };
+  }
+}
+
 function calculateCompleteness(user, addresses) {
   if (!user) return { completion: 0, missing: [] };
 
-  // 6 items used in Profile.jsx:
-  // 1. firstName
-  // 2. lastName
-  // 3. email
-  // 4. phoneNumber
-  // 5. about
-  // 6. at least one address
-  const total = 6;
-  let filled = 0;
-  let missing = [];
+  const checks = [
+    ["First Name", user.firstName],
+    ["Last Name", user.lastName],
+    ["Email", user.email],
+    ["Phone Number", user.phoneNumber],
+    ["About", user.about],
+    ["Address", addresses?.length > 0 ? "✓" : ""],
+  ];
 
-  if (user.firstName?.trim()) filled++;
-  else missing.push("First Name");
-  if (user.lastName?.trim()) filled++;
-  else missing.push("Last Name");
-  if (user.email?.trim()) filled++;
-  else missing.push("Email");
-  if (user.phoneNumber?.trim()) filled++;
-  else missing.push("Phone Number");
-  if (user.about?.trim()) filled++;
-  else missing.push("About");
-  if (addresses && addresses.length > 0) filled++;
-  else missing.push("Address");
+  const filled = checks.filter(([, v]) => v?.toString().trim()).length;
+  const missing = checks
+    .filter(([, v]) => !v?.toString().trim())
+    .map(([label]) => label);
 
-  const completion = Math.round((filled / total) * 100);
-  return { completion, missing };
+  return { completion: Math.round((filled / checks.length) * 100), missing };
 }
 
+/*  component  */
 export default function Navbar() {
+  const { t, i18n } = useTranslation();
+  const { darkMode, setDarkMode } = useContext(ThemeContext);
+  const navigate = useNavigate();
+  const searchRef = useRef(null);
+
+  /* authentication / profile */
   const [isExpanded, setIsExpanded] = useState(false);
   const [username, setUsername] = useState("");
   const [userId, setUserId] = useState("");
@@ -45,67 +60,58 @@ export default function Navbar() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // user + addresses data
   const [user, setUser] = useState(null);
   const [addresses, setAddresses] = useState([]);
-
-  // completeness
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [missingItems, setMissingItems] = useState([]);
-
-  // local state to control the "Let's Get You Started" sub-menu
   const [startMenuOpen, setStartMenuOpen] = useState(false);
 
-  const { darkMode, setDarkMode } = useContext(ThemeContext);
-
+  /* search */
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState([]); 
+  const [myJobPosts, setMyJobPosts] = useState([]);
+  const [myJobResults, setMyJobResults] = useState([]); 
+  const [suggestions, setSuggestions] = useState([]);
   const [showResults, setShowResults] = useState(false);
 
-  const searchRef = useRef(null);
-  const navigate = useNavigate();
-
-  // Listen for localStorage theme changes
+  /*  initial data load  */
   useEffect(() => {
-    function handleStorage(e) {
-      if (e.key === "theme") {
-        setDarkMode(e.newValue === "dark");
-      }
-    }
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, [setDarkMode]);
-
-  // Fetch user + addresses once on mount
-  useEffect(() => {
-    async function fetchData() {
+    (async () => {
       try {
+        /* user info */
         const resUser = await fetch("/api/v1/users/me", {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
           credentials: "include",
         });
-        if (!resUser.ok) throw new Error("Failed to fetch user info");
+        if (!resUser.ok) throw new Error("user fetch failed");
         const dataUser = await resUser.json();
 
+        /* addresses */
         const resAddr = await fetch("/api/v1/users/addresses", {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
           credentials: "include",
         });
-        let dataAddr = [];
-        if (resAddr.ok) {
-          dataAddr = await resAddr.json();
-        }
+        const dataAddr = resAddr.ok ? await resAddr.json() : [];
 
+        /* my job posts */
+        const resMy = await fetch("/api/v1/job-posts/my-job-posts", {
+          method: "GET",
+          credentials: "include",
+        });
+        const rawMyJobs = resMy.ok ? await resMy.json() : [];
+        const normMyJobs = Array.isArray(rawMyJobs.content)
+          ? rawMyJobs.content
+          : rawMyJobs;
+
+        /* set state */
         setUser(dataUser);
         setAddresses(dataAddr);
+        setMyJobPosts(normMyJobs);
         setUsername(dataUser.username || "");
         setUserId(dataUser.userId || "");
         setIsLoggedIn(true);
         setIsAdmin(dataUser.userType === "ADMIN");
 
-        // compute completeness
         const { completion, missing } = calculateCompleteness(dataUser, dataAddr);
         setProfileCompletion(completion);
         setMissingItems(missing);
@@ -115,198 +121,218 @@ export default function Navbar() {
       } finally {
         setIsCheckingAuth(false);
       }
-    }
-    fetchData();
-  }, [setDarkMode]);
+    })  
+  ();
+  },   
+[]);
 
-  // Poll addresses every 5s
-  useEffect(() => {
-    const interval = setInterval(() => {
-      async function fetchAddresses() {
-        try {
-          const resAddr = await fetch("/api/v1/users/addresses", {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-          });
-          if (resAddr.ok) {
-            const dataAddr = await resAddr.json();
-            setAddresses(dataAddr);
-          }
-        } catch (err) {
-          console.error("Polling addresses error:", err);
-        }
-      }
-      fetchAddresses();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Recompute completeness whenever user or addresses change
+  /* recompute profile completeness */
   useEffect(() => {
     const { completion, missing } = calculateCompleteness(user, addresses);
     setProfileCompletion(completion);
     setMissingItems(missing);
   }, [user, addresses]);
 
-  // search submission
-  async function handleSearchSubmit(e) {
-    e.preventDefault();
-    const trimmed = searchTerm.trim();
-    if (!trimmed) return;
-
-    try {
-      const res = await fetch(
-        `/api/v1/job-posts/search?title=${encodeURIComponent(trimmed)}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        }
-      );
-      if (!res.ok) throw new Error("Failed to search job posts");
-      const data = await res.json();
-      setSearchResults(data);
-      setShowResults(true);
-    } catch (err) {
-      console.error("Search error:", err);
-    }
-  }
-
-  function handleResultClick(job) {
-    window.location.href = `/SearchJobPost?jobId=${job.jobPostId}`;
-  }
-
-  // close search if clicking outside
+  /* sync darkMode */
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
+    const listener = (e) => e.key === "theme" && setDarkMode(e.newValue === "dark");
+    window.addEventListener("storage", listener);
+    return () => window.removeEventListener("storage", listener);
+  }, [setDarkMode]);
+
+  /* public search + suggestions + debounce */
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const q = searchTerm.trim();
+      if (!q) {
+        setSearchResults([]);
+        setSuggestions([]);
+        return;
+      }
+
+      Promise.all([
+        fetch(`/api/v1/job-posts/search?title=${encodeURIComponent(q)}`, {
+          credentials: "include",
+        })
+          .then((r) => r.json())
+          .then((d) => d.content ?? d),
+        fetch(
+          `/api/v1/job-posts/title-suggestions?title=${encodeURIComponent(q)}`,
+          {
+            credentials: "include",
+          }
+        )
+          .then((r) => r.json())
+          .then((d) => (Array.isArray(d) ? d : [])),
+      ])
+        .then(([searchData, suggestionsData]) => {
+          setSearchResults(searchData);
+          setSuggestions(suggestionsData);
+          setMyJobResults(
+            q
+              ? myJobPosts.filter((j) =>
+                  j.title?.toLowerCase().includes(q.toLowerCase())
+                )
+              : []
+          );
+          setShowResults(
+            Boolean(
+              q &&
+                (searchData.length ||
+                  myJobPosts.filter((j) =>
+                    j.title?.toLowerCase().includes(q.toLowerCase())
+                  ).length)
+            )
+          );
+        })
+        .catch(console.error);
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, myJobPosts]);
+
+  /* close on outside click */
+  useEffect(() => {
+    const handler = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
         setIsExpanded(false);
         setShowResults(false);
+        setSuggestions([]);
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // logout
-  const handleLogout = async () => {
+  /* actions */
+  const handleLanguageChange = (e) => i18n.changeLanguage(e.target.value);
+
+  const logout = async () => {
     try {
-      const response = await fetch("/api/v1/users/auth/logout", {
+      await fetch("/api/v1/users/auth/logout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
-      if (!response.ok) throw new Error("Logout failed");
       localStorage.setItem("theme", "light");
       setDarkMode(false);
       navigate("/Login");
-    } catch (error) {
-      console.error("Error during logout:", error);
+    } catch (e) {
+      console.error("logout error:", e);
     }
   };
 
+  /* render */
   return (
     <nav className="sticky top-0 z-50 lava-lamp-background p-4 shadow-md relative">
       <div className="container mx-auto flex items-center justify-between nav-container">
-        
-        {/* Left: Logo */}
+        {/* Logo */}
         <Link to="/">
           <img
             src="/jb.png"
             alt="JobSpotter Logo"
-            className="h-10 w-auto object-contain scale-500 mb-2"
+            className="h-10 w-auto object-contain mb-2 scale-500"
           />
         </Link>
 
         {/* Middle Nav */}
-        {isAdmin ? (
+        {isLoggedIn && isAdmin ? (
           <div className="flex-1 flex justify-center items-center gap-8">
-            <Link to="/dashboard" className="text-white font-medium hover:underline">
+            <Link
+              to="/dashboard"
+              className="text-white font-medium hover:underline"
+            >
               Dashboard
             </Link>
-            <Link to="/searchreport" className="text-white font-medium hover:underline">
+            <Link
+              to="/searchreport"
+              className="text-white font-medium hover:underline"
+            >
               Search Reports
             </Link>
           </div>
-        ) : (
+        ) : isLoggedIn ? (
           <div className="flex-1 flex justify-center items-center gap-8">
-            {/* Single dropdown under the video */}
+            {/* Profile Completeness */}
             <div className="relative group inline-block">
-              <video
-                src="/fox.mp4"
-                className="w-12 h-12"
-                autoPlay
-                loop
-                muted
-              />
-              {/* Main dropdown (on hover) */}
+              <video src="/fox.mp4" className="w-12 h-12" autoPlay loop muted />
               <div
-                className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-800
-                           border border-gray-200 dark:border-gray-600 rounded shadow-lg
-                           transform origin-top scale-0 opacity-0 transition-all
-                           ease-in-out duration-300 group-hover:scale-100
-                           group-hover:opacity-100 p-3 z-50
-                           flex flex-col items-start text-left space-y-2"
+                className={`absolute top-[calc(100%+1rem)] right-0 w-48 rounded-lg shadow-lg z-50 p-3
+                  ${darkMode ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-300 text-black"}
+                  transform origin-top scale-0 opacity-0 transition-all duration-300
+                  group-hover:scale-100 group-hover:opacity-100`}
               >
-                <div className="text-sm font-semibold text-black dark:text-white">
+                <div className="text-sm font-semibold">
                   {profileCompletion}% Complete
                 </div>
                 {missingItems.length > 0 && (
-                  <div className="text-xs text-gray-700 dark:text-gray-200">
+                  <div
+                    className={`text-xs ${
+                      darkMode ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
                     Missing: {missingItems.join(", ")}
                   </div>
                 )}
-
-                {/* If 100% complete, show "Let's Get You Started" button */}
                 {profileCompletion === 100 && (
                   <>
-                    {/* The user must click to open the sub-menu */}
                     <button
-                      className="w-full bg-green-500 text-white text-xs py-1 px-2 rounded text-center
-                                 hover:bg-green-600"
+                      className="w-full bg-green-500 text-white text-xs py-1 px-2 rounded hover:bg-green-600 mt-1"
                       onClick={() => setStartMenuOpen(!startMenuOpen)}
                     >
                       Let's Get You Started
                     </button>
-
-                    {/* Sub-menu that appears ONLY if startMenuOpen is true */}
                     {startMenuOpen && (
-                      <div className="w-full bg-white dark:bg-gray-800
-                                      border border-gray-200 dark:border-gray-600
-                                      rounded shadow-lg mt-2 flex flex-col">
+                      <div
+                        className={`w-full rounded-lg shadow-lg mt-2 flex flex-col
+                        ${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"}`}
+                      >
                         <Link
                           to="/SearchJobPost"
-                          className="block px-3 py-1 text-gray-700 dark:text-gray-100
-                                     hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+                          className={`block px-3 py-1 text-sm ${
+                            darkMode
+                              ? "hover:bg-gray-700 text-white"
+                              : "hover:bg-gray-100 text-black"
+                          }`}
                         >
                           Search for Jobs
                         </Link>
                         <Link
                           to="/MyJobs"
-                          className="block px-3 py-1 text-gray-700 dark:text-gray-100
-                                     hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+                          className={`block px-3 py-1 text-sm ${
+                            darkMode
+                              ? "hover:bg-gray-700 text-white"
+                              : "hover:bg-gray-100 text-black"
+                          }`}
                         >
                           My Job Posts
                         </Link>
                         <Link
                           to="/JobPostHistory"
-                          className="block px-3 py-1 text-gray-700 dark:text-gray-100
-                                     hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+                          className={`block px-3 py-1 text-sm ${
+                            darkMode
+                              ? "hover:bg-gray-700 text-white"
+                              : "hover:bg-gray-100 text-black"
+                          }`}
                         >
                           Job Post History
                         </Link>
                         <Link
                           to="/profile"
-                          className="block px-3 py-1 text-gray-700 dark:text-gray-100
-                                     hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+                          className={`block px-3 py-1 text-sm ${
+                            darkMode
+                              ? "hover:bg-gray-700 text-white"
+                              : "hover:bg-gray-100 text-black"
+                          }`}
                         >
                           My Profile
                         </Link>
                         <Link
                           to="/data"
-                          className="block px-3 py-1 text-gray-700 dark:text-gray-100
-                                     hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+                          className={`block px-3 py-1 text-sm ${
+                            darkMode
+                              ? "hover:bg-gray-700 text-white"
+                              : "hover:bg-gray-100 text-black"
+                          }`}
                         >
                           Data
                         </Link>
@@ -317,65 +343,78 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* "Jobs Available" */}
+            {/* Jobs Available */}
             <div className="relative group inline-block">
-              <span className="inline-block px-3 py-2 text-white font-medium hover:underline">
+              <span className="px-3 py-2 text-white font-medium hover:underline">
                 Jobs Available
               </span>
               <div
-                className="absolute top-full mt-6 right-0 bg-white dark:bg-gray-800 
-                           border border-gray-200 dark:border-gray-600 rounded shadow-lg 
-                           transform origin-bottom scale-0 opacity-0 transition-all 
-                           ease-in-out duration-300 group-hover:scale-100 
-                           group-hover:opacity-100"
+                className={`absolute top-[calc(100%+1rem)] right-0 rounded-lg shadow-lg z-50
+                ${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"}
+                transform origin-top scale-0 opacity-0 transition-all duration-300
+                group-hover:scale-100 group-hover:opacity-100`}
               >
                 <Link
                   to="/SearchJobPost"
-                  className="block px-4 py-2 text-gray-700 dark:text-gray-100 
-                             hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className={`block px-4 py-2 ${
+                    darkMode
+                      ? "hover:bg-gray-700 text-white"
+                      : "hover:bg-gray-100 text-black"
+                  }`}
                 >
                   View All Jobs
                 </Link>
                 <Link
                   to="/JobPostHistory"
-                  className="block px-4 py-2 text-gray-700 dark:text-gray-100 
-                             hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className={`block px-4 py-2 ${
+                    darkMode
+                      ? "hover:bg-gray-700 text-white"
+                      : "hover:bg-gray-100 text-black"
+                  }`}
                 >
                   View Job Post History
                 </Link>
-                <div className="h-px w-full bg-gray-300 dark:bg-gray-600" />
               </div>
             </div>
 
             {/* My Job Posts */}
             <div className="relative group inline-block">
-              <span className="inline-block px-3 py-2 text-white font-medium hover:underline">
+              <span className="px-3 py-2 text-white font-medium hover:underline">
                 My Job Posts
               </span>
               <div
-                className="absolute top-full mt-6 right-0 bg-white dark:bg-gray-800 
-                           border border-gray-200 dark:border-gray-600 rounded shadow-lg 
-                           transform origin-bottom scale-0 opacity-0 transition-all 
-                           ease-in-out duration-300 group-hover:scale-100 group-hover:opacity-100"
+                className={`absolute top-[calc(100%+1rem)] right-0 rounded-lg shadow-lg z-50
+                ${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"}
+                transform origin-top scale-0 opacity-0 transition-all duration-300
+                group-hover:scale-100 group-hover:opacity-100`}
               >
                 <Link
                   to="/MyJobs"
-                  className="block px-4 py-2 text-gray-700 dark:text-gray-100 
-                             hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className={`block px-4 py-2 ${
+                    darkMode
+                      ? "hover:bg-gray-700 text-white"
+                      : "hover:bg-gray-100 text-black"
+                  }`}
                 >
                   View My Jobs
                 </Link>
                 <Link
                   to="/SearchReviews"
-                  className="block px-4 py-2 text-gray-700 dark:text-gray-100 
-                             hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className={`block px-4 py-2 ${
+                    darkMode
+                      ? "hover:bg-gray-700 text-white"
+                      : "hover:bg-gray-100 text-black"
+                  }`}
                 >
                   View Rating Review History
                 </Link>
                 <Link
                   to="/CreateJobPost"
-                  className="block px-4 py-2 text-gray-700 dark:text-gray-100 
-                             hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className={`block px-4 py-2 ${
+                    darkMode
+                      ? "hover:bg-gray-700 text-white"
+                      : "hover:bg-gray-100 text-black"
+                  }`}
                 >
                   Create Job Post
                 </Link>
@@ -386,35 +425,77 @@ export default function Navbar() {
               Data
             </Link>
           </div>
-        )}
+        ) : null}
 
-        {/* Right side */}
+        {/* Right Side */}
         <div className="flex items-center space-x-4">
-          {/* Search Bar */}
+          {/* Search */}
           <div className="relative flex items-center" ref={searchRef}>
             {isExpanded ? (
               <form
-                onSubmit={handleSearchSubmit}
-                className="flex items-center bg-gray-100 dark:bg-gray-800 text-black dark:text-white 
-                           rounded-full shadow-md overflow-hidden w-[400px]"
+                onSubmit={(e) => e.preventDefault()}
+                className={`flex items-center rounded-full shadow-md overflow-hidden w-[400px] relative border
+                ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-black"
+                }`}
               >
-                <div className="flex items-center px-3 w-2/3">
-                  <Search className="text-gray-500 dark:text-gray-300" size={20} />
-                  <input
-                    type="text"
-                    className="w-full bg-transparent px-3 py-2 focus:outline-none 
-                               placeholder-gray-500 dark:placeholder-gray-400"
-                    placeholder="Search"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onFocus={() => {
-                      if (searchResults.length > 0) {
-                        setShowResults(true);
+                <div className="flex flex-col w-2/3 relative">
+                  <div className="flex items-center px-3">
+                    <Search
+                      className={`text-gray-500 ${
+                        darkMode ? "dark:text-gray-300" : ""
+                      }`}
+                      size={20}
+                    />
+                    <input
+                      type="text"
+                      className={`w-full bg-transparent px-3 py-2 focus:outline-none placeholder-gray-500 ${
+                        darkMode ? "dark:placeholder-gray-300" : ""
+                      }`}
+                      placeholder="Search"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onFocus={() =>
+                        (searchResults.length || myJobResults.length) &&
+                        setShowResults(true)
                       }
-                    }}
-                  />
+                    />
+                  </div>
+                  {suggestions.length > 0 && (
+                    <ul
+                      className={`absolute top-[calc(100%+1rem)] left-0 w-full border rounded-md shadow-md z-50
+                      ${
+                        darkMode
+                          ? "bg-gray-800 border-gray-700 text-white"
+                          : "bg-white border-gray-300 text-black"
+                      }`}
+                    >
+                      {suggestions.map((item, idx) => (
+                        <li
+                          key={idx}
+                          onClick={() => {
+                            setSearchTerm(item);
+                            setSuggestions([]);
+                          }}
+                          className={`px-4 py-2 cursor-pointer ${
+                            darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"
+                          }`}
+                        >
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-                <div className="w-px h-8 bg-gray-300 dark:bg-gray-600"></div>
+
+                <div
+                  className={`w-px h-8 ${
+                    darkMode ? "bg-gray-600" : "bg-gray-300"
+                  }`}
+                />
+
                 <div className="flex items-center px-3 w-1/3 gap-2">
                   <img
                     src={trollImage}
@@ -423,45 +504,96 @@ export default function Navbar() {
                   />
                   <input
                     type="text"
-                    className="w-full bg-transparent px-3 py-2 focus:outline-none 
-                               placeholder-gray-500 dark:placeholder-gray-400"
+                    className={`w-full bg-transparent px-3 py-2 focus:outline-none placeholder-gray-500 ${
+                      darkMode ? "dark:placeholder-gray-300" : ""
+                    }`}
                     placeholder="Location"
                   />
                   <button
                     type="submit"
-                    className="flex items-center gap-1 bg-gradient-to-r from-purple-600 to-pink-500 
-                               text-white px-4 py-2 rounded-full hover:opacity-90 transition"
+                    className="flex items-center gap-1 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-2 rounded-full hover:opacity-90 transition"
                   >
-                    <Search className="text-white" size={18} />
+                    <Search size={18} />
                   </button>
                 </div>
               </form>
             ) : (
               <button
-                className="bg-gradient-to-r from-green-500 to-lime-500 p-2 rounded-full shadow 
-                           hover:opacity-80 transition duration-300"
+                className="bg-gradient-to-r from-green-500 to-lime-500 p-2 rounded-full shadow hover:opacity-80 transition"
                 onClick={() => setIsExpanded(true)}
               >
                 <Search className="text-white" size={24} />
               </button>
             )}
 
-            {isExpanded && showResults && searchResults.length > 0 && (
+            {isExpanded && showResults && (searchResults.length || myJobResults.length) && (
               <div
-                className="absolute top-full mt-6 left-0 bg-white dark:bg-gray-800 
-                           border border-gray-200 dark:border-gray-600 rounded shadow-lg z-50 
-                           w-full transition-all ease-in-out duration-300"
+                className={`absolute top-[calc(100%+1rem)] left-0 rounded-lg shadow-lg z-50 w-[400px] p-2 border
+                ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-700 text-white"
+                    : "bg-white border-gray-300 text-black"
+                }`}
+                style={{ minHeight: "150px" }}
               >
-                {searchResults.map((job) => (
-                  <div
-                    key={job.jobPostId}
-                    onClick={() => handleResultClick(job)}
-                    className="px-4 py-2 text-gray-700 dark:text-gray-100 
-                               hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                <div className="flex justify-between items-center mb-2">
+                  <p
+                    className={`text-sm font-semibold ${
+                      darkMode ? "text-gray-200" : "text-gray-700"
+                    }`}
                   >
-                    {job.title}
-                  </div>
-                ))}
+                    {searchResults.length + myJobResults.length} job(s) found
+                  </p>
+                  <button
+                    onClick={() => setShowResults(false)}
+                    className={`${
+                      darkMode
+                        ? "text-gray-300 hover:text-gray-100"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
+                  >
+                    Close
+                  </button>
+                </div>
+                <div
+                  className={`flex flex-col divide-y ${
+                    darkMode ? "divide-gray-700" : "divide-gray-300"
+                  }`}
+                >
+                  {[...searchResults, ...myJobResults].map((job) => {
+                    const isMine = myJobPosts.some(
+                      (j) => j.jobPostId === job.jobPostId
+                    );
+                    return (
+                      <div
+                        key={job.jobPostId}
+                        onClick={() =>
+                          (window.location.href = `/SearchJobPost?jobId=${job.jobPostId}`)
+                        }
+                        className={`py-2 cursor-pointer ${
+                          darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"
+                        }`}
+                      >
+                        <h2
+                          className={`text-sm font-bold ${
+                            darkMode ? "text-gray-50" : "text-gray-800"
+                          }`}
+                        >
+                          {job.title} – {isMine ? "My Jobs" : "Search JobPost"}
+                        </h2>
+                        <p
+                          className={`text-xs ${
+                            darkMode ? "text-gray-200" : "text-gray-600"
+                          }`}
+                        >
+                          {job.description
+                            ? `${job.description.slice(0, 60)}…`
+                            : "No description."}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -492,67 +624,97 @@ export default function Navbar() {
               <div className="relative group inline-block">
                 <ProfilePicture userId={userId} darkMode={darkMode} />
                 <div
-                  className="absolute top-full mt-6 right-0 bg-white dark:bg-gray-800 
-                             border border-gray-200 dark:border-gray-600 rounded shadow-lg z-50 
-                             transform origin-bottom scale-0 opacity-0 transition-all 
-                             ease-in-out duration-300 group-hover:scale-100 group-hover:opacity-100"
+                  className={`absolute top-[calc(100%+1rem)] right-0 rounded-lg shadow-lg z-50
+                  ${
+                    darkMode
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-white border-gray-300"
+                  }
+                  transform origin-top scale-0 opacity-0 transition-all duration-300
+                  group-hover:scale-100 group-hover:opacity-100`}
                 >
                   <Link
                     to="/profile"
-                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 
-                               text-gray-700 dark:text-gray-100"
+                    className={`block px-4 py-2 ${
+                      darkMode
+                        ? "hover:bg-gray-700 text-white"
+                        : "hover:bg-gray-100 text-black"
+                    }`}
                   >
                     Profile
                   </Link>
                   <Link
                     to="#"
-                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 
-                               text-gray-700 dark:text-gray-100"
+                    className={`block px-4 py-2 ${
+                      darkMode
+                        ? "hover:bg-gray-700 text-white"
+                        : "hover:bg-gray-100 text-black"
+                    }`}
                   >
                     Job Activity
                   </Link>
                   <Link
                     to="/Settings"
-                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 
-                               text-gray-700 dark:text-gray-100"
+                    className={`block px-4 py-2 ${
+                      darkMode
+                        ? "hover:bg-gray-700 text-white"
+                        : "hover:bg-gray-100 text-black"
+                    }`}
                   >
                     Settings
                   </Link>
-                  <div className="h-px bg-gray-300 dark:bg-gray-600" />
+                  <div className={`h-px ${darkMode ? "bg-gray-700" : "bg-gray-300"}`} />
                   <div
-                    onClick={handleLogout}
-                    className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 
-                               text-gray-700 dark:text-gray-100 cursor-pointer"
+                    onClick={logout}
+                    className={`block px-4 py-2 cursor-pointer ${
+                      darkMode
+                        ? "hover:bg-gray-700 text-white"
+                        : "hover:bg-gray-100 text-black"
+                    }`}
                   >
                     Sign Out
                   </div>
                 </div>
               </div>
-              <span className="nav-username font-bold">{username}</span>
+              <span className="nav-username font-bold text-white">{username}</span>
             </div>
           )}
-        </div>
 
-        {/* Dark Mode Toggle */}
-        {isLoggedIn && (
-          <div className="absolute top-4 right-4 z-50">
-            <div
+          {/* Dark Mode Toggle */}
+          {isLoggedIn && (
+            <button
               onClick={() => setDarkMode(!darkMode)}
-              className="relative w-12 h-7 flex-shrink-0 rounded-full cursor-pointer 
-                         transition-colors bg-white dark:bg-gray-900"
+              className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition
+                ${
+                  darkMode
+                    ? "border border-gray-500"
+                    : "border border-gray-300"
+                }`}
             >
-              <div
-                className={`absolute top-1 left-1 h-5 w-5 flex items-center justify-center 
-                           rounded-full bg-white dark:bg-gray-900 text-gray-700 dark:text-white 
-                           shadow-md transform transition-transform ease-in-out duration-300 ${
-                             darkMode ? "translate-x-5" : "translate-x-0"
-                           }`}
-              >
-                {darkMode ? <Moon size={14} /> : <Sun size={14} />}
-              </div>
-            </div>
-          </div>
-        )}
+              {darkMode ? (
+                <Moon className="text-white" size={18} />
+              ) : (
+                <Sun className="text-white" size={18} />
+              )}
+            </button>
+          )}
+
+          {/* Language Switcher */}
+          {isLoggedIn && (
+            <select
+              onChange={handleLanguageChange}
+              value={i18n.language}
+              className={`px-2 py-1 rounded-md border ${
+                darkMode
+                  ? "bg-gray-800 border-gray-700 text-white"
+                  : "bg-white border-gray-300 text-black"
+              }`}
+            >
+              <option value="en">English</option>
+              <option value="fr">Français</option>
+            </select>
+          )}
+        </div>
       </div>
     </nav>
   );

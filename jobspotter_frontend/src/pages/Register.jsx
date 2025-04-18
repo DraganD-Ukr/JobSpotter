@@ -20,11 +20,12 @@ export function Register() {
     hasLowercase: false,
     hasLetter: false,
     hasNumber: false,
+    hasSpecial: false,
   });
   const [isFormValid, setIsFormValid] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
 
-  // Backend password validation rules
+  // Password validation
   const validatePassword = (password) => {
     const updatedRequirements = {
       minLength: password.length >= 8,
@@ -32,24 +33,31 @@ export function Register() {
       hasLowercase: /[a-z]/.test(password),
       hasLetter: /[A-Za-z]/.test(password),
       hasNumber: /\d/.test(password),
+      hasSpecial: /[!@#$%^&*()_+]/.test(password),
     };
     setPasswordRequirements(updatedRequirements);
-    return /^[A-Za-z0-9!@#$%^&*()_+]{8,}$/.test(password);
+    return (
+      updatedRequirements.minLength &&
+      updatedRequirements.hasLetter &&
+      updatedRequirements.hasNumber &&
+      updatedRequirements.hasSpecial
+    );
   };
 
+  // Field‑specific validation
   const validateField = (name, value) => {
     let message = "";
     switch (name) {
       case "firstName":
         if (!value.trim()) message = "First name cannot be empty.";
-        else if (!/^[A-Za-z ]+$/.test(value))
-          message = "First name can only contain letters and spaces.";
+        else if (!/^[A-Za-z' -]+$/.test(value))
+          message = "First name can include letters, apostrophes or hyphens only.";
         break;
 
       case "lastName":
         if (!value.trim()) message = "Last name cannot be empty.";
-        else if (!/^[A-Za-z ]+$/.test(value))
-          message = "Last name can only contain letters and spaces.";
+        else if (!/^[A-Za-z' -]+$/.test(value))
+          message = "Last name can include letters, apostrophes or hyphens only.";
         break;
 
       case "email":
@@ -60,16 +68,16 @@ export function Register() {
 
       case "username":
         if (!value.trim()) message = "Username cannot be empty.";
-        else if (!/^[A-Za-z0-9]{4,}$/.test(value))
+        else if (!/^[A-Za-z0-9' -]{4,}$/.test(value))
           message =
-            "Username must be at least 4 characters long and contain only letters and digits.";
+            "Username must be ≥4 chars and may include letters, digits, apostrophes or hyphens.";
         break;
 
       case "password":
         if (!value) message = "Password cannot be empty.";
         else if (!validatePassword(value))
           message =
-            "Password must be at least 8 characters long and contain only valid symbols.";
+            "Password must be ≥8 chars with a letter, a number and a special symbol.";
         break;
 
       case "confirmPassword":
@@ -86,32 +94,29 @@ export function Register() {
     return message;
   };
 
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     const fieldValue = type === "checkbox" ? checked : value;
 
-    // Update form values
     const updatedValues = { ...formValues, [name]: fieldValue };
     setFormValues(updatedValues);
 
-    // Validate the changed field and update errors
     const errorMessage = validateField(name, fieldValue);
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: errorMessage,
-    }));
+    setErrors((prev) => ({ ...prev, [name]: errorMessage }));
 
-    // Check overall form validity
     checkFormValidity(updatedValues);
   };
 
-  const checkFormValidity = (updatedValues) => {
-    const hasErrors = Object.keys(updatedValues).some(
-      (key) => validateField(key, updatedValues[key]) !== ""
+  // Check overall form validity
+  const checkFormValidity = (values) => {
+    const hasErrors = Object.keys(values).some(
+      (key) => validateField(key, values[key]) !== ""
     );
     setIsFormValid(!hasErrors);
   };
 
+  // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isFormValid) {
@@ -124,23 +129,18 @@ export function Register() {
       };
 
       try {
-        // Register the user
+        // Register
         const registerResponse = await fetch("/api/v1/users/auth/register", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
 
         if (registerResponse.ok && registerResponse.status === 201) {
-          // Registration successful – now automatically log in the user.
+          // Auto‑login
           const loginResponse = await fetch("/api/v1/users/auth/login", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            // Make sure to include credentials so that cookies are set.
+            headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify({
               username: formValues.username,
@@ -149,62 +149,43 @@ export function Register() {
           });
 
           if (loginResponse.ok) {
-            // Now fetch user data to confirm login and set user session info.
             const meResponse = await fetch("/api/v1/users/me", {
               method: "GET",
               headers: { "Content-Type": "application/json" },
-              credentials: "include", // ensures session cookie is sent
+              credentials: "include",
             });
-
             if (meResponse.ok) {
               const userData = await meResponse.json();
-              if (userData.userId) {
-                sessionStorage.setItem("userId", userData.userId);
-              }
+              if (userData.userId) sessionStorage.setItem("userId", userData.userId);
             }
-            // Redirect immediately to SearchJobPost after successful login.
             window.location.href = "/SearchJobPost";
           } else {
-            // Handle login error if registration succeeded but login failed.
-            console.error("Login failed after registration");
             setErrors({ general: "Login failed. Please try to log in manually." });
           }
-        } else if (registerResponse.ok) {
-          // For any other success status, log the response.
-          const data = await registerResponse.json();
-          console.log("User registered successfully:", data);
         } else {
           const errorData = await registerResponse.json();
-          console.error("Registration failed:", errorData);
           if (registerResponse.status === 400 && errorData.message) {
-            setErrors((prevErrors) => ({
-              ...prevErrors,
-              username: errorData.message,
-              email: errorData.message,
-            }));
+            setErrors((prev) => ({ ...prev, username: errorData.message, email: errorData.message }));
           } else {
             setErrors(
-              errorData.errors || {
-                general: "Registration failed. Please try again.",
-              }
+              errorData.errors || { general: "Registration failed. Please try again." }
             );
           }
         }
       } catch (error) {
-        console.error("An error occurred during registration:", error);
+        console.error("Registration error:", error);
         setErrors({ general: "An error occurred. Please try again later." });
       }
     }
   };
 
-  const areAllRequirementsMet =
-    /^[A-Za-z0-9!@#$%^&*()_+]{8,}$/.test(formValues.password) &&
-    formValues.password.length > 0;
+  const areAllRequirementsMet = Object.values(passwordRequirements).every(Boolean);
 
+  // Render
   return (
     <div className="register-page main-content min-h-screen p-4 flex items-center justify-center my-10 rounded-4xl border">
       <div className="card w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 overflow-hidden">
-        {/* Left Section: Info Panel */}
+        {/* Left Panel */}
         <div className="hidden md:flex flex-col justify-center items-center p-10 lava-lamp-background text-white">
           <h2 className="text-3xl font-extrabold mb-4 drop-shadow-lg text-center">
             Welcome to JobSpotter!
@@ -220,12 +201,11 @@ export function Register() {
           </p>
         </div>
 
-        {/* Right Section: Registration Form */}
+        {/* Right Panel – Form */}
         <div className="p-10">
           <h2 className="text-3xl font-bold mb-6">Sign Up</h2>
-          {errors.general && (
-            <p className="text-red-500 text-sm mb-4">{errors.general}</p>
-          )}
+          {errors.general && <p className="text-red-500 text-sm mb-4">{errors.general}</p>}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* First Name */}
             <div>
@@ -237,9 +217,7 @@ export function Register() {
                 onChange={handleChange}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
               />
-              {errors.firstName && (
-                <p className="text-red-500 text-sm">{errors.firstName}</p>
-              )}
+              {errors.firstName && <p className="text-red-500 text-sm">{errors.firstName}</p>}
             </div>
 
             {/* Last Name */}
@@ -252,9 +230,7 @@ export function Register() {
                 onChange={handleChange}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
               />
-              {errors.lastName && (
-                <p className="text-red-500 text-sm">{errors.lastName}</p>
-              )}
+              {errors.lastName && <p className="text-red-500 text-sm">{errors.lastName}</p>}
             </div>
 
             {/* Email */}
@@ -267,9 +243,7 @@ export function Register() {
                 onChange={handleChange}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
               />
-              {errors.email && (
-                <p className="text-red-500 text-sm">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
             </div>
 
             {/* Username */}
@@ -282,9 +256,7 @@ export function Register() {
                 onChange={handleChange}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
               />
-              {errors.username && (
-                <p className="text-red-500 text-sm">{errors.username}</p>
-              )}
+              {errors.username && <p className="text-red-500 text-sm">{errors.username}</p>}
             </div>
 
             {/* Password */}
@@ -299,9 +271,7 @@ export function Register() {
                 onBlur={() => setPasswordFocused(false)}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
               />
-              {errors.password && (
-                <p className="text-red-500 text-sm">{errors.password}</p>
-              )}
+              {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
 
               {/* Password Requirements */}
               {passwordFocused && (
@@ -310,16 +280,16 @@ export function Register() {
                     At least 8 characters long
                   </li>
                   <li className={passwordRequirements.hasUppercase ? "text-green-600" : "text-red-500"}>
-                    Contains at least 1 uppercase letter
+                    At least 1 uppercase letter
                   </li>
                   <li className={passwordRequirements.hasLowercase ? "text-green-600" : "text-red-500"}>
-                    Contains at least 1 lowercase letter
-                  </li>
-                  <li className={passwordRequirements.hasLetter ? "text-green-600" : "text-red-500"}>
-                    Contains at least 1 letter
+                    At least 1 lowercase letter
                   </li>
                   <li className={passwordRequirements.hasNumber ? "text-green-600" : "text-red-500"}>
-                    Contains at least 1 number
+                    At least 1 number
+                  </li>
+                  <li className={passwordRequirements.hasSpecial ? "text-green-600" : "text-red-500"}>
+                    At least 1 special symbol
                   </li>
                 </ul>
               )}
@@ -359,18 +329,14 @@ export function Register() {
                 </Link>
               </label>
             </div>
-            {errors.agreeToTerms && (
-              <p className="text-red-500 text-sm">{errors.agreeToTerms}</p>
-            )}
+            {errors.agreeToTerms && <p className="text-red-500 text-sm">{errors.agreeToTerms}</p>}
 
             {/* Sign Up Button */}
             <button
               type="submit"
               disabled={!isFormValid}
               className={`w-full py-2 ${
-                isFormValid
-                  ? "bg-gradient-to-r from-green-500 to-lime-500"
-                  : "bg-gray-300"
+                isFormValid ? "bg-gradient-to-r from-green-500 to-lime-500" : "bg-gray-300"
               } text-white font-bold rounded-lg hover:opacity-90 transition`}
             >
               Sign Up

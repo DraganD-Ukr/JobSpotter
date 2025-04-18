@@ -43,17 +43,6 @@ export default function Footer() {
         </ul>
       </div>
 
-      {/* Language Switcher in bottom right */}
-      <div className="absolute right-4 bottom-4">
-        <select
-          onChange={handleLanguageChange}
-          value={i18n.language}
-          className="px-2 py-1 rounded-md border border-gray-300"
-        >
-          <option value="en">English</option>
-          <option value="fr">Français</option>
-        </select>
-      </div>
     </footer>
   );
 }
