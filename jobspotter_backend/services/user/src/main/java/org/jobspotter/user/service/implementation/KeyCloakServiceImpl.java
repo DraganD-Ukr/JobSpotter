@@ -45,7 +45,7 @@ public class KeyCloakServiceImpl implements KeyCloakService {
     private String cachedAdminToken;
     private long tokenExpiryTime;
 
-    @Value("${keycloak.issuer-base-url}")
+    @Value("${keycloak.host-url}")
     private String localHostPrefixUrl;
 
 
