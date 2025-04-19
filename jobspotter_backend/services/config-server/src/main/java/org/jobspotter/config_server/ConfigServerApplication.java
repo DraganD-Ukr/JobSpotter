@@ -1,4 +1,4 @@
-package org.job_spotter.config_server;
+package org.jobspotter.config_server;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

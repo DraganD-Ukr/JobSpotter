@@ -8,7 +8,7 @@
 		<version>3.3.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>org.job_spotter</groupId>
+	<groupId>org.jobspotter</groupId>
 	<artifactId>config_server</artifactId>
 	<version>1.0.0</version>
 	<name>config_server</name>

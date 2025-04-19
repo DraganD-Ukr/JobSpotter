@@ -1,10 +1,10 @@
-package org.job_spotter.config_server;
+package org.jobspotter.jobpost.UnitTests;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ConfigServerApplicationTests {
+class JobPostApplicationTests {
 
 	@Test
 	void contextLoads() {

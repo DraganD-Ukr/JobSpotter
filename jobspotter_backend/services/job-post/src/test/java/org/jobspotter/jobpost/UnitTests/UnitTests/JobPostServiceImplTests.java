@@ -1,4 +1,4 @@
-package org.job_spotter.jobpost.UnitTests;
+package org.jobspotter.jobpost.UnitTests.UnitTests;
 
 import feign.FeignException;
 import feign.Request;
@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 import static org.mockito.Mockito.*;
-import org.junit.jupiter.api.BeforeEach;
+
 import org.mockito.MockedStatic;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
