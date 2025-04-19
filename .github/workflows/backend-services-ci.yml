@@ -46,7 +46,7 @@ jobs:
       - name: Check if the service directory changed
         id: check_changes
         run: |
-          echo "Checking if ${GITHUB_SHA} changed ${matrix.path}..."
+          bash -c "echo 'Checking if ${GITHUB_SHA} changed ${matrix.path}...'"
           git fetch origin ${{ github.ref }}
           CHANGED=$(git diff --name-only ${{ github.sha }} $(git merge-base ${{ github.sha }} origin/main) | grep "${matrix.path}" || true)
           if [[ -n "$CHANGED" ]]; then
