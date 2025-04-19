@@ -47,7 +47,7 @@ jobs:
         id: check_changes
         run: |
           echo "Checking if ${{ matrix.path }} changed..."
-          if github.event_name == 'pull_request'; then
+          if ${{ github.event_name == 'pull_request' }}; then
             # Get the list of changed files in the PR
             CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.head_ref }})
           else
