@@ -45,8 +45,8 @@ public class KeyCloakServiceImpl implements KeyCloakService {
     private String cachedAdminToken;
     private long tokenExpiryTime;
 
-
-    private final String localHostPrefixUrl = "http://localhost:9090";
+    @Value("${keycloak.issuer-base-url}")
+    private String localHostPrefixUrl;
 
 
     public String getAdminToken() {
