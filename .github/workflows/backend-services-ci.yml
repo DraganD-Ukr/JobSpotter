@@ -42,14 +42,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Check if the service's directory changed in the commit
+      # Check if the service's directory changed in the commit or pr
       - name: Check if the service directory changed
         id: check_changes
         run: |
-          echo "Checking if ${{ github.sha }} changed ${{ matrix.path }}..."
-          git fetch origin refs/heads/main
-          CHANGED=$(git diff --name-only ${{ github.sha }} $(git merge-base ${{ github.sha }} origin/main) | grep "${{ matrix.path }}" || true)
-          if [[ -n "$CHANGED" ]]; then
+          echo "Checking if ${{ matrix.path }} changed..."
+          if github.event_name == 'pull_request'; then
+            # Get the list of changed files in the PR
+            CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.head_ref }})
+          else
+            # Get the list of changed files in the push event
+            CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+          fi
+
+          # Check if any changed file is within the service's path
+          if [[ $(echo "$CHANGED_FILES" | grep -E "^${{ matrix.path }}/") ]]; then
             echo "result=true" >> "$GITHUB_OUTPUT"
           else
             echo "result=false" >> "$GITHUB_OUTPUT"
