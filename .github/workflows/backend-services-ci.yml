@@ -44,16 +44,16 @@ jobs:
 
       # Check if the service's directory changed in the commit
       - name: Check if the service directory changed
-        id: check_changes
         run: |
-          bash -c "echo 'Checking if ${GITHUB_SHA} changed ${matrix.path}...'"
-          git fetch origin ${{ github.ref }}
-          CHANGED=$(git diff --name-only ${{ github.sha }} $(git merge-base ${{ github.sha }} origin/main) | grep "${matrix.path}" || true)
+          echo "Checking if ${GITHUB_SHA} changed ${matrix.path}..."
+          git fetch origin refs/heads/main
+          CHANGED=$(git diff --name-only 69a5d414668ede6f994f1e7db1b6f7a1a6257827 $(git merge-base 69a5d414668ede6f994f1e7db1b6f7a1a6257827 origin/main) | grep "${matrix.path}" || true)
           if [[ -n "$CHANGED" ]]; then
             echo "result=true" >> $GITHUB_ENV
           else
             echo "result=false" >> $GITHUB_ENV
           fi
+
         
       # Set up Amazon Corretto (JDK 21)
       - name: Set up Java (Amazon Corretto 21)
