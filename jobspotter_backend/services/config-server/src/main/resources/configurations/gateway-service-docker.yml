@@ -1,0 +1,14 @@
+spring:
+  redis:
+    host: redis  # Docker container name
+    port: 6379
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:9090/realms/JobSpotter
+          jwk-set-uri: http://keycloak:9090/realms/JobSpotter/protocol/openid-connect/certs
+
+server:
+  port: 8100

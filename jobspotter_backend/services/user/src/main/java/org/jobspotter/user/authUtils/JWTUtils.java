@@ -21,8 +21,6 @@ public class JWTUtils {
 
     private static String keycloakPublicKey;
 
-
-
     private static String KEYCLOAK_BASE_URL = null;
 
     public JWTUtils(@Value("${keycloak.host.url}") String keycloakBaseUrl) {
