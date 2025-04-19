@@ -91,7 +91,8 @@ jobs:
         if: steps.check_changes.outputs.result == 'true'
         run: |
           cd jobspotter_backend/services/${{ matrix.service }}
-          ./mvnw clean verify   
+          chmod +x ./mvnw  # Grant execute permission
+          ./mvnw clean verify 
 
       # Build Docker Image
       - name: Build Docker Image for ${{ matrix.service }}
