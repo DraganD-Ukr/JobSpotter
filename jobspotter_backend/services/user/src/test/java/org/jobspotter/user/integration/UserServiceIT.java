@@ -99,7 +99,7 @@ public class UserServiceIT {
 
 //        Add keycloak properties from environment variables
         registry.add("keycloak.admin.client-id", () -> "JobSpotter-API");
-        registry.add("keycloak.host-url", () -> "http://localhost:" + keycloak.getFirstMappedPort());
+        registry.add("keycloak.host.url", () -> "http://localhost:" + keycloak.getFirstMappedPort());
         registry.add("keycloak.admin.username", keycloak::getAdminUsername);
         registry.add("keycloak.admin.password", keycloak::getAdminPassword);
 
