@@ -44,14 +44,15 @@ jobs:
 
       # Check if the service's directory changed in the commit
       - name: Check if the service directory changed
+        id: check_changes
         run: |
-          echo "Checking if ${GITHUB_SHA} changed ${matrix.path}..."
+          echo "Checking if ${{ github.sha }} changed ${{ matrix.path }}..."
           git fetch origin refs/heads/main
-          CHANGED=$(git diff --name-only 69a5d414668ede6f994f1e7db1b6f7a1a6257827 $(git merge-base 69a5d414668ede6f994f1e7db1b6f7a1a6257827 origin/main) | grep "${matrix.path}" || true)
+          CHANGED=$(git diff --name-only ${{ github.sha }} $(git merge-base ${{ github.sha }} origin/main) | grep "${{ matrix.path }}" || true)
           if [[ -n "$CHANGED" ]]; then
-            echo "result=true" >> $GITHUB_ENV
+            echo "result=true" >> "$GITHUB_OUTPUT"
           else
-            echo "result=false" >> $GITHUB_ENV
+            echo "result=false" >> "$GITHUB_OUTPUT"
           fi
 
         
