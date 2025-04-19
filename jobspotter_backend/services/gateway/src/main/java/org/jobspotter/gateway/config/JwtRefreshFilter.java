@@ -34,7 +34,8 @@ public class JwtRefreshFilter implements WebFilter {
     @Value("${keycloak.admin.client-id}")
     private String clientId;
 
-    private final String localHostPrefixUrl = "http://localhost:9090";
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private String issuerUri;
 
     private final JwtDecoder jwtDecoder;
     private final WebClient.Builder webClientBuilder;
@@ -104,7 +105,7 @@ public class JwtRefreshFilter implements WebFilter {
         // Make the refresh token request to Keycloak
         return webClientBuilder.build()
                 .post()
-                .uri(localHostPrefixUrl + "/realms/JobSpotter/protocol/openid-connect/token") // Keycloak token endpoint
+                .uri(issuerUri + "/protocol/openid-connect/token") // Keycloak token endpoint
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                 .bodyValue(formData)
                 .retrieve()
