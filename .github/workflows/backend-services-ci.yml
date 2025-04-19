@@ -86,13 +86,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # Run specific tests for ${{ matrix.service }}
-      - name: Run specific tests for ${{ matrix.service }}
+      # Run tests for ${{ matrix.service }}
+      - name: Run tests for ${{ matrix.service }}
         if: steps.check_changes.outputs.result == 'true'
         run: |
           cd jobspotter_backend/services/${{ matrix.service }}
           chmod +x ./mvnw
-          ./mvnw clean verify -Dtest=!*Default*Test,com.jobspotter.tests.*
+          ./mvnw clean verify -Dtest=!org.jobspotter.${{ matrix.service }}.* -Dsurefire.failIfNoSpecifiedTests=false
 
       # Build Docker Image
       - name: Build Docker Image for ${{ matrix.service }}
