@@ -38,7 +38,7 @@ public class SearchTitleSuggestionServiceImpl implements SearchTitleSuggestionSe
         }
 
         return suggestions.stream()
-                .filter(sug -> sug.getString().charAt(0) == title.charAt(0))
+                .filter(sug -> sug != null && sug.getString() != null && !sug.getString().isEmpty() && title != null && !title.isEmpty() && sug.getString().charAt(0) == title.charAt(0))
                 .map(Suggestion::getString)
                 .toList();
     }
