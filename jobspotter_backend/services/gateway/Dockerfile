@@ -14,8 +14,8 @@ ARG PROFILE=docker
 ENV ACTIVE_PROFILE=${PROFILE}
 
 WORKDIR /app
-COPY --from=build /build/target/gateway-service-*.jar /app/
+COPY --from=build /build/target/gateway-*.jar /app/
 
 EXPOSE 8100
 
-CMD java -jar -Dspring.profiles.active=${ACTIVE_PROFILE}  gateway-service-*.jar
+CMD java -jar -Dspring.profiles.active=${ACTIVE_PROFILE}  gateway-*.jar

@@ -14,8 +14,8 @@ ARG PROFILE=docker
 ENV ACTIVE_PROFILE=${PROFILE}
 
 WORKDIR /app
-COPY --from=build /build/target/discovery-service-*.jar /app/
+COPY --from=build /build/target/discovery-*.jar /app/
 
 EXPOSE 8761
 
-CMD java -jar -Dspring.profiles.active=${ACTIVE_PROFILE}  discovery-service-*.jar
+CMD java -jar -Dspring.profiles.active=${ACTIVE_PROFILE}  discovery-*.jar

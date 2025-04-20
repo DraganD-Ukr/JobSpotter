@@ -14,8 +14,8 @@ ARG PROFILE=docker
 ENV ACTIVE_PROFILE=${PROFILE}
 
 WORKDIR /app
-COPY --from=build /build/target/job-post-service-*.jar /app/
+COPY --from=build /build/target/job-post-*.jar /app/
 
 EXPOSE 8081
 
-CMD java -jar -Dspring.profiles.active=${ACTIVE_PROFILE}  job-post-service-*.jar
+CMD java -jar -Dspring.profiles.active=${ACTIVE_PROFILE}  job-post-*.jar

@@ -14,8 +14,8 @@ ARG PROFILE=docker
 ENV ACTIVE_PROFILE=${PROFILE}
 
 WORKDIR /app
-COPY --from=build /build/target/notification-service-*.jar /app/
+COPY --from=build /build/target/notification-*.jar /app/
 
 EXPOSE 8083
 
-CMD java -jar -Dspring.profiles.active=${ACTIVE_PROFILE}  notification-service-*.jar
+CMD java -jar -Dspring.profiles.active=${ACTIVE_PROFILE}  notification-*.jar
