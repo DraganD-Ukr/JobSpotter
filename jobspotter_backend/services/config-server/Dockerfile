@@ -18,4 +18,4 @@ COPY --from=build /build/target/config_server-*.jar /app/
 
 EXPOSE 8888
 
-CMD java -jar -Dspring.profiles.active=${ACTIVE_PROFILE}  config_server-*.jar
+CMD java -jar config_server-*.jar
