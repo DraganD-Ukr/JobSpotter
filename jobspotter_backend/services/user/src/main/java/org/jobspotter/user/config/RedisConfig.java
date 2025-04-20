@@ -3,6 +3,7 @@ package org.jobspotter.user.config;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -19,9 +20,12 @@ import java.time.Duration;
 @Configuration
 public class RedisConfig {
 
-
-    public RedisConnectionFactory redisConnectionFactory() {
-        LettuceConnectionFactory factory = new LettuceConnectionFactory();
+    @Bean
+    public RedisConnectionFactory redisConnectionFactory(
+            @Value("${spring.redis.host}") String host,
+            @Value("${spring.redis.port}") int port
+    ) {
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(host, port);
         return factory;
     }
 
