@@ -109,7 +109,7 @@ services:
   #        ----------------------Redis-------------------------
 
   redis:
-    image: redis/redis-stack:latest  # ✅ Use Redis Stack (Includes RediSearch)
+    image: redis/redis-stack:latest  #  Use Redis Stack (Includes RediSearch)
     container_name: redis
     restart: unless-stopped
     ports:
@@ -169,135 +169,135 @@ services:
 
 
 
-#      ---------------------------------------JOBSPOTTER SERVICES------------------------------------------------
+  #      ---------------------------------------JOBSPOTTER SERVICES------------------------------------------------
 
-    #----------------------Config Server------------------------
-    config-server:
-      container_name: config-server
-      image: jobspotter/config-server:latest
-      ports:
-        - "8888:8888"
-      networks:
-        - jobSpotter-net
-      restart: unless-stopped
+  #----------------------Config Server------------------------
+  config-server:
+    container_name: config-server
+    image: jobspotter/config-server:latest
+    ports:
+      - "8888:8888"
+    networks:
+      - jobSpotter-net
+    restart: unless-stopped
 
-    #----------------------Discovery Server (Eureka)------------------------
-    discovery:
-      container_name: discovery
-      image: jobspotter/discovery-service:latest
-      ports:
-        - "8761:8761"
-      networks:
-        - jobSpotter-net
-      depends_on:
-        - config-server
-      restart: unless-stopped
+  #----------------------Discovery Server (Eureka)------------------------
+  discovery:
+    container_name: discovery
+    image: jobspotter/discovery:latest
+    ports:
+      - "8761:8761"
+    networks:
+      - jobSpotter-net
+    depends_on:
+      - config-server
+    restart: unless-stopped
 
-    #----------------------Gateway------------------------
-    gateway:
-      container_name: gateway
-      image: jobspotter/gateway:latest
-      ports:
-        - "8080:8080"
-      networks:
-        - jobSpotter-net
-      depends_on:
-        - discovery
-        - config-server
-        - keycloak
-      restart: unless-stopped
+  #----------------------Gateway------------------------
+  gateway:
+    container_name: gateway
+    image: jobspotter/gateway:latest
+    ports:
+      - "8100:8100"
+    networks:
+      - jobSpotter-net
+    depends_on:
+      - discovery
+      - config-server
+      - keycloak
+    restart: unless-stopped
 
-    #----------------------Job Post Service------------------------
-    job-post:
-      container_name: job-post
-      image: jobspotter/jobpost:latest
-      ports:
-        - "8081:8081"
-      networks:
-        - jobSpotter-net
-      depends_on:
-        - discovery
-        - config-server
-        - postgresql
-        - gateway
-        - redis
-        - keycloak
-      restart: unless-stopped
+  #----------------------Job Post Service------------------------
+  job-post:
+    container_name: job-post
+    image: jobspotter/job-post:latest
+    ports:
+      - "8081:8081"
+    networks:
+      - jobSpotter-net
+    depends_on:
+      - discovery
+      - config-server
+      - postgresql
+      - gateway
+      - redis
+      - keycloak
+    restart: unless-stopped
 
-    #----------------------Notification Service------------------------
-    notification:
-      container_name: notification
-      image: jobspotter/notification:latest
-      ports:
-        - "8082:8082"
-      networks:
-        - jobSpotter-net
-      depends_on:
-        - discovery
-        - config-server
-        - gateway
-        - mongodb
-      restart: unless-stopped
+  #----------------------Notification Service------------------------
+  notification:
+    container_name: notification
+    image: jobspotter/notification:latest
+    ports:
+      - "8083:8083"
+    networks:
+      - jobSpotter-net
+    depends_on:
+      - discovery
+      - config-server
+      - gateway
+      - mongodb
+    restart: unless-stopped
 
-    #----------------------Report Service------------------------
-    report:
-      container_name: report
-      image:  jobspotter/report:latest
-      ports:
-        - "8083:8083"
-      networks:
-        - jobSpotter-net
-      depends_on:
-        - discovery
-        - config-server
-        - gateway
-        - redis
-        - keycloak
-        - mongodb
-      restart: unless-stopped
+  #----------------------Report Service------------------------
+  report:
+    container_name: report
+    image:  jobspotter/report:latest
+    ports:
+      - "8084:8084"
+    networks:
+      - jobSpotter-net
+    depends_on:
+      - discovery
+      - config-server
+      - gateway
+      - redis
+      - keycloak
+      - mongodb
+    restart: unless-stopped
 
-    #----------------------Review Service------------------------
-    review:
-      container_name: review
-      image:  jobspotter/review:latest
-      ports:
-        - "8084:8084"
-      networks:
-        - jobSpotter-net
-      depends_on:
-        - discovery
-        - config-server
-        - gateway
-        - redis
-        - keycloak
-        - postgresql
-      restart: unless-stopped
+  #----------------------Review Service------------------------
+  review:
+    container_name: review
+    image:  jobspotter/review:latest
+    ports:
+      - "8082:8082"
+    networks:
+      - jobSpotter-net
+    depends_on:
+      - discovery
+      - config-server
+      - gateway
+      - redis
+      - keycloak
+      - postgresql
+    restart: unless-stopped
 
-    #----------------------User Service------------------------
-    user:
-      container_name: user
-      image:  jobspotter/user:latest
-      ports:
-        - "8080:8080"
-      networks:
-        - jobSpotter-net
-      environment:
-        - AWS_S3_BUCKET=${AWS_S3_BUCKET}
-        - AWS_S3_ACCESS_KEY_ID=${AWS_S3_ACCESS_KEY_ID}
-        - AWS_S3_SECRET_ACCESS_KEY=${AWS_S3_SECRET_ACCESS_KEY}
-        - AWS_S3_REGION=${AWS_S3_REGION}
-        - KEYCLOAK_ADMIN_CLIENT_ID=${KEYCLOAK_ADMIN_CLIENT_ID}
-        - KEYCLOAK_ADMIN_USERNAME=${KEYCLOAK_ADMIN_USERNAME}
-        - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
-        - GOOGLE_GEOCODING_API_KEY=${GOOGLE_GEOCODING_API_KEY}
-      depends_on:
-        - discovery
-        - config-server
-        - gateway
-        - postgresql
-        - redis
-        - keycloak
-      restart: unless-stopped
+  #----------------------User Service------------------------
+  user:
+    container_name: user
+    image:  jobspotter/user:latest
+    ports:
+      - "8080:8080"
+    networks:
+      - jobSpotter-net
+    environment:
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AWS_S3_ACCESS_KEY_ID=${AWS_S3_ACCESS_KEY_ID}
+      - AWS_S3_SECRET_ACCESS_KEY=${AWS_S3_SECRET_ACCESS_KEY}
+      - AWS_S3_REGION=${AWS_S3_REGION}
+      - KEYCLOAK_ADMIN_CLIENT_ID=${KEYCLOAK_ADMIN_CLIENT_ID}
+      - KEYCLOAK_ADMIN_USERNAME=${KEYCLOAK_ADMIN_USERNAME}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - GOOGLE_GEOCODING_API_KEY=${GOOGLE_GEOCODING_API_KEY}
+    depends_on:
+      - discovery
+      - config-server
+      - gateway
+      - postgresql
+      - redis
+      - keycloak
+    restart: unless-stopped
 
 
 
@@ -308,10 +308,10 @@ networks:
     driver: bridge
 
 volumes:
-  postgres:
-  mongodb:
-  keycloak_data:
-  keycloak_db_data:
+  jobSpotter_postgres:
+  jobSpotter_mongo:
+  jobSpotter_keycloak_data:
+  jobSpotter_keycloak_db_data:
   redis: {}
   zookeeper-data: {}
   zookeeper-datalog: {}
