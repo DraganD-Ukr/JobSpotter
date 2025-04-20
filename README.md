@@ -7,7 +7,11 @@
   <img src="https://img.shields.io/github/commit-activity/t/DraganD-Ukr/JobSpotter/main" alt="Total Commits" height="25">
   <img src="https://img.shields.io/github/issues-pr-closed/DraganD-Ukr/JobSpotter" alt="Total PRs Closed" height="25">
   <img src="https://img.shields.io/github/contributors/DraganD-Ukr/JobSpotter" alt="Contributors" height="25">
+  <a href="https://github.com/DraganD-Ukr/JobSpotter/actions/workflows/backend-services-ci.yml">
+    <img src="https://github.com/DraganD-Ukr/JobSpotter/actions/workflows/backend-services-ci.yml/badge.svg?branch=main" alt="Service CI Pipeline" height="25">
+  </a>
 </div>
+
 
 
 
@@ -39,13 +43,13 @@ A web platform that connects users with local, simple side jobs, such as babysit
 - :coffee: **Backend**: Java, Spring Boot
 - :satellite: **Real-Time Messaging**: Kafka, Server-Sent Events (SSE)
 - :lock: **Authentication**: Keycloak
-- :floppy_disk: **Caching**: Redis (to be implemented)
+- :floppy_disk: **Caching**: Redis 
 - :card_file_box: **Database**: MongoDB, PostgreSQL
 - :mag_right: **Search Engine**: Full-Text Search with synonyms (Lucene + Hibernate Search)
 - :cloud: **Cloud Storage**: AWS S3 (for file storage)
 - :test_tube: **Testing**: JUnit, Mockito, Spring Boot Test, Testcontainers
-- :whale: **Containerization**: Docker (to be implemented)
-- :arrow_up: **CI/CD**: GitHub Actions (to be implemented)
+- :whale: **Containerization**: Docker 
+- :arrow_up: **CI/CD**: GitHub Actions 
 - :wrench: **Config Server**: Centralized configuration management for all services.
 - :electric_plug: **Discovery Service**: Enables service discovery for microservices communication.
 
@@ -71,7 +75,7 @@ A web platform that connects users with local, simple side jobs, such as babysit
    - Instead of predefined report types, the type of report is determined by the fields present in each report. This approach enables efficient management of various report types while keeping the structure simple and scalable.
 
 8. **Kafka & SSE**: Real-time notifications are delivered using Kafka, ensuring at-least-once delivery guarantees. Server-Sent Events (SSE) are used to push updates to the front-end.     
-9. **Performance**: Redis caching improves application performance by reducing response times and preventing redundant database queries (to be implemented).
+9. **Performance**: Redis caching improves application performance by reducing response times and preventing redundant database queries.
 10. **Testing**: Unit and integration tests are written using JUnit, Mockito, and Testcontainers, achieving over 80% test coverage to ensure application stability and quality (in progress).
 
 ## **License**
