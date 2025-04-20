@@ -14,7 +14,7 @@ ARG PROFILE=docker
 ENV ACTIVE_PROFILE=${PROFILE}
 
 WORKDIR /app
-COPY --from=build /build/target/config-server-*.jar /app/
+COPY --from=build /build/target/config-server-*.jar /app/config-server.jar
 
 EXPOSE 8888
 
