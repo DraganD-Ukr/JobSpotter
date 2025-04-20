@@ -19,6 +19,7 @@ import org.springframework.data.redis.connection.RedisConnectionCommands;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -42,6 +43,7 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@ActiveProfiles("test")
 @Slf4j
 @SpringBootTest(classes = UserApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -107,6 +109,7 @@ public class UserServiceIT {
         // Disable Config Server
         registry.add("spring.cloud.config.enabled", () -> "false");
         registry.add("spring.config.import", () -> "optional:configtree:");
+        registry.add("spring.config.location", () -> "classpath:/");
     }
 
 
