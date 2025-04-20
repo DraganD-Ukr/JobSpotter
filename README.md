@@ -7,7 +7,11 @@
   <img src="https://img.shields.io/github/commit-activity/t/DraganD-Ukr/JobSpotter/main" alt="Total Commits" height="25">
   <img src="https://img.shields.io/github/issues-pr-closed/DraganD-Ukr/JobSpotter" alt="Total PRs Closed" height="25">
   <img src="https://img.shields.io/github/contributors/DraganD-Ukr/JobSpotter" alt="Contributors" height="25">
+  <a href="https://github.com/DraganD-Ukr/JobSpotter/actions/workflows/backend-services-ci.yml">
+    <img src="https://github.com/DraganD-Ukr/JobSpotter/actions/workflows/backend-services-ci.yml/badge.svg?branch=main" alt="Service CI Pipeline" height="25">
+  </a>
 </div>
+
 
 
 
