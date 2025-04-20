@@ -19,7 +19,7 @@ public class JwtDecoderConfig {
     @Bean
     @Profile("docker")  // Created when the "docker" profile is active
     public JwtDecoder dockerJwtDecoder() {
-        return JwtDecoders.fromIssuerLocation("http://keycloak:9090/realms/JobSpotter");
+        return JwtDecoders.fromIssuerLocation("http://keycloak:8080/realms/JobSpotter");
     }
 
 }
