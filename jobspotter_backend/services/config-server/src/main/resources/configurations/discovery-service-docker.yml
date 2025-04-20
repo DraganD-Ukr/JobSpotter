@@ -1,11 +1,11 @@
 eureka:
   instance:
-    hostname: eureka-server  # Use the container name in the Docker network
+    hostname: discovery-service  # Use the container name in the Docker network
   client:
     registerWithEureka: false
     fetchRegistry: false
     serviceUrl:
-      defaultZone: http://${eureka.instance.hostname}:8761/eureka/
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
 
 server:
   port: 8761

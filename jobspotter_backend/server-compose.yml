@@ -174,7 +174,7 @@ services:
   #----------------------Config Server------------------------
   config-server:
     container_name: config-server
-    image: jobspotter/config-server:latest
+    image: jobspotter/config-server:1065f8ab8461736cf409f36aab377c429811d999
     ports:
       - "8888:8888"
     networks:
@@ -184,7 +184,7 @@ services:
   #----------------------Discovery Server (Eureka)------------------------
   discovery:
     container_name: discovery
-    image: jobspotter/discovery:latest
+    image: jobspotter/discovery:64455e0b8896126aeec45e268c86a942be8ee61
     ports:
       - "8761:8761"
     networks:
@@ -196,7 +196,7 @@ services:
   #----------------------Gateway------------------------
   gateway:
     container_name: gateway
-    image: jobspotter/gateway:latest
+    image: jobspotter/gateway:964455e0b8896126aeec45e268c86a942be8ee61
     ports:
       - "8100:8100"
     networks:
@@ -210,7 +210,7 @@ services:
   #----------------------Job Post Service------------------------
   job-post:
     container_name: job-post
-    image: jobspotter/job-post:latest
+    image: jobspotter/job-post:964455e0b8896126aeec45e268c86a942be8ee61
     ports:
       - "8081:8081"
     networks:
@@ -227,7 +227,7 @@ services:
   #----------------------Notification Service------------------------
   notification:
     container_name: notification
-    image: jobspotter/notification:latest
+    image: jobspotter/notification:964455e0b8896126aeec45e268c86a942be8ee61
     ports:
       - "8083:8083"
     networks:
@@ -242,7 +242,7 @@ services:
   #----------------------Report Service------------------------
   report:
     container_name: report
-    image:  jobspotter/report:latest
+    image:  jobspotter/report:964455e0b8896126aeec45e268c86a942be8ee61
     ports:
       - "8084:8084"
     networks:
@@ -259,7 +259,7 @@ services:
   #----------------------Review Service------------------------
   review:
     container_name: review
-    image:  jobspotter/review:latest
+    image:  jobspotter/review:964455e0b8896126aeec45e268c86a942be8ee61
     ports:
       - "8082:8082"
     networks:
@@ -276,7 +276,7 @@ services:
   #----------------------User Service------------------------
   user:
     container_name: user
-    image:  jobspotter/user:latest
+    image:  jobspotter/user:964455e0b8896126aeec45e268c86a942be8ee61
     ports:
       - "8080:8080"
     networks:
