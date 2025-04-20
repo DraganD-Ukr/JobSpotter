@@ -21,15 +21,11 @@ public class KafkaConsumerConfig {
 
     private final KafkaProperties kafkaProperties;
 
-    @Bean
-    public Map<String, Object> consumerConfig() {
-        return kafkaProperties.buildConsumerProperties(new DefaultSslBundleRegistry());
-    }
 
     @Bean
     public ConsumerFactory<String, Notification> consumerFactory() {
-        Map<String, Object> producerProps = kafkaProperties.buildConsumerProperties(new DefaultSslBundleRegistry());
-        return new DefaultKafkaConsumerFactory<>(producerProps);
+        Map<String, Object> consumerProperties = kafkaProperties.buildConsumerProperties(new DefaultSslBundleRegistry());
+        return new DefaultKafkaConsumerFactory<>(consumerProperties);
     }
 
     @Bean
