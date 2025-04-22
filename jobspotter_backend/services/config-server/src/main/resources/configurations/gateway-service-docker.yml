@@ -1,4 +1,19 @@
 spring:
+  ssl:
+    bundle:
+      jks:
+        server:
+          key:
+            alias: gateway-service
+          keystore:
+            location: ${KEYSTORE_LOCATION}
+            password: ${KEYSTORE_PASSWORD}
+            type: PKCS12
+        pem:
+          client:
+            truststore:
+              certificate: ${CERTIFICATE_LOCATION}
+
   redis:
     host: redis  # Docker container name
     port: 6379
@@ -57,6 +72,9 @@ keycloak:
 
 server:
   port: 8100
+  ssl:
+    enabled: ${SSL_ON:false}
+    bundle: "server"
 
 
 springdoc:
