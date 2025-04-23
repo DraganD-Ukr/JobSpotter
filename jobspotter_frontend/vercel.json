@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/api/:match*",
-      "destination": "https://api.jobspotter.eu/:match*"
+      "source": "/proxy/:path*",
+      "destination": "https://api.jobspotter.eu/:path*"
     }
   ]
 }
