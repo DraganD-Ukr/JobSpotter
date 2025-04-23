@@ -1,0 +1,7 @@
+{  
+    "rewrites": [
+         { "source": "/api/:match*",
+           "destination": "https://api.jobspotter.eu/:match*"
+         } 
+   ]
+}
