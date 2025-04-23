@@ -16,6 +16,7 @@ import org.jobspotter.jobpost.repository.JobPostRepository;
 import org.jobspotter.jobpost.repository.JobPostSpecificationRepository;
 import org.jobspotter.jobpost.service.Implementation.JobPostImpl;
 import org.jobspotter.jobpost.service.NotificationService;
+import org.jobspotter.jobpost.service.SearchTitleSuggestionService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -73,6 +74,9 @@ public class JobPostServiceImplTests {
 
     @Mock
     private NotificationService notificationService;
+
+    @Mock
+    private SearchTitleSuggestionService searchTitleSuggestionService;
 
     @InjectMocks
     private JobPostImpl jobPostImpl;
@@ -563,7 +567,9 @@ public class JobPostServiceImplTests {
             assertNotNull(returnedId);
             assertEquals(99L, returnedId);
 
+
             verify(jobPostRepository).save(jobPostCaptor.capture());
+            verify(searchTitleSuggestionService).addTitle(request.getTitle());
             JobPost savedJob = jobPostCaptor.getValue();
 
             assertAll("Verify saved job post",
@@ -614,6 +620,7 @@ public class JobPostServiceImplTests {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> jobPostImpl.createJobPost(accessToken, request));
 
+        verify(searchTitleSuggestionService, never()).addTitle(request.getTitle());
         assertTrue(exception.getMessage().contains("Address Not Found"));
     }
 

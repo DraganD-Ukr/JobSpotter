@@ -18,6 +18,7 @@ import org.jobspotter.jobpost.repository.JobPostSpecificationRepository;
 import org.jobspotter.jobpost.repository.specification.JobPostSpecification;
 import org.jobspotter.jobpost.service.JobPostService;
 import org.jobspotter.jobpost.service.NotificationService;
+import org.jobspotter.jobpost.service.SearchTitleSuggestionService;
 import org.jobspotter.jobpost.utils.GeoUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -48,6 +49,7 @@ public class JobPostImpl implements JobPostService {
     private final JobPostSpecificationRepository jobPostSpecificationRepository;
     private final NotificationService notificationService;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final SearchTitleSuggestionService searchTitleSuggestionService;
 
     private static final String TOP_JOB_POSTS_KEY = "top10:jobposts";
 
@@ -420,6 +422,8 @@ public class JobPostImpl implements JobPostService {
                     .action("VIEW")
                     .createdAt(LocalDateTime.now())
                     .build(), KafkaTopic.JOB_POST_CREATE);
+
+            searchTitleSuggestionService.addTitle(jobPost.getTitle());
 
             return jobPost.getJobPostId();
             
