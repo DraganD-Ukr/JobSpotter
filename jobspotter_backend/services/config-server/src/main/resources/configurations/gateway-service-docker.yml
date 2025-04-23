@@ -1,4 +1,9 @@
 spring:
+  data:
+    redis:
+      host: redis  # Docker container name
+      port: 6379
+
   ssl:
     bundle:
       jks:
@@ -14,10 +19,6 @@ spring:
             truststore:
               certificate: ${CERTIFICATE_LOCATION}
 
-  data:
-    redis:
-      host: redis  # Docker container name
-      port: 6379
   cloud:
     gateway:
       default-filters:
