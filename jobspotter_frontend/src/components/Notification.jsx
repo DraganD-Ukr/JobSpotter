@@ -46,7 +46,7 @@ export default function Notification({ variant = "icon", isLoggedIn = true }) {
     let existingUnread = getStoredUnreadNotifications();
     const readNotificationIds = getReadNotificationIds();
 
-    fetch("/api/v1/notifications", { credentials: "include" })
+    fetch("/api/v1/notifications/stream", { credentials: "include" })
       .then((res) => {
         if (!res.ok) {
           console.error(`Error fetching notifications: ${res.status} ${res.statusText}`);

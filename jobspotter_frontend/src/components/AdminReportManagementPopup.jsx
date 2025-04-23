@@ -146,7 +146,7 @@ export default function AdminReportManagementPopup() {
       .then((res) => {
         if (!res.ok) throw new Error("Failed to update applicant");
         console.log("Applicant updated successfully.");
-        successMessage("Applicant updated successfully!");
+        setSuccessMessage("Applicant updated successfully!");
         setIsSuccessMessageVisible(true);
         setIsEditApplicantFormVisible(false);
       })
@@ -316,7 +316,7 @@ export default function AdminReportManagementPopup() {
       });
   }
 
-  function handleUserBan() {
+  function handleUserDisable() {
     let userId = report?.reportedUserId;
     if (!userId) return;
     fetch(`/api/v1/users/${userId}/disable`, {
@@ -325,13 +325,19 @@ export default function AdminReportManagementPopup() {
       credentials: "include",
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to ban user");
+        if (!res.ok) throw new Error("Failed to disable user");
         return res.json();
       })
       .then(() => {
-        console.log("Disabled(banned) user:", userId);
+        console.log("Disabled user:", userId);
+        setSuccessMessage("User disabled successfully!");
+        setIsSuccessMessageVisible(true);
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        console.error("Error disabling user:", error);
+        setErrorMessage("Error disabling user: " + error.message);
+        setIsErrorMessageVisible(true);
+      });
   }
 
   useEffect(() => {
@@ -494,7 +500,6 @@ export default function AdminReportManagementPopup() {
 
         {/* Title Box */}
         <div className="mb-4">
-   
           <h2 className="text-center font-bold text-xl">
             Title
           </h2>
@@ -584,9 +589,9 @@ export default function AdminReportManagementPopup() {
                       bg-red-600 text-white px-4 py-2 rounded 
                       hover:opacity-90 transition
                     "
-                    onClick={handleUserBan}
+                    onClick={handleUserDisable}
                   >
-                    Ban
+                    Disable
                   </button>
                 </div>
               </>
@@ -752,7 +757,7 @@ export default function AdminReportManagementPopup() {
         {/* Delete JobPost confirmation */}
         {isDeleteJobPostConfirmationVisible && (
           jobPostData ? (
-            <div className="rounded-md shadow-md p-6 mt-6 bg-white">
+            <div className="rounded-md shadow with-shadow-md p-6 mt-6 bg-white">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Confirm Delete Job Post
               </h3>
