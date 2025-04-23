@@ -17,7 +17,7 @@ public class MyJobPostDetailedResponse {
 
     private Long jobPostId;
     private UUID jobPosterId; // Subject to change
-    private Set<Tag> tags;
+    private Set<TagDto> tags;
     private List<ApplicantDetailedResponse> applicants;
     private String title;
     private String description;
