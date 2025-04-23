@@ -110,3 +110,5 @@ jobs:
         if: steps.check_changes.outputs.result == 'true'
         run: |
           docker push jobspotter/${{ matrix.service }}:${{ github.sha }}
+          docker tag jobspotter/${{ matrix.service }}:${{ github.sha }} jobspotter/${{ matrix.service }}:latest
+          docker push jobspotter/${{ matrix.service }}:latest
