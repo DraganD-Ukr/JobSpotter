@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: env.VITE_API_URL,  // Use the loaded API URL from environment variables
           changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
           secure: false,
         },
       },
