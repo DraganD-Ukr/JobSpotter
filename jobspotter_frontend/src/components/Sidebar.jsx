@@ -2,15 +2,17 @@ import { useEffect, useState, useContext } from "react";
 import { ThemeContext } from "../components/ThemeContext";
 import { Link } from "react-router-dom";
 import ProfilePicture from "../components/ProfilePicture";
+import Notification from "../components/Notification";
 
 export default function Sidebar() {
+  // User info state
   const [userId, setUserId] = useState("");
   const [firstName, setFirstName] = useState("Guest");
   const [lastName, setLastName] = useState("User");
   const [userType, setUserType] = useState("User");
-
   const { darkMode, setDarkMode } = useContext(ThemeContext);
 
+  // Fetch user data when component mounts
   useEffect(() => {
     fetch("/api/v1/users/me", {
       method: "GET",
@@ -22,8 +24,6 @@ export default function Sidebar() {
         return res.json();
       })
       .then((data) => {
-        console.log("Sidebar user data:", data);
-        // Set each piece of data like in the Navbar
         setUserId(data.userId || "");
         setFirstName(data.firstName || "Guest");
         setLastName(data.lastName || "User");
@@ -32,7 +32,7 @@ export default function Sidebar() {
       .catch((err) => console.error("Error fetching user data:", err));
   }, [setDarkMode]);
 
-  // Logout function for Sign Out link
+  // Logout function
   const handleLogout = async () => {
     try {
       const response = await fetch("/api/v1/users/auth/logout", {
@@ -49,10 +49,35 @@ export default function Sidebar() {
     }
   };
 
+  // Delete Account function
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone."
+    );
+    if (!confirmed) return;
+
+    try {
+      if (!userId) throw new Error("No userId found. Cannot delete account.");
+
+      const response = await fetch(`/api/v1/users/${userId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to delete account");
+
+      alert("Account deleted successfully.");
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      alert("There was a problem deleting your account.");
+    }
+  };
+
   return (
-    <aside>
+    <aside className="p-4 border-r">
+      {/* User Info */}
       <div className="flex items-center gap-3 mb-6">
-        {/* Use ProfilePicture just like in Navbar, passing userId and darkMode */}
         <ProfilePicture userId={userId} darkMode={darkMode} />
         <div>
           <h3 className="text-lg font-semibold">
@@ -62,6 +87,8 @@ export default function Sidebar() {
         </div>
       </div>
 
+
+      {/* Nav links */}
       <nav className="space-y-3">
         <Link to="/Profile" className="block text-sm hover:text-green-400">
           Profile
@@ -75,15 +102,23 @@ export default function Sidebar() {
         <Link to="/Address" className="block text-sm hover:text-green-400">
           Manage Address
         </Link>
-        <Link to="/NotificationPopup" className="block text-sm hover:text-green-400">
-          Notifications
-        </Link>
+              {/* Notification component with variant "text" for Sidebar */}
+      <div className="mb-4">
+        <Notification variant="text" />
+      </div>
         <Link
           to="#"
           onClick={handleLogout}
           className="block text-sm hover:text-green-400"
         >
           Sign Out
+        </Link>
+        <Link
+          to="#"
+          onClick={handleDeleteAccount}
+          className="block text-sm hover:text-red-400"
+        >
+          Delete Account
         </Link>
       </nav>
     </aside>

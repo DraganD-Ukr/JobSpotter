@@ -330,7 +330,7 @@ export function JobPostDetails() {
                                     <div className="flex flex-col font-semibold text-lg">
                                         <span>{jobPoster.firstName}</span>
                                         <span>{jobPoster.lastName}</span>
-                                    </div>
+                                    </div>  
                                 </Link>
                             )}
 

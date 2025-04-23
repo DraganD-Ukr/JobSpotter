@@ -42,7 +42,7 @@ export function Contact() {
             </div>
           </div>
 
-          {/* Aloy */}
+          {/* Joart */}
           <div className="card border border-gray-300 hover:shadow-md hover:border-green-500 transition p-6 rounded-lg flex flex-col items-center text-center">
             <FaUserTie className="text-4xl text-green-500 mb-4" />
             <h4 className="text-xl font-semibold mb-2">Aloy</h4>
@@ -51,7 +51,7 @@ export function Contact() {
             </p>
             <div className="flex flex-col gap-2 items-center text-gray-700 dark:text-gray-300">
               <p className="flex items-center gap-2">
-                <FaEnvelope /> aloy@jobspotter.com
+                <FaEnvelope /> Joart@jobspotter.com
               </p>
               <p className="flex items-center gap-2">
                 <FaPhone /> +987 654 3210
@@ -59,7 +59,7 @@ export function Contact() {
             </div>
           </div>
 
-          {/* Joart */}
+          {/* Aloy */}
           <div className="card border border-gray-300 hover:shadow-md hover:border-green-500 transition p-6 rounded-lg flex flex-col items-center text-center">
             <FaUserTie className="text-4xl text-green-500 mb-4" />
             <h4 className="text-xl font-semibold mb-2">Joart</h4>
@@ -68,7 +68,7 @@ export function Contact() {
             </p>
             <div className="flex flex-col gap-2 items-center text-gray-700 dark:text-gray-300">
               <p className="flex items-center gap-2">
-                <FaEnvelope /> joart@jobspotter.com
+                <FaEnvelope /> Aloy@jobspotter.com
               </p>
               <p className="flex items-center gap-2">
                 <FaPhone /> +555 123 4567
