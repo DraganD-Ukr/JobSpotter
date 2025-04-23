@@ -12,7 +12,7 @@ import {
     FaStar,
     FaStarHalfAlt,
     FaRegStar,
-    FaInfoCircle // Import info icon
+    FaInfoCircle 
 } from 'react-icons/fa';
 import { BsInfoLg } from "react-icons/bs";
 import ProfilePicture from './ProfilePicture';
@@ -106,7 +106,6 @@ const UserProfile = React.memo(({ user, rating, ratingLoading, ratingError }) =>
                         <p className="text-gray-500 dark:text-gray-300">Ratings not available.</p>
                     )}
                     {/* Tooltip Popup */}
-                    {/* Tooltip Popup */}
                     <div
                         className={`absolute right-0 top-full text-left mt-2 p-4 rounded-md shadow-xl w-64 md:w-80 lg:w-96 transition-opacity duration-300 ease-in-out transform ${darkMode
                                 ? 'bg-gray-800 text-white border border-gray-700'
@@ -178,23 +177,9 @@ const UserProfile = React.memo(({ user, rating, ratingLoading, ratingError }) =>
                 </div>
             </div>
 
-            {/* Activity/Timeline-like Section - User ID */}
-            <div className={`p-4 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-300 bg-white'}`}>
-                <h4 className={`font-semibold text-lg mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>System Information</h4>
-                <div className="flex items-center">
-                    <FaRegIdCard className={`mr-3 h-6 w-6 text-gray-500 ${darkMode ? 'text-gray-400' : ''}`} />
-                    <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>User ID: {user.userId}</p>
-                </div>
-            </div>
-
-            {/* You can add more sections here if needed */}
 
         </div>
     );
 });
-
-
-
-
 
 export default UserProfile;

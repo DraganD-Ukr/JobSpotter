@@ -17,7 +17,7 @@ export default function SearchReviews() {
     setError("");
     try {
       const response = await fetch(
-        `/api/v1/reviews?reviewedUserId=${searchUserId}`,
+        `/api/v1/reviews/user/${searchUserId}/reviews`,
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -177,9 +177,10 @@ export default function SearchReviews() {
         {ratingsSummary && (
           <div className="mb-6 p-4 border border-green-600 rounded bg-gray-800 text-green-300">
             <h2 className="font-semibold text-lg mb-2 text-green-400">Ratings Summary</h2>
-            <p>Total Ratings: {ratingsSummary.ratingCount}</p>
-            <p>Average Rating: {ratingsSummary.averageRating}</p>
-            <p>Role: {ratingsSummary.role}</p>
+            <p>Seeker Rating Count: {ratingsSummary.seekerRatingCount}</p>
+            <p>Average Seeker Rating: {ratingsSummary.avgSeekerRating?.toFixed(2)}</p>
+            <p>Provider Rating Count: {ratingsSummary.providerRatingCount}</p>
+            <p>Average Provider Rating: {ratingsSummary.avgProviderRating?.toFixed(2)}</p>
           </div>
         )}
 

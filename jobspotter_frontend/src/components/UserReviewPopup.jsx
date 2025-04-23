@@ -8,26 +8,77 @@ export default function UserReviewPopup({
   jobPostId,
   reviewerID,
   reviewedUserID,
-  roleOfReviewer
+  roleOfReviewer,
+  fallbackUserId
 }) {
   const { darkMode } = useContext(ThemeContext);
 
+  // Form field states
+  const [rating, setRating] = useState("");
+  const [comment, setComment] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
   // Submits the user review to the server
   const handleSubmitReview = async () => {
-    // Basic validations
+
+
+    setErrorMessage("");
+
+    // Validate that reviewerID and roleOfReviewer are provided
+    if (!reviewerID) {
+      setErrorMessage("Reviewer user ID is required.");
+      return;
+    }
+    if (!roleOfReviewer) {
+      setErrorMessage("Reviewer role is required.");
+      return;
+    }
+
+    // Validate the rating
     const parsedRating = parseFloat(rating);
     if (isNaN(parsedRating) || parsedRating < 1 || parsedRating > 5) {
       setErrorMessage("Rating must be between 1 and 5.");
       return;
     }
+    // Validate the comment
     if (comment.trim().length < 5) {
       setErrorMessage("Comment must be at least 5 characters.");
       return;
     }
 
+    let finalReviewedUserID = reviewedUserID;
+    if (!finalReviewedUserID && fallbackUserId) {
+      try {
+        const response = await fetch(`/api/v1/users/${fallbackUserId}`);
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch user data: ${response.status} ${response.statusText}`
+          );
+        }
+        const userData = await response.json();
+
+
+        finalReviewedUserID = userData.userId || userData.id;
+
+        if (!finalReviewedUserID) {
+          setErrorMessage("User record found, but user ID is missing.");
+          return;
+        }
+      } catch (fetchErr) {
+        console.error(fetchErr);
+        setErrorMessage(fetchErr.message);
+        return;
+      }
+    }
+
+    if (!finalReviewedUserID) {
+      setErrorMessage("Reviewed user ID is required, but none was provided.");
+      return;
+    }
+
     const requestBody = {
       reviewerID,
-      reviewedUserID,
+      reviewedUserID: finalReviewedUserID,
       rating: parsedRating,
       comment,
       roleOfReviewer,
@@ -41,7 +92,9 @@ export default function UserReviewPopup({
         body: JSON.stringify(requestBody),
       });
       if (!response.ok) {
-        throw new Error(`Review submit failed: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Review submit failed: ${response.status} ${response.statusText}`
+        );
       }
       onClose();
     } catch (err) {
@@ -49,10 +102,6 @@ export default function UserReviewPopup({
       setErrorMessage(err.message);
     }
   };
-
-  const [rating, setRating] = useState("");
-  const [comment, setComment] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
 
   // Exit if popup is not visible
   if (!isVisible) return null;
@@ -68,11 +117,7 @@ export default function UserReviewPopup({
       <div
         className={`
           w-11/12 max-w-md p-6 sm:p-8 rounded-xl shadow-2xl border transition-all
-          ${
-            darkMode
-              ? "bg-gray-900 text-green-200 border-green-700"
-              : "bg-white text-gray-900 border-gray-200"
-          }
+          ${darkMode ? "bg-gray-900 text-green-200 border-green-700" : "bg-white text-gray-900 border-gray-200"}
         `}
       >
         {/* Header */}

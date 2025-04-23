@@ -1,36 +1,35 @@
 @import "tailwindcss";
 
+/* Global Styles */
 body {
   @apply font-sans;
+  margin: 0;
+  position: relative;
 }
 
 body.lightMode {
   color: #000000;
-  position: relative; 
-  margin: 0;
 }
+
 body.lightMode::before {
   content: "";
-  position: fixed;     
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: -1;         
-  pointer-events: none; 
-  
+  z-index: -1;
+  pointer-events: none;
   background: #ffffff url("/src/assets/lightmode.jpg") repeat;
-  background-size: repeat;
-  
+  background-size: auto;
   filter: blur(8px);
   -webkit-filter: blur(8px);
 }
 
 body.darkMode {
   color: #ffffff;
-  position: relative;
-  margin: 0;
 }
+
 body.darkMode::before {
   content: "";
   position: fixed;
@@ -40,25 +39,25 @@ body.darkMode::before {
   height: 100%;
   z-index: -1;
   pointer-events: none;
-  
   background: #1a1a1a url("/src/assets/darkmode.png") repeat;
-  background-size: repeat;
-  
+  background-size: auto;
   filter: blur(8px);
   -webkit-filter: blur(8px);
 }
 
-
+/* Navbar Styles */
 .lava-lamp-background {
   background: linear-gradient(120deg, #205b31, #13c100, #59c70f);
   background-size: 400% 400%;
   animation: lavaLampAnimation 10s ease infinite;
 }
+
 .darkMode .lava-lamp-background {
   background: linear-gradient(120deg, #4a6551, #509452, #235f3a);
   background-size: 400% 400%;
   animation: lavaLampAnimation 10s ease infinite;
 }
+
 @keyframes lavaLampAnimation {
   0% {
     background-position: 0% 50%;
@@ -71,12 +70,38 @@ body.darkMode::before {
   }
 }
 
+.nav-container {
+  background-color: transparent !important;
+}
+
+.darkMode .nav-container {
+  background-color: transparent !important;
+}
+
+.nav-username {
+  color: #ffffff;
+}
+
+.darkMode .nav-username {
+  color: #ffffff;
+}
+
+nav .group > div {
+  transition-delay: 175ms;
+}
+
+nav .group:hover > div {
+  transition-delay: 0ms;
+}
+
+/* Sidebar and Main Content */
 .sidebar {
   background-color: rgba(255, 255, 255, 0.8);
   color: #000000;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
 }
+
 .darkMode .sidebar {
   background-color: rgba(47, 47, 47, 0.8);
   color: #ffffff;
@@ -90,6 +115,7 @@ body.darkMode::before {
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
 }
+
 .darkMode .main-content {
   background-color: rgba(26, 26, 26, 0.8);
   color: #ffffff;
@@ -97,13 +123,29 @@ body.darkMode::before {
   -webkit-backdrop-filter: blur(5px);
 }
 
+.main-content p {
+  color: #000000 !important;
+}
+
+.darkMode .main-content p {
+  color: #ffffff !important;
+}
+
+/* Card Styles */
 .card {
+  @apply p-6 shadow-md rounded-lg;
   background-color: rgba(255, 255, 255, 0.8);
   color: #000000;
-  @apply p-6 shadow-md rounded-lg;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
 }
+
+.card:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 10px 2px #59c70f, 0 0 20px 4px #13c100 inset;
+}
+
 .darkMode .card {
   background-color: rgba(41, 44, 38, 0.8);
   color: #ffffff;
@@ -112,9 +154,55 @@ body.darkMode::before {
   -webkit-backdrop-filter: blur(5px);
 }
 
-.darkMode .textbox {
+.login-page .card:hover,
+.register-page .card:hover {
+  transform: none !important;
+  box-shadow: 0 0 0 3px #59c70f !important;
+  transition: box-shadow 0.2s ease !important;
+}
+
+.no-hover-glow:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Form Elements */
+.textbox.darkMode {
   background-color: #2f2f2f;
   color: #ffffff;
+}
+
+input[type="text"]::placeholder {
+  color: #3d3939ad;
+}
+
+.darkMode input[type="text"]::placeholder {
+  color: #b4b0b093;
+}
+
+select.darkMode {
+  background-color: #2f2f2f;
+  color: #ffffff;
+  border-color: #444444;
+}
+
+option.darkMode {
+  background-color: #2f2f2f;
+  color: #ffffff;
+}
+
+/* Button Styles */
+button,
+input[type="button"],
+input[type="submit"] {
+  transition: background-color 0.3s ease;
+}
+
+button:disabled,
+input[type="button"]:disabled,
+input[type="submit"]:disabled {
+  background-color: #919397;
+  color: #f1ebeb;
 }
 
 .darkMode button,
@@ -123,31 +211,19 @@ body.darkMode::before {
   background-color: #28e85c70;
   color: #ffffff;
 }
+
 .darkMode button:hover,
 .darkMode input[type="button"]:hover,
 .darkMode input[type="submit"]:hover {
   background-color: #28e85b3e;
 }
+
 .darkMode button:active,
 .darkMode input[type="button"]:active,
 .darkMode input[type="submit"]:active {
   background-color: #333333;
 }
-button,
-input[type="button"],
-input[type="submit"] {
-  transition: background-color 0.3s ease;
-}
 
-
-/* Style for disabled buttons */
-button:disabled,
-input[type="button"]:disabled,
-input[type="submit"]:disabled {
-  background-color: #919397;
-  color: #f1ebeb;
-}
-/* Style for disabled buttons (Dark mode)*/
 .darkMode button:disabled,
 .darkMode input[type="button"]:disabled,
 .darkMode input[type="submit"]:disabled {
@@ -155,120 +231,63 @@ input[type="submit"]:disabled {
   color: #ffffff;
 }
 
-
-.darkMode select {
-  background-color: #2f2f2f;
-  color: #ffffff;
-  border-color: #444444;
-}
-.darkMode option {
-  background-color: #2f2f2f;
-  color: #ffffff;
-}
-
-.darkMode input[type="text"]::placeholder {
-  color: #b4b0b093; /* White placeholder text */
-}
-
-input[type="text"]::placeholder {
-  color: #3d3939ad; /* White placeholder text */
-}
-
-.darkMode button:active,
-.darkMode input[type="button"]:active,
-.darkMode input[type="submit"]:active {
-  background-color: #333333;
-}
-
-
-
-
-
-
-
-
-
-/* Dark mode properties for certain elements */
-
-/* Page button in pagination */
-.darkMode #page-button {
+/* Pagination Buttons */
+#page-button.darkMode {
   background-color: #4a4d4b;
   color: #ffffff;
 }
-.darkMode #page-button:hover {
+
+#page-button.darkMode:hover {
   background-color: #3a3c3b;
-  color: #ffffff;
 }
-.darkMode #active-page {
+
+#active-page.darkMode {
   background-color: #2f6b38;
   color: #ffffff;
 }
-.darkMode #active-page:hover {
+
+#active-page.darkMode:hover {
   background-color: #24552a;
-  color: #ffffff;
 }
 
-
-.darkMode #active-applicants-page {
+#active-applicants-page.darkMode {
   background-color: #15811e;
   color: #ffffff;
 }
-.darkMode #active-applicants-page:hover {
+
+#active-applicants-page.darkMode:hover {
   background-color: #24552a;
-  color: #ffffff;
 }
 
-.darkMode #navigate-page {
+#navigate-page.darkMode {
   background-color: #606463;
   color: #ffffff;
 }
-.darkMode #navigate-page:hover {
+
+#navigate-page.darkMode:hover {
   background-color: #424443;
-  color: #ffffff;
 }
-.darkMode #other-pages {
+
+#other-pages.darkMode {
   background-color: #3c3f3e;
   color: #bfbfbf;
 }
-.darkMode #other-pages:hover {
+
+#other-pages.darkMode:hover {
   background-color: #2b2c2b;
   color: #ffffff;
 }
-.darkMode #toggle-view {
+
+#toggle-view.darkMode {
   background-color: #4a4d4b;
   color: #ffffff;
 }
-.darkMode #toggle-view:hover {
+
+#toggle-view.darkMode:hover {
   background-color: #3a3c3b;
-  color: #ffffff;
 }
 
-.darkMode #distance-range-input {
-  color: #ffffff;
-  border-color: #444444;
-}
-.darkMode #distance-range-input-ticks {
-  color: #545151;
-}
-
-.darkMode #cancel-apply {
-  background-color: #80817dac; /* Green thumb */
-}
-
-.darkMode #cancel-apply:hover {
-  background-color: #60605dac; /* Green thumb */
-}
-
-/* Applicant managing buttons */
-.darkMode #reject-applicant {
-  background-color: #c02222fc; /* Red thumb */
-}
-.darkMode #reject-applicant:hover {
-  background-color: #891919fc; /* Red thumb */
-}
-
-
-/* Job Post Search Range Slider */
+/* Range Slider */
 .range-slider {
   -webkit-appearance: none;
   appearance: none;
@@ -277,6 +296,7 @@ input[type="text"]::placeholder {
   outline: none;
   transition: background 0.15s ease-in-out;
 }
+
 .range-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -288,9 +308,11 @@ input[type="text"]::placeholder {
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s;
 }
+
 .range-slider::-webkit-slider-thumb:hover {
   transform: scale(1.2);
 }
+
 .range-slider::-moz-range-thumb {
   width: 20px;
   height: 20px;
@@ -300,39 +322,45 @@ input[type="text"]::placeholder {
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s;
 }
+
 .range-slider::-moz-range-thumb:hover {
   transform: scale(1.2);
 }
 
-.footer {
-  background-color: #ffffff;
-  color: #000000;
-}
-.darkMode .footer {
-  background-color: #1a1a1a;
+#distance-range-input.darkMode {
   color: #ffffff;
+  border-color: #444444;
 }
 
-.nav-container {
-  background-color: transparent !important;
-}
-.darkMode .nav-container {
-  background-color: transparent !important;
+#distance-range-input-ticks.darkMode {
+  color: #545151;
 }
 
-.nav-username {
-  color: #ffffff;
-}
-.darkMode .nav-username {
-  color: #ffffff;
+/* Applicant Management Buttons */
+#cancel-apply.darkMode {
+  background-color: #80817dac;
 }
 
+#cancel-apply.darkMode:hover {
+  background-color: #60605dac;
+}
+
+#reject-applicant.darkMode {
+  background-color: #c02222fc;
+}
+
+#reject-applicant.darkMode:hover {
+  background-color: #891919fc;
+}
+
+/* Miscellaneous */
 .details-panel {
   background-color: #f8f8f8;
   color: #000000;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
 }
+
 .darkMode .details-panel {
   background-color: #4a4a4a;
   color: #ffffff;
@@ -344,44 +372,17 @@ input[type="text"]::placeholder {
   background-color: #ffffff;
   transition: background-color 0.3s ease;
 }
+
 .darkMode .toggle-switch {
   background-color: #2f2f2f;
 }
 
-nav .group > div {
-  transition-delay: 175ms;
-}
-nav .group:hover > div {
-  transition-delay: 0ms;
+.footer {
+  background-color: #ffffff;
+  color: #000000;
 }
 
-
-.card:hover {
-  transform: scale(1.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  box-shadow: 0 0 10px 2px #59c70f, 
-              0 0 20px 4px #13c100 inset;
-}
-
-
-.login-page .card:hover,
-.register-page .card:hover {
-  transform: none !important;           
-  box-shadow: 0 0 0 3px #59c70f !important;
-  transition: box-shadow 0.2s ease !important;
-}
-
-.main-content p {
-  color: #000000 !important; 
-}
-
-.darkMode .main-content p {
-  color: #ffffff !important; 
-}
-
-
-.no-hover-glow:hover {
-  transform: none !important;
-  box-shadow: none !important;
+.darkMode .footer {
+  background-color: #1a1a1a;
+  color: #ffffff;
 }

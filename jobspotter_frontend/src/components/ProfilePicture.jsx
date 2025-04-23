@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { FaUser } from 'react-icons/fa'; // Assuming you're using react-icons
-import axios from 'axios'; // Or your preferred HTTP client
+import { FaUser } from 'react-icons/fa';
+import axios from 'axios'; 
 
 const ProfilePicture = ({ userId, darkMode }) => {
   const [profilePicUrl, setProfilePicUrl] = useState(null);
   const [loading, setLoading] = useState(true);
-  const bucketName = import.meta.env.VITE_S3_BUCKET_NAME; // Access the bucket name
+  const bucketName = import.meta.env.VITE_S3_BUCKET_NAME; 
 
-  const imgLink = `https://${bucketName}.s3.amazonaws.com/${userId}`; // Construct the image URL
+  const imgLink = `https://${bucketName}.s3.amazonaws.com/${userId}`;
 
   useEffect(() => {
     const fetchProfilePic = async () => {
@@ -37,7 +37,7 @@ const ProfilePicture = ({ userId, darkMode }) => {
 
   if (loading) {
     return (
-      <div className={`w-20 h-20 rounded-full border-2 border-gray-400 ${darkMode ? 'dark:border-gray-600 bg-gray-200 dark:bg-gray-700' : 'bg-gray-100'}`}>
+      <div className={`w-14 h-14 rounded-full border-2 border-gray-400 ${darkMode ? 'dark:border-gray-600 bg-gray-200 dark:bg-gray-700' : 'bg-gray-100'}`}>
         <div className="flex items-center justify-center h-full w-full rounded-full">
           <FaUser className={`h-10 w-10 text-gray-500 ${darkMode ? 'dark:text-gray-400' : ''}`} />
         </div>
@@ -50,14 +50,14 @@ const ProfilePicture = ({ userId, darkMode }) => {
       <img
         src={profilePicUrl}
         alt="Profile"
-        className="w-20 h-20 rounded-full object-cover"
+        className="w-14 h-14 rounded-full object-cover"
       />
     );
   }
 
   // Placeholder if image not found
   return (
-    <div className={`w-20 h-20 rounded-full border-2 border-gray-400 ${darkMode ? 'dark:border-gray-600 bg-gray-200 dark:bg-gray-700' : 'bg-gray-100'}`}>
+    <div className={`w-14 h-14 rounded-full border-2 border-gray-400 ${darkMode ? 'dark:border-gray-600 bg-gray-200 dark:bg-gray-700' : 'bg-gray-100'}`}>
       <div className="flex items-center justify-center h-full w-full rounded-full">
         <FaUser className={`h-10 w-10 text-gray-500 ${darkMode ? 'dark:text-gray-400' : ''}`} />
       </div>
