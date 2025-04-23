@@ -71,7 +71,7 @@ keycloak:
     client-id=${KEYCLOAK_ADMIN_CLIENT_ID}:
 
 server:
-  port: 8100
+  port: 443
   ssl:
     enabled: ${SSL_ON:false}
     bundle: "server"
