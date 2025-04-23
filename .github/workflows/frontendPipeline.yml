@@ -18,6 +18,7 @@ jobs:
         node-version: 18
 
     - name: Install Dependencies & Build
+      working-directory: ./jobspotter_frontend
       run: |
         npm install
         npm run build
@@ -31,6 +32,7 @@ jobs:
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v5
       with:
-        context: .
+        context: ./jobspotter_frontend
         push: true
         tags: jobspotter/jobspotter-frontend:latest
+
