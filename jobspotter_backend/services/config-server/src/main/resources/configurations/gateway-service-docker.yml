@@ -14,9 +14,10 @@ spring:
             truststore:
               certificate: ${CERTIFICATE_LOCATION}
 
-  redis:
-    host: redis  # Docker container name
-    port: 6379
+  data:
+    redis:
+      host: redis  # Docker container name
+      port: 6379
   cloud:
     gateway:
       default-filters:
