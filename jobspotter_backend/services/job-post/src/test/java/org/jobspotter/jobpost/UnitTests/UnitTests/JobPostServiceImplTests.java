@@ -211,7 +211,20 @@ public class JobPostServiceImplTests {
             assertAll("Verify MyJobPostDetailedResponse",
                     () -> assertEquals(testJobPost.getJobPostId(), responseJobPost.getJobPostId()),
                     () -> assertEquals(testJobPost.getJobPosterId(), responseJobPost.getJobPosterId()),
-                    () -> assertEquals(testJobPost.getTags(), responseJobPost.getTags()),
+
+//                    Convert tags of job post we are testing to TagDto
+                    () -> {
+                        Set<TagDto> expectedTagNames = testJobPost.getTags().stream()
+                                .map(
+                                        tag -> TagDto.builder()
+                                                .tagId(tag.getTagId())
+                                                .name(tag.getName())
+                                                .build()
+                                )
+                                .collect(Collectors.toSet());
+                        assertEquals(expectedTagNames, responseJobPost.getTags());
+                    },
+
                     () -> assertEquals(testJobPost.getTitle(), responseJobPost.getTitle()),
                     () -> assertEquals(testJobPost.getDescription(), responseJobPost.getDescription()),
                     () -> assertEquals(testJobPost.getAddress(), responseJobPost.getAddress()),
