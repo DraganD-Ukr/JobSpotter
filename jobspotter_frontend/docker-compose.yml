@@ -1,0 +1,13 @@
+
+services:
+  jobspotter-frontend:
+    image: jobspotter/jobspotter-frontend:latest
+    container_name: jobspotter-frontend
+    ports:
+      - "80:80"
+    networks:
+      - default
+      - gateway_net
+    environment:
+      - VITE_API_URL=http://localhost:8100
+
