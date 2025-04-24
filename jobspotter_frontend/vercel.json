@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://api.jobspotter.eu/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
