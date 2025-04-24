@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useContext } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Search, Sun, Moon, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import trollImage from "../assets/troll.jpg";
@@ -50,7 +50,6 @@ export default function Navbar() {
   const { t, i18n } = useTranslation();
   const { darkMode, setDarkMode } = useContext(ThemeContext);
   const navigate = useNavigate();
-  const location = useLocation();
   const searchRef = useRef(null);
   const languageRef = useRef(null);
 
@@ -128,13 +127,6 @@ export default function Navbar() {
       }
     })();
   }, []);
-
-  /* redirect admin to dashboard if on user page */
-  useEffect(() => {
-    if (isAdmin && location.pathname === "/SearchJobPost") {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [isAdmin, location, navigate]);
 
   /* recompute profile completeness */
   useEffect(() => {

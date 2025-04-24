@@ -45,7 +45,13 @@ export default function App() {
   return (
     <ThemeProvider>
       <Navbar />
-      <div className={`p-4 min-h-screen ${isJobPostPage ? "mx-20" : "container mx-auto"}`}>
+      <div
+        className={`min-h-screen ${
+          isJobPostPage
+            ? "px-4 sm:px-6 md:px-10 lg:mx-20"
+            : "container mx-auto px-4 sm:px-6 md:px-8"
+        }`}
+      >
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/notification" element={<Notification />} />
