@@ -1,12 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://api.jobspotter.eu/$1"
+      "source": "/api/:path*",
+      "destination": "https://api.jobspotter.eu/api/:path*"
     },
     {
-        "source": "/(.*)",
-        "destination": "/"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
