@@ -1,6 +1,7 @@
 package org.jobspotter.user.service.implementation;
 
 import lombok.RequiredArgsConstructor;
+import org.jobspotter.user.authUtils.JWTUtils;
 import org.jobspotter.user.dto.AddressPatchRequest;
 import org.jobspotter.user.dto.AddressRequest;
 import org.jobspotter.user.dto.AddressResponse;
@@ -36,10 +37,17 @@ public class AddressServiceImpl implements AddressService {
     private final UserRepository userRepository;
     private final GeoCodingService geoCodingService;
 
+
+
     @Override
-    public ResponseEntity<HttpStatus> createAddress(UUID userId, AddressRequest addressRequest) {
+    public Long createAddress(String accessToken, AddressRequest addressRequest) throws Exception {
 
 //        TODO: Check for duplicate addresses
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
+
+        log.info("Creating a new address for user with ID {}", userId);
+
 //        Check if user exists
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
@@ -81,17 +89,22 @@ public class AddressServiceImpl implements AddressService {
         Double lat = coordinates.get("lat");
         Double lng = coordinates.get("lng");
 
-
+        address.setLatitude(lat);
+        address.setLongitude(lng);
 
 //          Save the address
-        addressRepository.save(address);
+        Address saved = addressRepository.save(address);
 
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return saved.getAddressId();
 
     }
 
+
+
     @Override
-    public ResponseEntity<HttpStatus> deleteAddress(UUID userId, Long addressId) {
+    public void deleteAddress(String accessToken, Long addressId) throws Exception {
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
         Address address = addressRepository.findById(addressId)
                 .orElseThrow(
@@ -111,14 +124,16 @@ public class AddressServiceImpl implements AddressService {
         } else {
             addressRepository.delete(address);
             log.info("Address with ID {} deleted successfully", addressId);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
 
     }
 
-    @Override
-    public ResponseEntity<?> updateAddress(UUID userId, Long addressId, AddressPatchRequest addressRequest) {
 
+
+    @Override
+    public AddressResponse updateAddress(String accessToken, Long addressId, AddressPatchRequest addressRequest) throws Exception {
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
         log.info("Updating address with ID {}", addressId);
 
@@ -148,19 +163,7 @@ public class AddressServiceImpl implements AddressService {
 
         Address unwrappedAddress = address.get();
 //        Unwrap the optional
-        Address addressToBeUpdated = new Address(
-                unwrappedAddress.getAddressId(),
-                unwrappedAddress.getUser(),
-                unwrappedAddress.getAddress(),
-                unwrappedAddress.getStreetAddress(),
-                unwrappedAddress.getCity(),
-                unwrappedAddress.getCounty(),
-                unwrappedAddress.getEirCode(),
-                unwrappedAddress.getLongitude(),
-                unwrappedAddress.getLatitude(),
-                unwrappedAddress.getAddressType(),
-                unwrappedAddress.isDefault()
-        ) ;
+
 
 
 //        Check if user exists and is authorized to update the address
@@ -170,34 +173,49 @@ public class AddressServiceImpl implements AddressService {
          }
 
 
-        if (updateAddressFields(addressRequest, addressToBeUpdated)){
+        if (updateAddressFields(addressRequest, unwrappedAddress)){
 
 //            Check for duplicate or HOME conflict
-            hasDuplicateOrHomeConflict(userAddresses, addressToBeUpdated);
+            hasDuplicateOrHomeConflict(userAddresses, unwrappedAddress);
 
 //            Update coordinates
-            Map<String, Double> coordinates = geoCodingService.getCoordinates(addressToBeUpdated.getAddress());
-            addressToBeUpdated.setLatitude(coordinates.get("lat"));
-            addressToBeUpdated.setLongitude(coordinates.get("lng"));
+            Map<String, Double> coordinates = geoCodingService.getCoordinates(unwrappedAddress.getAddress());
+            unwrappedAddress.setLatitude(coordinates.get("lat"));
+            unwrappedAddress.setLongitude(coordinates.get("lng"));
 
 //            Save the updated address
-            addressRepository.save(addressToBeUpdated);
+            addressRepository.save(unwrappedAddress);
             log.info("Address with ID {} updated successfully", addressId);
 
         } else {
             log.info("No changes detected in address with ID {}", addressId);
-            return ResponseEntity.ok("No changes detected in the address");
+            return null;
         }
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return AddressResponse.builder()
+                .addressId(unwrappedAddress.getAddressId())
+                .userId(unwrappedAddress.getUser().getUserId())
+                .address(unwrappedAddress.getAddress())
+                .streetAddress(unwrappedAddress.getStreetAddress())
+                .city(unwrappedAddress.getCity())
+                .county(unwrappedAddress.getCounty())
+                .eirCode(unwrappedAddress.getEirCode())
+                .latitude(unwrappedAddress.getLatitude())
+                .longitude(unwrappedAddress.getLongitude())
+                .addressType(unwrappedAddress.getAddressType())
+                .isDefault(unwrappedAddress.isDefault())
+                .build();
 
     }
 
+
+
     @Override
-    public ResponseEntity<AddressResponse> getAddressById(UUID userId, Long addressId) {
+    public AddressResponse getAddressById(String accessToken, Long addressId) throws Exception {
 
         log.info("Fetching address with ID {}", addressId);
 
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
         Address address = addressRepository.findById(addressId).orElseThrow(() -> {
             log.warn("Address not found with ID {}", addressId);
@@ -213,7 +231,7 @@ public class AddressServiceImpl implements AddressService {
             throw new ForbiddenException("User not authorized to get the address");
         }
 
-        return ResponseEntity.ok(AddressResponse.builder()
+        return AddressResponse.builder()
                 .addressId(address.getAddressId())
                 .userId(address.getUser().getUserId())
                 .address(address.getAddress())
@@ -225,12 +243,15 @@ public class AddressServiceImpl implements AddressService {
                 .longitude(address.getLongitude())
                 .addressType(address.getAddressType())
                 .isDefault(address.isDefault())
-                .build());
+                .build();
     }
 
-    @Override
-    public ResponseEntity<List<AddressResponse>> getAllAddresses(UUID userId) {
 
+
+    @Override
+    public List<AddressResponse> getAllAddresses(String accessToken) throws Exception {
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
         User user = userRepository.findById(userId)
                 .orElseThrow( () -> new ResourceNotFoundException("User with id " + userId + " not found"));
@@ -238,7 +259,7 @@ public class AddressServiceImpl implements AddressService {
 
         List<Address> addresses = addressRepository.findAllByUser(user);
 
-        return ResponseEntity.ok(
+        return
                 addresses.stream()
                         .map(address -> AddressResponse.builder()
                                 .addressId(address.getAddressId())
@@ -254,8 +275,7 @@ public class AddressServiceImpl implements AddressService {
                                 .isDefault(address.isDefault())
                                 .build()
                         )
-                        .toList()
-        );
+                        .toList();
 
     }
 
@@ -264,20 +284,26 @@ public class AddressServiceImpl implements AddressService {
 
     /**
      * Check if the user already has an address with type HOME or if the full address is a duplicate
-     * @param addresses
-     * @param addressToUpdate
-     * @return
+     * @param addresses List of addresses of the user
+     * @param addressToUpdate Address to be updated
+     * @return true if there is a conflict, false otherwise
      */
     private boolean hasDuplicateOrHomeConflict(List<Address> addresses, Address addressToUpdate) {
 
         for(Address currAdr : addresses) {
-            if (addressToUpdate.getAddressType().equals(AddressType.HOME)
-                    && currAdr.getAddressType().equals(AddressType.HOME)) {
+
+            if (    !currAdr.getAddressId().equals(addressToUpdate.getAddressId())
+                    && addressToUpdate.getAddressType().equals(AddressType.HOME)
+                    && currAdr.getAddressType().equals(AddressType.HOME)
+            ) {
+                log.warn("User with id {} already has an address with type HOME", addressToUpdate.getUser().getUserId());
                 throw new ResourceAlreadyExistsException("User already has an address with type HOME");
             }
-            if (currAdr.getAddress().equals(addressToUpdate.getAddress())) {
+            if (currAdr.getAddress().equals(addressToUpdate.getAddress()) && currAdr.getAddressType().equals(AddressType.HOME)) {
+                log.warn("Duplicate address found when trying to add a new address for user with ID {}", addressToUpdate.getUser().getUserId());
                 throw new ResourceAlreadyExistsException("Duplicate address found, please provide a different address");
             }
+
         }
         return false;
     }

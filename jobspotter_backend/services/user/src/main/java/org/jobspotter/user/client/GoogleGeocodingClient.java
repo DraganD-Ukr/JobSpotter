@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Map;
 
+/**
+ * Feign client for Google Geocoding API.
+ */
 @FeignClient(name = "google-geocoding-client", url = "https://maps.googleapis.com/maps/api/geocode/json")
 public interface GoogleGeocodingClient {
 

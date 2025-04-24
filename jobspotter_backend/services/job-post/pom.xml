@@ -8,17 +8,44 @@
 		<version>3.3.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>org.job_spotter</groupId>
+	<groupId>org.jobspotter</groupId>
 	<artifactId>job-post</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>job-post</name>
 	<description>job-post</description>
 	<url/>
 	<licenses>
-		<license/>
+		<license>
+			<name>MIT License</name>
+			<url>https://github.com/DraganD-Ukr/JobSpotter/blob/main/LICENSE</url>
+			<distribution>repo</distribution>
+			<comments>MIT License allows for use, modification, and distribution with few restrictions. The software is provided "as is".</comments>
+		</license>
 	</licenses>
+
 	<developers>
-		<developer/>
+		<developer>
+			<id>Aloy-Lockness11</id>
+			<name>Aloysius Wilfred Pacheco</name>
+			<email>aloysiuspacheco2003@gmail.com</email>
+			<roles>
+				<role>fullstack-dev</role>
+			</roles>
+			<organization>job_spotter</organization>
+			<organizationUrl>https://github.com/DraganD-Ukr/JobSpotter</organizationUrl>
+		</developer>
+
+		<developer>
+			<id>DraganD-Ukr</id>
+			<name>Dmytro Drahan</name>
+			<email>dmitrijrolkin@gmail.com</email>
+			<roles>
+				<role>backend-dev</role>
+			</roles>
+			<organization>job_spotter</organization>
+			<organizationUrl>https://github.com/DraganD-Ukr/JobSpotter</organizationUrl>
+		</developer>
+
 	</developers>
 	<scm>
 		<connection/>
@@ -64,7 +91,8 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<optional>true</optional>
+			<version>1.18.38</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -81,7 +109,6 @@
 			<artifactId>jjwt-api</artifactId>
 			<version>0.12.6</version>
 		</dependency>
-
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-impl</artifactId>
@@ -100,7 +127,90 @@
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.6.0</version>
 		</dependency>
-    </dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.hibernate.search/hibernate-search-mapper-orm -->
+		<dependency>
+			<groupId>org.hibernate.search</groupId>
+			<artifactId>hibernate-search-mapper-orm</artifactId>
+			<version>7.2.2.Final</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.hibernate.search/hibernate-search-backend-lucene -->
+		<dependency>
+			<groupId>org.hibernate.search</groupId>
+			<artifactId>hibernate-search-backend-lucene</artifactId>
+			<version>7.2.2.Final</version>
+		</dependency>
+
+		<!--Logger (compatible For Hibernate)-->
+		<dependency>
+			<groupId>org.jboss.logging</groupId>
+			<artifactId>jboss-logging</artifactId>
+			<version>3.6.1.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-mongodb</artifactId>
+        </dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.redis/lettucemod -->
+		<dependency>
+			<groupId>com.redis</groupId>
+			<artifactId>lettucemod-spring</artifactId>
+			<version>4.2.1</version>
+		</dependency>
+
+
+		<!--		Monitoring        -->
+
+		<dependency>
+			<groupId>io.zipkin.reporter2</groupId>
+			<artifactId>zipkin-reporter-brave</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-bridge-brave</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-micrometer</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+
+	</dependencies>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -123,6 +233,7 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
+							<version>1.18.30</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>

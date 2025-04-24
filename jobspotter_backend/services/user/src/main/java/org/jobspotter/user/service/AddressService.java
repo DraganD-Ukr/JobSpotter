@@ -3,21 +3,48 @@ package org.jobspotter.user.service;
 import org.jobspotter.user.dto.AddressPatchRequest;
 import org.jobspotter.user.dto.AddressRequest;
 import org.jobspotter.user.dto.AddressResponse;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface AddressService {
 
-    ResponseEntity<HttpStatus> createAddress(UUID userId, AddressRequest addressRequest);
+    /**
+     * Create a new address for a user
+     * @param accessToken the access token of user
+     * @param addressRequest the address request
+     * @return the address id
+     */
+    Long createAddress(String accessToken, AddressRequest addressRequest) throws Exception;
 
-    ResponseEntity<HttpStatus> deleteAddress(UUID userId, Long addressId);
+    /**
+     * Delete an address
+     * @param accessToken the access token of user
+     * @param addressId the address id
+     */
+   void deleteAddress(String accessToken, Long addressId) throws Exception;
 
-    ResponseEntity<?> updateAddress(UUID userId, Long addressId, AddressPatchRequest addressRequest);
+    /**
+     * Update an address
+     * @param accessToken access token of user
+     * @param addressId the address id
+     * @param addressRequest the address request
+     * @return the updated address, error response or no content
+     */
+    AddressResponse updateAddress(String accessToken, Long addressId, AddressPatchRequest addressRequest) throws Exception;
 
-    ResponseEntity<AddressResponse> getAddressById(UUID userId, Long addressId);
+    /**
+     * Get an address by id
+     * @param accessToken the access token of user
+     * @param addressId the address id
+     * @return the address response
+     */
+    AddressResponse getAddressById(String accessToken, Long addressId) throws Exception;
 
-    ResponseEntity<List<AddressResponse>> getAllAddresses(UUID userId);
+    /**
+     * Get all addresses for a user
+     * @param accessToken access token of user
+     * @return the list of address responses
+     */
+    List<AddressResponse> getAllAddresses(String accessToken) throws Exception;
 }

@@ -2,9 +2,10 @@ package org.jobspotter.user.authUtils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.security.KeyFactory;
 import java.security.PublicKey;
@@ -20,13 +21,33 @@ public class JWTUtils {
 
     private static String keycloakPublicKey;
 
-    @PostConstruct
-    public void init() {
-        keycloakPublicKey = System.getenv("KEYCLOAK_PUBLIC_KEY");
+    private static String KEYCLOAK_BASE_URL = null;
+
+    public JWTUtils(@Value("${keycloak.host.url}") String keycloakBaseUrl) {
+        KEYCLOAK_BASE_URL = keycloakBaseUrl;
+    }
+
+    public static String getPublicKeyFromKeycloak() {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            Map<String, String> response = restTemplate.getForObject(KEYCLOAK_BASE_URL+"/realms/JobSpotter", Map.class);
+
+            String publicKeyStr = response.get("public_key");
+
+            return publicKeyStr;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve or parse Keycloak public key", e);
+        }
     }
 
 
+
     private static PublicKey getPublicKey() throws Exception {
+
+        if (keycloakPublicKey == null) {
+            keycloakPublicKey = getPublicKeyFromKeycloak();
+        }
 
         // Decode the base64 encoded public key
         byte[] decoded = Base64.getDecoder().decode(keycloakPublicKey);
@@ -78,7 +99,7 @@ public class JWTUtils {
         }
 
         log.warn("User does not have admin role!");
-        throw new Exception("User does not have admin role!");
+        return false;
     }
 
 

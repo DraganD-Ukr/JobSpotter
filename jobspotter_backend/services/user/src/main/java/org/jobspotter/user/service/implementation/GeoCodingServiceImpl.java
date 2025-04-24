@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.user.client.GoogleGeocodingClient;
 import org.jobspotter.user.service.GeoCodingService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,7 +17,8 @@ public class GeoCodingServiceImpl implements GeoCodingService {
 
     private final GoogleGeocodingClient googleGeocodingClient;
 
-    private String GOOGLE_API_KEY = System.getenv("GOOGLE_GEOCODING_API_KEY");
+    @Value("${google.geocoding.api.key}")
+    private String GOOGLE_API_KEY;
 
     @Override
     public Map<String, Double> getCoordinates(String address) {

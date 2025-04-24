@@ -30,6 +30,7 @@ services:
     networks:
       - jobSpotter-net  # Include MongoDB in the network
 
+  #----------------------Kafka and zookeper------------------------
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     container_name: jobSpotter_zookeeper
@@ -37,13 +38,16 @@ services:
       ZOOKEEPER_SERVER_ID: 1
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/data
+      - zookeeper-datalog:/datalog
     ports:
       - "22181:2181"
     networks:
       - jobSpotter-net
 
 
-  #----------------------Kafka and zookeper------------------------
+
   kafka:
     image: confluentinc/cp-kafka:latest
     container_name: jobSpotter_kafka
@@ -52,12 +56,15 @@ services:
     depends_on:
       - zookeeper
     environment:
+      KAFKA_BROKER_ID: 1
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT, PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+    volumes:
+      - kafka-data:/var/lib/kafka/data
     networks:
       - jobSpotter-net
 
@@ -97,6 +104,69 @@ services:
     networks:
       - jobSpotter-net
 
+
+
+#        ----------------------Redis-------------------------
+
+  redis:
+    image: redis/redis-stack:latest  # ✅ Use Redis Stack (Includes RediSearch)
+    container_name: jobSpotter_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+      - "8001:8001"  # RedisInsight UI
+    volumes:
+      - jobSpotter_redis:/data
+    networks:
+      - jobSpotter-net
+
+#        --------------------------------------------Tools (Monitoring, Tracing)---------------------------------------------
+
+  #----------------------Zipkin------------------------
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: jobSpotter_zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - jobSpotter-net
+
+
+  #----------------------Prometheus------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: jobSpotter_prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - jobSpotter-net
+    restart: unless-stopped
+
+
+  #----------------------Grafana------------------------
+  grafana:
+    image: grafana/grafana:latest
+    container_name: jobSpotter_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - prometheus
+    links:
+      - prometheus:prometheus # Link to Prometheus
+    networks:
+      - jobSpotter-net
+    restart: unless-stopped
+    volumes:
+      - ./grafana:/var/lib/grafana  # Persist Grafana data
+
+#        ----------------------Network------------------------
+
+
 networks:
   jobSpotter-net:
     driver: bridge
@@ -106,3 +176,8 @@ volumes:
   jobSpotter_mongo:
   jobSpotter_keycloak_data:
   jobSpotter_keycloak_db_data:
+  jobSpotter_redis: {}
+  zookeeper-data: {}
+  zookeeper-datalog: {}
+  kafka-data: {}
+  jobSpotter_grafana: {}

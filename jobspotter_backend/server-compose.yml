@@ -1,0 +1,319 @@
+services:
+
+  #----------------------PostgreSQL------------------------
+  postgresql:
+    container_name: postgres
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      PGDATA: /data/postgres
+    volumes:
+      - jobSpotter_postgres:/data/postgres
+    ports:
+      - "1234:5432"
+    networks:
+      - jobSpotter-net
+    restart: unless-stopped
+
+  #----------------------MongoDB------------------------
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - jobSpotter_mongo:/data
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+    networks:
+      - jobSpotter-net  # Include MongoDB in the network
+
+  #----------------------Kafka and zookeper------------------------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: jobSpotter_zookeeper
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/data
+      - zookeeper-datalog:/datalog
+    ports:
+      - "22181:2181"
+    networks:
+      - jobSpotter-net
+
+
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT, PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - jobSpotter-net
+
+
+  #----------------------Keycloak------------------------
+  keycloak-db:
+    image: postgres:15
+    container_name: keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    volumes:
+      - jobSpotter_keycloak_db_data:/var/lib/postgresql/data
+    networks:
+      - jobSpotter-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.0
+    container_name: keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+      KC_DB_URL: jdbc:postgresql://keycloak-db/keycloak
+      KC_HOSTNAME: localhost
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_LOG_LEVEL: info
+    command: start-dev
+    ports:
+      - "9090:8080"
+    depends_on:
+      - keycloak-db
+    volumes:
+      - jobSpotter_keycloak_data:/opt/keycloak/data
+    networks:
+      - jobSpotter-net
+
+
+
+  #        ----------------------Redis-------------------------
+
+  redis:
+    image: redis/redis-stack:latest  #  Use Redis Stack (Includes RediSearch)
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+      - "8001:8001"  # RedisInsight UI
+    volumes:
+      - redis:/data
+    networks:
+      - jobSpotter-net
+
+  #        --------------------------------------------Tools (Monitoring, Tracing)---------------------------------------------
+
+  #----------------------Zipkin------------------------
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: jobSpotter_zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - jobSpotter-net
+
+
+  #----------------------Prometheus------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - jobSpotter-net
+    restart: unless-stopped
+
+
+  #----------------------Grafana------------------------
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - prometheus
+    links:
+      - prometheus:prometheus # Link to Prometheus
+    networks:
+      - jobSpotter-net
+    restart: unless-stopped
+    volumes:
+      - ./grafana:/var/lib/grafana  # Persist Grafana data
+
+
+
+
+
+
+  #      ---------------------------------------JOBSPOTTER SERVICES------------------------------------------------
+
+  #----------------------Config Server------------------------
+  config-server:
+    container_name: config-server
+    image: jobspotter/config-server:1065f8ab8461736cf409f36aab377c429811d999
+    ports:
+      - "8888:8888"
+    networks:
+      - jobSpotter-net
+    restart: unless-stopped
+
+  #----------------------Discovery Server (Eureka)------------------------
+  discovery:
+    container_name: discovery
+    image: jobspotter/discovery:64455e0b8896126aeec45e268c86a942be8ee61
+    ports:
+      - "8761:8761"
+    networks:
+      - jobSpotter-net
+    depends_on:
+      - config-server
+    restart: unless-stopped
+
+  #----------------------Gateway------------------------
+  gateway:
+    container_name: gateway
+    image: jobspotter/gateway:964455e0b8896126aeec45e268c86a942be8ee61
+    ports:
+      - "8100:8100"
+    networks:
+      - jobSpotter-net
+    depends_on:
+      - discovery
+      - config-server
+      - keycloak
+    restart: unless-stopped
+
+  #----------------------Job Post Service------------------------
+  job-post:
+    container_name: job-post
+    image: jobspotter/job-post:964455e0b8896126aeec45e268c86a942be8ee61
+    ports:
+      - "8081:8081"
+    networks:
+      - jobSpotter-net
+    depends_on:
+      - discovery
+      - config-server
+      - postgresql
+      - gateway
+      - redis
+      - keycloak
+    restart: unless-stopped
+
+  #----------------------Notification Service------------------------
+  notification:
+    container_name: notification
+    image: jobspotter/notification:964455e0b8896126aeec45e268c86a942be8ee61
+    ports:
+      - "8083:8083"
+    networks:
+      - jobSpotter-net
+    depends_on:
+      - discovery
+      - config-server
+      - gateway
+      - mongodb
+    restart: unless-stopped
+
+  #----------------------Report Service------------------------
+  report:
+    container_name: report
+    image:  jobspotter/report:964455e0b8896126aeec45e268c86a942be8ee61
+    ports:
+      - "8084:8084"
+    networks:
+      - jobSpotter-net
+    depends_on:
+      - discovery
+      - config-server
+      - gateway
+      - redis
+      - keycloak
+      - mongodb
+    restart: unless-stopped
+
+  #----------------------Review Service------------------------
+  review:
+    container_name: review
+    image:  jobspotter/review:964455e0b8896126aeec45e268c86a942be8ee61
+    ports:
+      - "8082:8082"
+    networks:
+      - jobSpotter-net
+    depends_on:
+      - discovery
+      - config-server
+      - gateway
+      - redis
+      - keycloak
+      - postgresql
+    restart: unless-stopped
+
+  #----------------------User Service------------------------
+  user:
+    container_name: user
+    image:  jobspotter/user:964455e0b8896126aeec45e268c86a942be8ee61
+    ports:
+      - "8080:8080"
+    networks:
+      - jobSpotter-net
+    environment:
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AWS_S3_ACCESS_KEY_ID=${AWS_S3_ACCESS_KEY_ID}
+      - AWS_S3_SECRET_ACCESS_KEY=${AWS_S3_SECRET_ACCESS_KEY}
+      - AWS_S3_REGION=${AWS_S3_REGION}
+      - KEYCLOAK_ADMIN_CLIENT_ID=${KEYCLOAK_ADMIN_CLIENT_ID}
+      - KEYCLOAK_ADMIN_USERNAME=${KEYCLOAK_ADMIN_USERNAME}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - GOOGLE_GEOCODING_API_KEY=${GOOGLE_GEOCODING_API_KEY}
+    depends_on:
+      - discovery
+      - config-server
+      - gateway
+      - postgresql
+      - redis
+      - keycloak
+    restart: unless-stopped
+
+
+
+#        ----------------------Network------------------------
+
+networks:
+  jobSpotter-net:
+    driver: bridge
+
+volumes:
+  jobSpotter_postgres:
+  jobSpotter_mongo:
+  jobSpotter_keycloak_data:
+  jobSpotter_keycloak_db_data:
+  redis: {}
+  zookeeper-data: {}
+  zookeeper-datalog: {}
+  kafka-data: {}
+  grafana: {}

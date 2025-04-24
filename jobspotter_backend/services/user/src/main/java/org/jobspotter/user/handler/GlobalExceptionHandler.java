@@ -2,6 +2,7 @@ package org.jobspotter.user.handler;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import lombok.extern.slf4j.Slf4j;
 import org.jobspotter.user.dto.ErrorResponse;
 import org.jobspotter.user.exception.*;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -89,7 +91,7 @@ public class GlobalExceptionHandler {
         // Iterate through all the field errors and append the message to the errorMessages StringBuilder
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String errorMessage = error.getDefaultMessage();
-            if (errorMessages.length() > 0) {
+            if (!errorMessages.isEmpty()) {
                 errorMessages.append(", ");
             }
             errorMessages.append(errorMessage);
@@ -197,7 +199,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException e) {
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
-                "FORBIDDEN",
+                "UNAUTHORIZED",
                 HttpStatus.UNAUTHORIZED.value(),
                 e.getMessage()
         );
@@ -233,6 +235,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 e.getMessage()
         );
+        log.error("An error occurred: ", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 }

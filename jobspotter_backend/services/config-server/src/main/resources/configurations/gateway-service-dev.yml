@@ -1,0 +1,81 @@
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cloud:
+    gateway:
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            keyResolver: "#{@ipKeyResolver}" # Uses IP address as key (overriden bean in Gateway)
+            redis-rate-limiter:
+              replenish-rate: 10 # Requests allowed per second
+              burst-capacity: 15 # Max requests allowed in a burst (rate limiter will kick in after this)
+              requestedTokens: 1 # Number of tokens to be consumed per request
+              redis:
+                timeWindow: 5 # Cooldown time in seconds
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: user-service
+          uri: lb:http://USER-SERVICE
+          predicates:
+            - Path=/api/v1/users/**
+          filters:
+
+
+        - id: notification-service
+          uri: lb:http://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/v1/notifications/**
+
+        - id: job-post-service
+          uri: lb:http://JOB-POST-SERVICE
+          predicates:
+            - Path=/api/v1/job-posts/**
+
+        - id: review-service
+          uri: lb:http://REVIEW-SERVICE
+          predicates:
+            - Path=/api/v1/reviews/**
+
+        - id: report-service
+          uri: lb:http://REPORT-SERVICE
+          predicates:
+            - Path=/api/v1/reports/**
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090/realms/JobSpotter
+          jwk-set-uri: http://localhost:9090/realms/JobSpotter/protocol/openid-connect/certs
+
+keycloak:
+  admin:
+    client-id=${KEYCLOAK_ADMIN_CLIENT_ID}:
+
+server:
+  port: 8100
+
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      -   name: gateway-service
+          url: /v3/api-docs
+      -   name: user-service
+          url: /api/v1/users/v3/api-docs
+      -   name: job-post-service
+          url: /api/v1/job-posts/v3/api-docs
+      -   name: review-service
+          url: /api/v1/reviews/v3/api-docs
+      -   name: report-service
+          url: /api/v1/reports/v3/api-docs

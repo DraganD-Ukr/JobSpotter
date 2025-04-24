@@ -8,17 +8,44 @@
 		<version>3.3.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>org.job_spotter</groupId>
+	<groupId>org.jobspotter</groupId>
 	<artifactId>config_server</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>config_server</name>
 	<description>config_server</description>
 	<url/>
 	<licenses>
-		<license/>
+		<license>
+			<name>MIT License</name>
+			<url>https://github.com/DraganD-Ukr/JobSpotter/blob/main/LICENSE</url>
+			<distribution>repo</distribution>
+			<comments>MIT License allows for use, modification, and distribution with few restrictions. The software is provided "as is".</comments>
+		</license>
 	</licenses>
+
 	<developers>
-		<developer/>
+		<developer>
+			<id>Aloy-Lockness11</id>
+			<name>Aloysius Wilfred Pacheco</name>
+			<email>aloysiuspacheco2003@gmail.com</email>
+			<roles>
+				<role>fullstack-dev</role>
+			</roles>
+			<organization>job_spotter</organization>
+			<organizationUrl>https://github.com/DraganD-Ukr/JobSpotter</organizationUrl>
+		</developer>
+
+		<developer>
+			<id>DraganD-Ukr</id>
+			<name>Dmytro Drahan</name>
+			<email>dmitrijrolkin@gmail.com</email>
+			<roles>
+				<role>backend-dev</role>
+			</roles>
+			<organization>job_spotter</organization>
+			<organizationUrl>https://github.com/DraganD-Ukr/JobSpotter</organizationUrl>
+		</developer>
+
 	</developers>
 	<scm>
 		<connection/>
@@ -40,6 +67,18 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+
+
+		<!--		Monitoring        -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>

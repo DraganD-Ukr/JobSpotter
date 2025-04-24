@@ -1,5 +1,6 @@
 package org.jobspotter.user.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.EnumType;
@@ -16,6 +17,9 @@ import org.jobspotter.user.dto.deserializer.CountyDeserializer;
 import org.jobspotter.user.model.AddressType;
 import org.jobspotter.user.model.County;
 
+/**
+ * The address request. Used to create a new address for the user.
+ */
 @Builder
 @Setter
 @Getter
@@ -50,6 +54,7 @@ public class AddressRequest {
     @JsonDeserialize(using = AddressTypeDeserializer.class)
     private AddressType addressType;
 
+    @JsonProperty("isDefault")
     @Schema(description = "Is default address", example = "true")
     private boolean isDefault;
 

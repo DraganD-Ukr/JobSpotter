@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
+/**
+ * The address of the user. User can have 5 addresses at most(HOME, WORK, OTHER). Only one can be HOME.
+ */
 @Data
 @Builder
 @AllArgsConstructor
@@ -13,6 +16,7 @@ import lombok.*;
 @Entity
 @Table(name = "addresses")
 @EqualsAndHashCode
+
 public class Address {
 
     /**
