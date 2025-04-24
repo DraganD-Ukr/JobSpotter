@@ -33,7 +33,6 @@ export function Login() {
     // Count fields that have content and don't have validation errors
     const validFields = Object.entries(formValues)
       .filter(([key, value]) => {
-
         if (key === 'rememberMe') return false;
         // Only count fields that have content and no errors
         return typeof value === 'string' && 
@@ -103,8 +102,12 @@ export function Login() {
               sessionStorage.setItem("userId", userData.userId);
             }
 
-            // 4) Immediately redirect to your chosen route
-            window.location.href = "/SearchJobPost";
+            // 4) Redirect based on user role
+            if (userData.userType === "ADMIN") {
+              window.location.href = "/dashboard";
+            } else {
+              window.location.href = "/SearchJobPost";
+            }
           } else {
             const errorData = await meResponse.json();
             setErrors(
@@ -113,8 +116,13 @@ export function Login() {
               }
             );
           }
+        } else if (response.status === 403) {
+          // Handle banned user case
+          setErrors({
+            general: "You have been banned. Please contact support.",
+          });
         } else {
-          // If login fails extract error messages from the response.
+          // If login fails for other reasons, extract error messages from the response
           const errorData = await response.json();
           setErrors(
             errorData.errors || {

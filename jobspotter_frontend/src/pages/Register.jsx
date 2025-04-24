@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCheck, FaTimes, FaArrowRight } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 export function Register() {
   const [formValues, setFormValues] = useState({
@@ -19,10 +19,10 @@ export function Register() {
   const [pwdFocus, setPwdFocus] = useState(false);
   const [pwdStrength, setPwdStrength] = useState(0);
   const [isValidForm, setIsValidForm] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Password validation with dynamic strength calculation
   const validatePassword = (pw) => {
-    // If password is empty all requirements should be false
     if (!pw || pw.length === 0) {
       const emptyRequirements = {
         minLength: false,
@@ -46,7 +46,6 @@ export function Register() {
       hasSpecial: /[!@#$%^&*()_+\-=\[\]{};:'"\\|,.<>\/?]+/.test(pw)
     };
     
-    // Calculate password strength 0-100
     const metRequirements = Object.values(requirements).filter(Boolean).length;
     const strengthPercentage = Math.min(100, Math.round((metRequirements / 6) * 100));
     setPwdStrength(strengthPercentage);
@@ -103,7 +102,6 @@ export function Register() {
     const up = { ...formValues, [name]: val };
     setFormValues(up);
 
-    // If password field is being changed validate password requirements in real-time
     if (name === 'password') {
       validatePassword(val);
     }
@@ -122,9 +120,7 @@ export function Register() {
 
   useEffect(() => {
     const validFields = Object.entries(formValues).filter(([key, value]) => {
-
       if (key === 'agreeToTerms') return false;
-
       return typeof value === 'string' && 
              value.length > 0 && 
              !errors[key];
@@ -181,8 +177,7 @@ export function Register() {
           window.location.href = "/SearchJobPost";
         } else {
           setErrors({
-            general:
-              "Login failed. Try manually.",
+            general: "Login failed. Try manually.",
           });
         }
       } else {
@@ -196,16 +191,14 @@ export function Register() {
         } else {
           setErrors(
             ed.errors || {
-              general:
-                "Registration failed.",
+              general: "Registration failed.",
             }
           );
         }
       }
     } catch {
       setErrors({
-        general:
-          "Error occurred. Try later.",
+        general: "Error occurred. Try later.",
       });
     } finally {
       setIsLoading(false);
@@ -251,7 +244,6 @@ export function Register() {
       className="register-page main-content min-h-screen p-4 flex items-center justify-center my-10 rounded-4xl border"
     >
       <div className="card w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 overflow-hidden relative">
-        {/* Progress bar */}
         <motion.div 
           className="absolute top-0 left-0 h-1 bg-gradient-to-r from-green-500 to-lime-500"
           style={{ width: `${formProgress}%` }}
@@ -311,8 +303,8 @@ export function Register() {
               { name: 'lastName', placeholder: 'Last Name', type: 'text' },
               { name: 'email', placeholder: 'Email', type: 'email' },
               { name: 'username', placeholder: 'Username', type: 'text' },
-              { name: 'password', placeholder: 'Password', type: 'password' },
-              { name: 'confirmPassword', placeholder: 'Repeat Password', type: 'password' },
+              { name: 'password', placeholder: 'Password', type: showPassword ? 'text' : 'password' },
+              { name: 'confirmPassword', placeholder: 'Repeat Password', type: showConfirmPassword ? 'text' : 'password' },
             ].map(({ name, placeholder, type }) => {
               const ok = formValues[name] && !errors[name];
               const bad = !!errors[name];
@@ -334,7 +326,6 @@ export function Register() {
                           name === 'password'
                             ? () => {
                                 setPwdFocus(true);
-                                // Ensures password requirements are updated when field is focused
                                 validatePassword(formValues.password);
                               }
                             : undefined
@@ -347,6 +338,21 @@ export function Register() {
                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-gray-400"
                         {...inputInt}
                       />
+                      {(name === 'password' || name === 'confirmPassword') && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            name === 'password'
+                              ? setShowPassword(!showPassword)
+                              : setShowConfirmPassword(!showConfirmPassword)
+                          }
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        >
+                          {name === 'password'
+                            ? (showPassword ? <FaEyeSlash /> : <FaEye />)
+                            : (showConfirmPassword ? <FaEyeSlash /> : <FaEye />)}
+                        </button>
+                      )}
                     </div>
                     
                     <div className="flex-shrink-0 ml-3 w-6 h-6 flex items-center justify-center">
@@ -399,7 +405,6 @@ export function Register() {
                   exit={{ height: 0, opacity: 0 }}
                   className="mt-2 mb-4 text-sm bg-gray-50 p-4 rounded-lg shadow-sm"
                 >
-                  {/* Password strength indicator */}
                   <div className="mb-3">
                     <div className="flex justify-between mb-1">
                       <span className="text-xs font-medium">Password Strength</span>
@@ -417,7 +422,6 @@ export function Register() {
                     </div>
                   </div>
                   
-                  {/* Requirements list */}
                   <ul className="space-y-1">
                     {[
                       { key: 'minLength', label: 'At least 8 characters' },
@@ -483,7 +487,6 @@ export function Register() {
               </p>
             )}
 
-            {/* Sign Up Button updated to match the login page button alignment */}
             <div className="flex items-center">
               <motion.button
                 type="submit"

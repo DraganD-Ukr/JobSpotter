@@ -16,12 +16,42 @@ export default function AdminReportManagementPopup() {
   const [isDeleteApplicantConfirmationVisible, setIsDeleteApplicantConfirmationVisible] = useState(false);
   const [isRemoveReviewConfirmationVisible, setIsRemoveReviewConfirmationVisible] = useState(false);
 
-  // Additional state for success message
+  // Additional state for success/error message
   const [successMessage, setSuccessMessage] = useState("");
   const [isSuccessMessageVisible, setIsSuccessMessageVisible] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState("");
   const [isErrorMessageVisible, setIsErrorMessageVisible] = useState(false);
+
+  const [searchParams] = useSearchParams();
+  const [report, setReport] = useState({});
+  const [userDetails, setUserDetails] = useState(null);
+  const [username, setUsername] = useState("");
+  const [jobPostData, setJobPostData] = useState(null);
+  const [applicantData, setApplicantData] = useState(null);
+  const [reportTags, setReportTags] = useState([]);
+  const [status, setStatus] = useState("");
+  const [reportedReview, setReportedReview] = useState(null);
+
+  // Clear messages after 5 seconds
+  useEffect(() => {
+    if (isSuccessMessageVisible) {
+      const timer = setTimeout(() => {
+        setIsSuccessMessageVisible(false);
+        setSuccessMessage("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccessMessageVisible]);
+
+  useEffect(() => {
+    if (isErrorMessageVisible) {
+      const timer = setTimeout(() => {
+        setIsErrorMessageVisible(false);
+        setErrorMessage("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isErrorMessageVisible]);
 
   const handleActionSelect = (action) => {
     setSelectedAction(action);
@@ -57,15 +87,16 @@ export default function AdminReportManagementPopup() {
   };
 
   const handleEditJobPostSubmit = (e) => {
+    e.preventDefault();
     if (!e.target) {
       console.error("Event target is undefined!");
       return;
     }
     const formData = new FormData(e.target);
     const jsonData = Object.fromEntries(formData.entries());
-    jsonData.maxApplicants = jobPostData.maxApplicants;
+    jsonData.maxApplicants = jobPostData?.maxApplicants || 0;
 
-    console.log("Editing job post with data:", formData);
+    console.log("Editing job post with data:", jsonData);
     fetch(`/api/v1/job-posts/${report.reportedJobPostId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -73,18 +104,17 @@ export default function AdminReportManagementPopup() {
       credentials: "include",
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to update report status");
+        if (!res.ok) throw new Error(`Failed to update job post: ${res.status} ${res.statusText}`);
         console.log("Job post updated successfully.");
         setSuccessMessage("Job post updated successfully!");
         setIsSuccessMessageVisible(true);
         setIsEditJobPostFormVisible(false);
       })
       .catch((error) => {
-        console.error("Error updating report status:", error.message);
+        console.error("Error updating job post:", error.message);
         setErrorMessage("Error updating job post: " + error.message);
         setIsErrorMessageVisible(true);
       });
-    setIsEditJobPostFormVisible(false);
   };
 
   const handleDeleteJobPost = () => {
@@ -95,21 +125,26 @@ export default function AdminReportManagementPopup() {
       credentials: "include",
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to delete job post");
+        if (!res.ok) throw new Error(`Failed to delete job post: ${res.status} ${res.statusText}`);
         console.log("Job post deleted successfully.");
         setSuccessMessage("Job post deleted successfully!");
         setIsSuccessMessageVisible(true);
         setIsDeleteJobPostConfirmationVisible(false);
+        setJobPostData(null); // Clear job post data after deletion
       })
       .catch((error) => {
         console.error("Error deleting job post:", error.message);
         setErrorMessage("Error deleting job post: " + error.message);
         setIsErrorMessageVisible(true);
       });
-    setIsDeleteJobPostConfirmationVisible(false);
   };
 
   const handleDeleteApplicant = () => {
+    if (!jobPostData?.jobPostId || !applicantData?.applicantId) {
+      setErrorMessage("Missing job post or applicant data.");
+      setIsErrorMessageVisible(true);
+      return;
+    }
     console.log("Deleting applicant:", report.reportedApplicantId);
     fetch(`/api/v1/job-posts/my-job-posts/${jobPostData.jobPostId}/applicants/${applicantData.applicantId}`, {
       method: "DELETE",
@@ -117,26 +152,35 @@ export default function AdminReportManagementPopup() {
       credentials: "include",
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to delete applicant");
+        if (!res.ok) throw new Error(`Failed to delete applicant: ${res.status} ${res.statusText}`);
         console.log("Applicant deleted successfully.");
         setSuccessMessage("Applicant deleted successfully!");
         setIsSuccessMessageVisible(true);
         setIsDeleteApplicantConfirmationVisible(false);
+        setApplicantData(null); // Clear applicant data after deletion
       })
       .catch((error) => {
         console.error("Error deleting applicant:", error.message);
         setErrorMessage("Error deleting applicant: " + error.message);
         setIsErrorMessageVisible(true);
       });
-    setIsDeleteApplicantConfirmationVisible(false);
   };
 
-  const handleEditApplicantSubmit = (message) => {
-    console.log("Editing applicant with data:", message);
-    if (!jobPostData || !jobPostData.jobPostId || !applicantData || !applicantData.applicantId) {
+  const handleEditApplicantSubmit = (e) => {
+    e.preventDefault();
+    if (!jobPostData?.jobPostId || !applicantData?.applicantId) {
       console.error("Missing job post or applicant data.");
+      setErrorMessage("Missing job post or applicant data.");
+      setIsErrorMessageVisible(true);
       return;
     }
+    const message = e.target.elements["applicant-message"]?.value;
+    if (!message) {
+      setErrorMessage("Applicant message is required.");
+      setIsErrorMessageVisible(true);
+      return;
+    }
+    console.log("Editing applicant with data:", message);
     fetch(`/api/v1/job-posts/job-post-worked-on/${jobPostData.jobPostId}/applicants/${applicantData.applicantId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -144,21 +188,31 @@ export default function AdminReportManagementPopup() {
       credentials: "include",
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to update applicant");
+        if (!res.ok) throw new Error(`Failed to update applicant: ${res.status} ${res.statusText}`);
         console.log("Applicant updated successfully.");
         setSuccessMessage("Applicant updated successfully!");
         setIsSuccessMessageVisible(true);
         setIsEditApplicantFormVisible(false);
+        setApplicantData((prev) => ({ ...prev, message })); // Update local state
       })
       .catch((error) => {
         console.error("Error updating applicant:", error.message);
         setErrorMessage("Error updating applicant: " + error.message);
         setIsErrorMessageVisible(true);
       });
-    setIsEditApplicantFormVisible(false);
   };
 
-  const handleEditReviewSubmit = (reviewData) => {
+  const handleEditReviewSubmit = (e) => {
+    e.preventDefault();
+    const reviewData = {
+      content: e.target.elements["review-content"]?.value,
+      rating: parseInt(e.target.elements["review-rating"]?.value, 10),
+    };
+    if (!reviewData.content || isNaN(reviewData.rating)) {
+      setErrorMessage("Review content and rating are required.");
+      setIsErrorMessageVisible(true);
+      return;
+    }
     console.log("Editing review with data:", reviewData);
     fetch(`/api/v1/reviews/${report.reportedReviewId}`, {
       method: "PUT",
@@ -167,18 +221,18 @@ export default function AdminReportManagementPopup() {
       credentials: "include",
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to update review");
+        if (!res.ok) throw new Error(`Failed to update review: ${res.status} ${res.statusText}`);
         console.log("Review updated successfully.");
         setSuccessMessage("Review updated successfully!");
         setIsSuccessMessageVisible(true);
         setIsEditReviewFormVisible(false);
+        setReportedReview((prev) => ({ ...prev, ...reviewData })); // Update local state
       })
       .catch((error) => {
         console.error("Error updating review:", error.message);
         setErrorMessage("Error updating review: " + error.message);
         setIsErrorMessageVisible(true);
       });
-    setIsEditReviewFormVisible(false);
   };
 
   const handleRemoveReview = () => {
@@ -189,31 +243,19 @@ export default function AdminReportManagementPopup() {
       credentials: "include",
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to remove review");
+        if (!res.ok) throw new Error(`Failed to remove review: ${res.status} ${res.statusText}`);
         console.log("Review removed successfully.");
         setSuccessMessage("Review removed successfully!");
         setIsSuccessMessageVisible(true);
         setIsRemoveReviewConfirmationVisible(false);
+        setReportedReview(null); // Clear review data after deletion
       })
       .catch((error) => {
         console.error("Error removing review:", error.message);
         setErrorMessage("Error removing review: " + error.message);
         setIsErrorMessageVisible(true);
       });
-    setIsRemoveReviewConfirmationVisible(false);
   };
-
-  const [searchParams] = useSearchParams();
-  const [report, setReport] = useState({});
-  const [userDetails, setUserDetails] = useState(null);
-
-  const [username, setUsername] = useState("");
-  const [jobPostData, setJobPostData] = useState(null);
-  const [applicantData, setApplicantData] = useState(null);
-  const [reportTags, setReportTags] = useState([]);
-  const [status, setStatus] = useState("");
-
-  const [reportedReview, setReportedReview] = useState(null);
 
   useEffect(() => {
     const parsedReport = {
@@ -226,7 +268,6 @@ export default function AdminReportManagementPopup() {
       reportTags: searchParams.get("reportTags")?.split(",") || [],
       reportStatus: searchParams.get("reportStatus") || "",
       createdAt: searchParams.get("createdAt"),
-      // ADDED: to show the reportTitle if present
       reportTitle: searchParams.get("reportTitle"),
     };
     setReport(parsedReport);
@@ -303,7 +344,7 @@ export default function AdminReportManagementPopup() {
       credentials: "include",
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to update report status");
+        if (!res.ok) throw new Error(`Failed to update report status: ${res.status} ${res.statusText}`);
         setReport((prevReport) => ({
           ...prevReport,
           reportStatus: status.toUpperCase(),
@@ -313,25 +354,37 @@ export default function AdminReportManagementPopup() {
       })
       .catch((error) => {
         console.error("Error updating report status:", error);
+        setErrorMessage("Error updating report status: " + error.message);
+        setIsErrorMessageVisible(true);
       });
   }
 
   function handleUserDisable() {
     let userId = report?.reportedUserId;
-    if (!userId) return;
+    if (!userId) {
+      setErrorMessage("No user ID provided.");
+      setIsErrorMessageVisible(true);
+      return;
+    }
     fetch(`/api/v1/users/${userId}/disable`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to disable user");
-        return res.json();
-      })
-      .then(() => {
+        if (!res.ok) {
+          return res.text().then((text) => {
+            throw new Error(`Failed to disable user: ${res.status} ${res.statusText} - ${text}`);
+          });
+        }
         console.log("Disabled user:", userId);
         setSuccessMessage("User disabled successfully!");
         setIsSuccessMessageVisible(true);
+        // Update user details to reflect disabled state
+        setUserDetails((prev) => ({
+          ...prev,
+          isDisabled: true, // Assuming the API might not return this, we set it locally
+        }));
       })
       .catch((error) => {
         console.error("Error disabling user:", error);
@@ -581,15 +634,19 @@ export default function AdminReportManagementPopup() {
                   <p>
                     <strong>Email:</strong> {userDetails.email || "N/A"}
                   </p>
+                  <p>
+                    <strong>Status:</strong> {userDetails.isDisabled ? "Disabled" : "Active"}
+                  </p>
                 </div>
 
                 <div className="flex justify-start mt-2">
                   <button
-                    className="
-                      bg-red-600 text-white px-4 py-2 rounded 
-                      hover:opacity-90 transition
-                    "
+                    className={`
+                      bg-red-600 text-white px-4 py-2 rounded hover:opacity-90 transition
+                      ${userDetails.isDisabled ? "opacity-50 cursor-not-allowed" : ""}
+                    `}
                     onClick={handleUserDisable}
+                    disabled={userDetails.isDisabled}
                   >
                     Disable
                   </button>
@@ -683,10 +740,7 @@ export default function AdminReportManagementPopup() {
             <div className="rounded-md shadow-md p-6 mt-6 bg-white">
               <h3 className="mb-6 text-xl font-semibold">Edit Job Post</h3>
               <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleEditJobPostSubmit(e);
-                }}
+                onSubmit={handleEditJobPostSubmit}
                 className="space-y-4"
               >
                 <div>
@@ -740,6 +794,7 @@ export default function AdminReportManagementPopup() {
                       focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50
                     "
                     onClick={() => setIsEditJobPostFormVisible(false)}
+                    type="button"
                   >
                     Cancel
                   </button>
@@ -757,7 +812,7 @@ export default function AdminReportManagementPopup() {
         {/* Delete JobPost confirmation */}
         {isDeleteJobPostConfirmationVisible && (
           jobPostData ? (
-            <div className="rounded-md shadow with-shadow-md p-6 mt-6 bg-white">
+            <div className="rounded-md shadow-md p-6 mt-6 bg-white">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Confirm Delete Job Post
               </h3>
@@ -801,10 +856,7 @@ export default function AdminReportManagementPopup() {
                 Edit Applicant Message
               </h3>
               <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleEditApplicantSubmit(/* Form Data */);
-                }}
+                onSubmit={handleEditApplicantSubmit}
                 className="space-y-4"
               >
                 <div>
@@ -816,6 +868,7 @@ export default function AdminReportManagementPopup() {
                   </label>
                   <textarea
                     id="applicant-message"
+                    name="applicant-message"
                     className="
                       shadow appearance-none border rounded w-full py-2 px-3 
                       text-gray-700 leading-tight focus:outline-none focus:shadow-outline resize-none
@@ -839,6 +892,7 @@ export default function AdminReportManagementPopup() {
                       focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50
                     "
                     onClick={() => setIsEditApplicantFormVisible(false)}
+                    type="button"
                   >
                     Cancel
                   </button>
@@ -902,10 +956,7 @@ export default function AdminReportManagementPopup() {
                 Edit Review
               </h3>
               <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleEditReviewSubmit(/* Form Data */);
-                }}
+                onSubmit={handleEditReviewSubmit}
                 className="space-y-4"
               >
                 <div>
@@ -917,6 +968,7 @@ export default function AdminReportManagementPopup() {
                   </label>
                   <textarea
                     id="review-content"
+                    name="review-content"
                     className="
                       shadow appearance-none border rounded w-full py-2 px-3 
                       text-gray-700 leading-tight focus:outline-none focus:shadow-outline resize-none
@@ -934,11 +986,14 @@ export default function AdminReportManagementPopup() {
                   <input
                     type="number"
                     id="review-rating"
+                    name="review-rating"
                     className="
                       shadow appearance-none border rounded w-full py-2 px-3 
                       text-gray-700 leading-tight focus:outline-none focus:shadow-outline
                     "
                     defaultValue={reportedReview?.rating}
+                    min="1"
+                    max="5"
                   />
                 </div>
                 <div className="flex justify-end space-x-2">
@@ -957,6 +1012,7 @@ export default function AdminReportManagementPopup() {
                       focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50
                     "
                     onClick={() => setIsEditReviewFormVisible(false)}
+                    type="button"
                   >
                     Cancel
                   </button>

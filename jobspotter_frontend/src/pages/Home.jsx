@@ -221,19 +221,28 @@ export function Home() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex items-center gap-3 text-xl font-semibold text-gray-600">
-          <svg className="animate-spin h-6 w-6 text-emerald-500" viewBox="0 0 24 24">
-            <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z" />
-          </svg>
-          Loading...
+        <div className="flex flex-col items-center gap-3 text-xl font-semibold text-gray-600">
+          <FaSearch className="text-emerald-500 text-4xl animate-magnifier" />
+          <span>Loading...</span>
         </div>
+        <style>
+          {`
+            @keyframes magnifierMove {
+              0% { transform: translateX(-20px); }
+              50% { transform: translateX(20px); }
+              100% { transform: translateX(-20px); }
+            }
+            .animate-magnifier {
+              animation: magnifierMove 2s ease-in-out infinite;
+            }
+          `}
+        </style>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans scaled-container">
       <style>
         {`
           .lava-lamp-background {
@@ -245,6 +254,15 @@ export function Home() {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
+          }
+          .scaled-container {
+            transform: scale(0.77);
+            transform-origin: top center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
           }
         `}
       </style>
