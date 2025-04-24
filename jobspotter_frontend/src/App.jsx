@@ -55,30 +55,30 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/notification" element={<Notification />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/privacypolicy" element={<PrivacyPolicy />} />
-          <Route path="/termsofservice" element={<TermsOfService />} />
-          <Route path="/data" element={<Data />} />
-          <Route path="/address" element={<Address />} />
-          <Route path="/createjobpost" element={<CreateJobPost />} />
-          <Route path="/myJobs" element={<MyJobs />} />
-          <Route path="/searchjobpost" element={<SearchJobPost />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/jobposthistory" element={<JobPostHistory />} />
+          <Route path="/About" element={<About />} />
+          <Route path="/Contact" element={<Contact />} />
+          <Route path="/Login" element={<Login />} />
+          <Route path="/Register" element={<Register />} />
+          <Route path="/Profile" element={<Profile />} />
+          <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
+          <Route path="/TermsOfService" element={<TermsOfService />} />
+          {/* <Route path="/Data" element={<Data />} /> */}
+          <Route path="/Address" element={<Address />} />
+          <Route path="/CreateJobPost" element={<CreateJobPost />} />
+          <Route path="/MyJobs" element={<MyJobs />} />
+          <Route path="/SearchJobPost" element={<SearchJobPost />} />
+          <Route path="/Settings" element={<Settings />} />
+          <Route path="/JobPostHistory" element={<JobPostHistory />} />
           <Route path="/ViewMoreDetails" element={<ViewMoreDetails />} />
           <Route path="/myJob/:jobId" element={<ViewMoreDetails />} />
           <Route path="/job/:jobId" element={<JobPostDetails />} />
-          <Route path="/helpandsupport" element={<HelpAndSupport />} />
+          <Route path="/HelpAndSupport" element={<HelpAndSupport />} />
           <Route path="/users/:userId" element={<UserProfile />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/Dashboard" element={<Dashboard />} />
           <Route path="/adminreportmanagementpopup" element={<AdminReportManagementPopup />} />
-          <Route path="/searchreport" element={<SearchReport />} />
+          <Route path="/SearchReport" element={<SearchReport />} />
           <Route path="/userreportformpopup" element={<UserReportFormPopup />} />
-          <Route path="/searchreviews" element={<SearchReviews />} />
+          <Route path="/SearchReviews" element={<SearchReviews />} />
           <Route path="/userreviewpopup" element={<UserReviewPopup />} />
           <Route path="/assistance" element={<Assistance />} />
         </Routes>

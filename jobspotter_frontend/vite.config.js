@@ -4,8 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
-  // Load env variables based on the current mode (dev or prod)
+export default defineConfig(({mode}) => {
+
   const env = loadEnv(mode, process.cwd(), '')
 
   return {
@@ -18,12 +18,11 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: env.VITE_API_URL,  // Use the loaded API URL from environment variables
           changeOrigin: true,
-          secure: false,
+          rewrite: (path) => path.replace(/^\/api/, '/api/'),
+          secure: true,
         },
       },
     },
-    define: {
-      __APP_ENV__: JSON.stringify(env.APP_ENV),  // You can use this to inject the environment into your code
-    },
+    
   }
 })
