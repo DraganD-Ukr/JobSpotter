@@ -22,6 +22,7 @@ import org.jobspotter.jobpost.service.SearchTitleSuggestionService;
 import org.jobspotter.jobpost.utils.GeoUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -515,7 +516,16 @@ public class JobPostImpl implements JobPostService {
      * @param jobPostId The ID of the job post to delete
      * @throws Exception If the user is not an admin or job poster, or job post status is not OPEN
      */
-    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
+    @Caching(evict = {
+            @CacheEvict(
+                    value = "myJobPostCache",
+                    key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId"
+            ),
+            @CacheEvict(
+                    value = "jobPostCache",
+                    key = "#jobPostId"
+            )
+    })
     @Transactional
     @Override
     public void deleteJobPost(String accessToken, Long jobPostId) throws Exception {
@@ -531,8 +541,26 @@ public class JobPostImpl implements JobPostService {
         log.info("Job post deleted successfully");
     }
 
+    /**
+     * Apply to a job post by its ID
+     * Only the job poster and admins can apply to a job post
+     * The job post status must be OPEN if the user is not an admin
+     *
+     * @param accessToken
+     * @param jobPostId   The ID of the job post to apply to
+     * @param jobPostApplyRequest
+     */
+
     @Override
-    public void applyToJobPost(UUID userId, Long jobPostId, JobPostApplyRequest jobPostApplyRequest) {
+    @CacheEvict(
+            value = "myJobPostCache",
+            key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId"
+    )
+    public void applyToJobPost(String accessToken, Long jobPostId, JobPostApplyRequest jobPostApplyRequest) throws Exception {
+
+
+        // Extract userId
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
         // Find the job post
         JobPost jobPost = getJobPostByID(jobPostId);
@@ -592,9 +620,8 @@ public class JobPostImpl implements JobPostService {
         log.info("User applied to job post successfully");
     }
 
-
-    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Transactional
+    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Override
     public void takeApplicantsAction(UUID userId, Long jobPostId, List<ApplicantActionRequest> applicantsActionRequest) {
 
@@ -763,7 +790,16 @@ public class JobPostImpl implements JobPostService {
     }
 
     @Transactional
-    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
+    @Caching(evict = {
+            @CacheEvict(
+                    value = "myJobPostCache",
+                    key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId"
+            ),
+            @CacheEvict(
+                    value = "jobPostCache",
+                    key = "#jobPostId"
+            )
+    })
     @Override
     public void startJobPost(String accessToken, Long jobPostId) throws Exception {
 //        Get the job post from the database
@@ -828,7 +864,16 @@ public class JobPostImpl implements JobPostService {
         log.info("Job post started successfully");
     }
     @Transactional
-    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
+    @Caching(evict = {
+            @CacheEvict(
+                    value = "myJobPostCache",
+                    key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId"
+            ),
+            @CacheEvict(
+                    value = "jobPostCache",
+                    key = "#jobPostId"
+            )
+    })
     @Override
     public void cancelJobPost(String accessToken, Long jobPostId) throws Exception {
 
@@ -868,7 +913,16 @@ public class JobPostImpl implements JobPostService {
 
 
     @Transactional
-    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
+    @Caching(evict = {
+            @CacheEvict(
+                    value = "myJobPostCache",
+                    key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId"
+            ),
+            @CacheEvict(
+                    value = "jobPostCache",
+                    key = "#jobPostId"
+            )
+    })
     @Override
     public void finishJobPost(String accessToken, Long jobPostId) throws Exception{
 

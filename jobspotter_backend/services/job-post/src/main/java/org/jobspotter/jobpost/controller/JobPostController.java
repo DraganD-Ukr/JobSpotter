@@ -427,8 +427,7 @@ public class JobPostController {
     ) throws Exception {
         log.info("Applying to job post");
 
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
-        jobPostService.applyToJobPost(userId, id, jobPostApplyRequest);
+        jobPostService.applyToJobPost(accessToken, id, jobPostApplyRequest);
 
         return ResponseEntity.noContent().build();
     }

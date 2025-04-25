@@ -31,7 +31,7 @@ public interface JobPostService {
 
     void deleteJobPost(String accessToken, Long jobPostId) throws Exception;
 
-    void applyToJobPost(UUID userId, Long jobPostId, JobPostApplyRequest jobPostApplyRequest);
+    void applyToJobPost(String accessToken, Long jobPostId, JobPostApplyRequest request) throws Exception;
 
     void takeApplicantsAction(UUID userId, Long jobPostId, List<ApplicantActionRequest> applicantsActionRequest);
 
