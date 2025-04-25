@@ -20,6 +20,7 @@ import org.jobspotter.jobpost.service.JobPostService;
 import org.jobspotter.jobpost.service.NotificationService;
 import org.jobspotter.jobpost.service.SearchTitleSuggestionService;
 import org.jobspotter.jobpost.utils.GeoUtils;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -469,6 +470,10 @@ public class JobPostImpl implements JobPostService {
      * @param jobPostPatchRequest The fields to update
      * @throws Exception If the user is not an admin or job poster, or job post status is not OPEN
      */
+    @CacheEvict(
+            value = "myJobPostCache",
+            key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId"
+    )
     @Transactional
     @Override
     public void updateJobPost(String accessToken, Long jobPostId, JobPostPatchRequest jobPostPatchRequest) throws Exception {
