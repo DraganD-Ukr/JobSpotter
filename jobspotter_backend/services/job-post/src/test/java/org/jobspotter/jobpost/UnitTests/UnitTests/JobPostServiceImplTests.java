@@ -273,7 +273,7 @@ public class JobPostServiceImplTests {
             // And return false for admin role.
             when(jwtUtils.hasAdminRole(accessToken)).thenReturn(false);
 
-            // Act & Assert: Expect UnauthorizedException to be thrown.
+            // Act/ Assert: Expect UnauthorizedException to be thrown.
             Exception exception = assertThrows(UnauthorizedException.class,
                     () -> jobPostImpl.getMyJobPostDetails(accessToken, 1L));
             assertTrue(exception.getMessage().contains("You are not authorized"));
@@ -629,7 +629,7 @@ public class JobPostServiceImplTests {
         when(userServiceClient.getAddressById(accessToken, request.getAddressId()))
                 .thenThrow(notFoundException);
 
-        // Act & Assert
+        // Act/ Assert
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> jobPostImpl.createJobPost(accessToken, request));
 
@@ -709,7 +709,7 @@ public class JobPostServiceImplTests {
             when(jwtUtils.hasAdminRole(accessToken)).thenReturn(false);
             when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
 
-            // Act & Assert
+            // Act/ Assert
             assertThrows(ForbiddenException.class,
                     () -> jobPostImpl.updateJobPost(accessToken, jobPostId, patchRequest));
         }
@@ -802,30 +802,36 @@ public class JobPostServiceImplTests {
      * </p>
      */
     @Test
-    void applyToJobPost_Success() {
+    void applyToJobPost_Success() throws Exception {
         // Arrange
-        JobPost jobPost = getDummyJobPost(); // Status OPEN
+        String accessToken = "mocked-access-token";
         UUID userId = UUID.randomUUID();
+        JobPost jobPost = getDummyJobPost(); // Status OPEN
         JobPostApplyRequest applyRequest = new JobPostApplyRequest("Excited to apply!");
 
         when(jobPostRepository.findById(1L)).thenReturn(Optional.of(jobPost));
 
-        // Act
-        jobPostImpl.applyToJobPost(userId, 1L, applyRequest);
+        try (MockedStatic<JWTUtils> jwtUtilsMocked = mockStatic(JWTUtils.class)) {
+            jwtUtilsMocked.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
 
-        // Assert
-        assertEquals(1, jobPost.getApplicants().size());
+            // Act
+            jobPostImpl.applyToJobPost(accessToken, 1L, applyRequest);
 
-        Applicant savedApplicant = jobPost.getApplicants().iterator().next();
-        assertEquals(userId, savedApplicant.getUserId());
-        assertEquals("Excited to apply!", savedApplicant.getMessage());
-        assertEquals(ApplicantStatus.PENDING, savedApplicant.getStatus());
+            // Assert
+            assertEquals(1, jobPost.getApplicants().size());
 
-        verify(applicantRepository).save(any(Applicant.class));
-        verify(jobPostRepository).save(jobPost);
-        verify(notificationService, times(2)).sendNotification(any(), eq(KafkaTopic.APPLICANT_APPLIED));
+            Applicant savedApplicant = jobPost.getApplicants().iterator().next();
+            assertEquals(userId, savedApplicant.getUserId());
+            assertEquals("Excited to apply!", savedApplicant.getMessage());
+            assertEquals(ApplicantStatus.PENDING, savedApplicant.getStatus());
 
+            verify(applicantRepository).save(any(Applicant.class));
+            verify(jobPostRepository).save(jobPost);
+            verify(notificationService, times(2)).sendNotification(any(), eq(KafkaTopic.APPLICANT_APPLIED));
+        }
     }
+
+
 
     /**
      * Testing for a successful application to a job post when the job post is not open.
@@ -837,21 +843,28 @@ public class JobPostServiceImplTests {
     @Test
     void applyToJobPost_NotOpenStatus_ShouldThrowForbiddenException() {
         // Arrange
+        String accessToken = "mocked-access-token";
         UUID userId = UUID.randomUUID();
         JobPost jobPost = getDummyJobPost();
         jobPost.setStatus(JobStatus.COMPLETED); // Not OPEN
 
         when(jobPostRepository.findById(1L)).thenReturn(Optional.of(jobPost));
 
-        // Act & Assert
-        ForbiddenException exception = assertThrows(ForbiddenException.class,
-                () -> jobPostImpl.applyToJobPost(userId, 1L, new JobPostApplyRequest("Applying to closed job")));
+        try (MockedStatic<JWTUtils> jwtUtilsMocked = mockStatic(JWTUtils.class)) {
+            jwtUtilsMocked.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
 
-        assertTrue(exception.getMessage().contains("JobStatus does not allow for this action"));
+            // Act & Assert
+            ForbiddenException exception = assertThrows(ForbiddenException.class,
+                    () -> jobPostImpl.applyToJobPost(accessToken, 1L, new JobPostApplyRequest("Applying to closed job")));
 
-        verify(applicantRepository, never()).save(any());
-        verify(jobPostRepository, never()).save(any());
+            assertTrue(exception.getMessage().contains("JobStatus does not allow for this action"));
+
+            verify(applicantRepository, never()).save(any());
+            verify(jobPostRepository, never()).save(any());
+        }
     }
+
+
 
     /**
      * Testing for a successful application to a job post when the user is already an applicant.
@@ -861,8 +874,9 @@ public class JobPostServiceImplTests {
      * </p>
      */
     @Test
-    void applyToJobPost_AlreadyApplied_ShouldThrowForbiddenException() {
+    void applyToJobPost_AlreadyApplied_ShouldThrowForbiddenException() throws Exception {
         // Arrange
+        String accessToken = "mocked-access-token";
         UUID userId = UUID.randomUUID();
         JobPost jobPost = getDummyJobPost();
         jobPost.getApplicants().add(Applicant.builder()
@@ -872,15 +886,21 @@ public class JobPostServiceImplTests {
 
         when(jobPostRepository.findById(1L)).thenReturn(Optional.of(jobPost));
 
-        // Act & Assert
-        ForbiddenException exception = assertThrows(ForbiddenException.class,
-                () -> jobPostImpl.applyToJobPost(userId, 1L, new JobPostApplyRequest("Applying again")));
+        try (MockedStatic<JWTUtils> jwtUtilsMocked = mockStatic(JWTUtils.class)) {
+            jwtUtilsMocked.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
 
-        assertTrue(exception.getMessage().contains("already applied"));
+            // Act & Assert
+            ForbiddenException exception = assertThrows(ForbiddenException.class,
+                    () -> jobPostImpl.applyToJobPost(accessToken, 1L, new JobPostApplyRequest("Applying again")));
 
-        verify(applicantRepository, never()).save(any());
-        verify(jobPostRepository, never()).save(any());
+            assertTrue(exception.getMessage().contains("already applied"));
+
+            verify(applicantRepository, never()).save(any());
+            verify(jobPostRepository, never()).save(any());
+        }
     }
+
+
 
     // Test Methods for takeActionOnApplication
     //==================================================================================================================
@@ -1197,7 +1217,7 @@ public class JobPostServiceImplTests {
         when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
         when(jwtUtils.hasAdminRole(accessToken)).thenReturn(true);
 
-        // Act & Assert
+        // Act/ Assert
         assertThrows(ResourceNotFoundException.class, () ->
                 jobPostImpl.deleteApplicant(accessToken, jobPostId, invalidApplicantId));
 
@@ -1235,7 +1255,7 @@ public class JobPostServiceImplTests {
         when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
         when(jwtUtils.hasAdminRole(accessToken)).thenReturn(true);
 
-        // Act & Assert
+        // Act/ Assert
         assertThrows(ForbiddenException.class, () ->
                 jobPostImpl.deleteApplicant(accessToken, jobPostId, applicantId));
 
@@ -1252,8 +1272,9 @@ public class JobPostServiceImplTests {
      * </p>
      */
     @Test
-    void startJobPost_Success() {
+    void startJobPost_Success() throws Exception {
         // Arrange
+        String accessToken = "mocked-access-token";
         UUID userId = UUID.randomUUID();
         Long jobPostId = 1L;
 
@@ -1280,17 +1301,24 @@ public class JobPostServiceImplTests {
 
         when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
 
-        // Act
-        jobPostImpl.startJobPost(userId, jobPostId);
+        try (MockedStatic<JWTUtils> jwtUtilsMocked = mockStatic(JWTUtils.class)) {
+            jwtUtilsMocked.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
 
-        // Assert
-        assertEquals(JobStatus.IN_PROGRESS, jobPost.getStatus(), "Job post should be IN_PROGRESS");
-        assertTrue(jobPost.getApplicants().stream()
-                .noneMatch(applicant -> applicant.getStatus() == ApplicantStatus.PENDING), "All PENDING applicants must be REJECTED");
+            // Act
+            jobPostImpl.startJobPost(accessToken, jobPostId);
 
-        verify(applicantRepository).saveAll(applicants);
-        verify(jobPostRepository).save(jobPost);
+            // Assert
+            assertEquals(JobStatus.IN_PROGRESS, jobPost.getStatus(), "Job post should be IN_PROGRESS");
+
+            assertTrue(jobPost.getApplicants().stream()
+                            .noneMatch(applicant -> applicant.getStatus() == ApplicantStatus.PENDING),
+                    "All PENDING applicants must be REJECTED");
+
+            verify(applicantRepository).saveAll(applicants);
+            verify(jobPostRepository).save(jobPost);
+        }
     }
+
 
     //no accepted applicants
     /**
@@ -1301,8 +1329,9 @@ public class JobPostServiceImplTests {
      * </p>
      */
     @Test
-    void startJobPost_NoAcceptedApplicants_ThrowsInvalidRequestException() {
+    void startJobPost_NoAcceptedApplicants_ThrowsInvalidRequestException() throws Exception {
         // Arrange
+        String accessToken = "mocked-access-token";
         UUID userId = UUID.randomUUID();
         Long jobPostId = 1L;
 
@@ -1323,13 +1352,19 @@ public class JobPostServiceImplTests {
 
         when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
 
-        // Act & Assert
-        InvalidRequestException exception = assertThrows(InvalidRequestException.class,
-                () -> jobPostImpl.startJobPost(userId, jobPostId));
-        assertTrue(exception.getMessage().contains("At least 1 applicant must be accepted"));
+        try (MockedStatic<JWTUtils> jwtUtilsMocked = mockStatic(JWTUtils.class)) {
+            jwtUtilsMocked.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
 
-        verify(jobPostRepository).findById(jobPostId);
+            // Act & Assert
+            InvalidRequestException exception = assertThrows(InvalidRequestException.class,
+                    () -> jobPostImpl.startJobPost(accessToken, jobPostId));
+
+            assertTrue(exception.getMessage().contains("At least 1 applicant must be accepted"));
+            verify(jobPostRepository).findById(jobPostId);
+        }
     }
+
+
 //Canncel Job Post
     //===================================================================================================================
     /**
@@ -1403,7 +1438,7 @@ public class JobPostServiceImplTests {
             jwtUtilsMockedStatic.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(jobPosterId);
             when(jwtUtils.hasAdminRole(accessToken)).thenReturn(false);
 
-            // Act & Assert
+            // Act/ Assert
             ForbiddenException exception = assertThrows(ForbiddenException.class,
                     () -> jobPostImpl.cancelJobPost(accessToken, jobPostId));
             assertTrue(exception.getMessage().contains("JobStatus does not allow"));

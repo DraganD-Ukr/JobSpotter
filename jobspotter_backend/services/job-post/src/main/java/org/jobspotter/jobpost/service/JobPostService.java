@@ -31,7 +31,7 @@ public interface JobPostService {
 
     void deleteJobPost(String accessToken, Long jobPostId) throws Exception;
 
-    void applyToJobPost(UUID userId, Long jobPostId, JobPostApplyRequest jobPostApplyRequest);
+    void applyToJobPost(String accessToken, Long jobPostId, JobPostApplyRequest request) throws Exception;
 
     void takeApplicantsAction(UUID userId, Long jobPostId, List<ApplicantActionRequest> applicantsActionRequest);
 
@@ -39,11 +39,11 @@ public interface JobPostService {
 
     void deleteApplicant(String accessToken, Long jobPostId, Long applicantId) throws Exception;
 
-    void startJobPost(UUID userId, Long jobPostId) ;
+    void startJobPost(String accessToken, Long jobPostId) throws Exception ;
 
     void cancelJobPost(String accessToken, Long jobPostId) throws Exception;
 
-    void finishJobPost(UUID userId, Long jobPostId);
+    void finishJobPost(String accessToken, Long jobPostId) throws Exception;
 
     Applicant getApplicantById(String accessToken, Long applicantId) throws Exception;
 
