@@ -3,7 +3,7 @@ import { ThemeProvider } from "./components/ThemeContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Notification from "./components/Notification";
-import HelpAndSupport from "./pages/HelpAndSupport";
+import HelpAndSupport from "./pages/HelpandSupport";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Assistance from "./components/Assistance";
 
@@ -62,7 +62,6 @@ export default function App() {
           <Route path="/Profile" element={<Profile />} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
           <Route path="/TermsOfService" element={<TermsOfService />} />
-          {/* <Route path="/Data" element={<Data />} /> */}
           <Route path="/Address" element={<Address />} />
           <Route path="/CreateJobPost" element={<CreateJobPost />} />
           <Route path="/MyJobs" element={<MyJobs />} />

@@ -124,6 +124,19 @@ export default function Notification({ variant = "icon", isLoggedIn = true }) {
     setIsPopupVisible((prev) => !prev);
   };
 
+    // Animation for the bell icon when new notifications arrive
+    const bellAnimation = useSpring({
+      transform: unreadCount > 0 ? 'rotate(12deg)' : 'rotate(0deg)',
+      config: { tension: 300, friction: 10 }
+    });
+  
+    // Animation for the notification counter
+    const counterAnimation = useSpring({
+      from: { opacity: 0, transform: 'scale(0.5)' },
+      to: { opacity: unreadCount > 0 ? 1 : 0, transform: unreadCount > 0 ? 'scale(1)' : 'scale(0.5)' },
+      config: config.wobbly
+    });
+
   const handleMarkAsRead = (notificationID) => {
     // Update the UI by removing the notification
     setNotifications((prev) => {
@@ -210,18 +223,6 @@ export default function Notification({ variant = "icon", isLoggedIn = true }) {
     );
   }
 
-  // Animation for the bell icon when new notifications arrive
-  const bellAnimation = useSpring({
-    transform: unreadCount > 0 ? 'rotate(12deg)' : 'rotate(0deg)',
-    config: { tension: 300, friction: 10 }
-  });
-
-  // Animation for the notification counter
-  const counterAnimation = useSpring({
-    from: { opacity: 0, transform: 'scale(0.5)' },
-    to: { opacity: unreadCount > 0 ? 1 : 0, transform: unreadCount > 0 ? 'scale(1)' : 'scale(0.5)' },
-    config: config.wobbly
-  });
 
   // Hover animation for the bell button
   const [isHovered, setIsHovered] = useState(false);
