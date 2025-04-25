@@ -763,11 +763,13 @@ public class JobPostImpl implements JobPostService {
     }
 
     @Transactional
+    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Override
-    public void startJobPost(UUID userId, Long jobPostId) {
+    public void startJobPost(String accessToken, Long jobPostId) throws Exception {
 //        Get the job post from the database
         JobPost jobPost = getJobPostByID(jobPostId);
 
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 //        Check if the user is the job poster
         checkIfUserIsJobPoster(userId, jobPost);
 
@@ -802,7 +804,6 @@ public class JobPostImpl implements JobPostService {
         jobPost.setStatus(JobStatus.IN_PROGRESS);
         jobPostRepository.save(jobPost);
 
-//        TODO: Send notification to all accepted applicants
         notificationService.sendNotification(Notification.builder()
                 .message("Your job post '" + jobPost.getTitle() + "' have started. Good luck!:")
                 .destinationUserId(jobPost.getJobPosterId())
@@ -826,9 +827,8 @@ public class JobPostImpl implements JobPostService {
 
         log.info("Job post started successfully");
     }
-
-    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Transactional
+    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Override
     public void cancelJobPost(String accessToken, Long jobPostId) throws Exception {
 
@@ -867,11 +867,14 @@ public class JobPostImpl implements JobPostService {
     }
 
 
-
+    @Transactional
+    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Override
-    public void finishJobPost(UUID userId, Long jobPostId) {
+    public void finishJobPost(String accessToken, Long jobPostId) throws Exception{
 
         JobPost jobPost = getJobPostByID(jobPostId);
+
+        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
 
         checkIfUserIsJobPoster(userId, jobPost);
 

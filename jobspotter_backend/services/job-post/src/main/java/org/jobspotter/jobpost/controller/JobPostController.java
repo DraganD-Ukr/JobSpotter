@@ -623,8 +623,7 @@ public class JobPostController {
 
         log.info("Starting job post");
 
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
-        jobPostService.startJobPost(userId, id);
+        jobPostService.startJobPost(accessToken, id);
 
         return ResponseEntity.noContent().build();
     }
@@ -704,8 +703,7 @@ public class JobPostController {
     ) throws Exception {
         log.info("Finishing job post");
 
-        UUID userId = JWTUtils.getUserIdFromToken(accessToken);
-        jobPostService.finishJobPost(userId, id);
+        jobPostService.finishJobPost(accessToken, id);
         return ResponseEntity.noContent().build();
     }
 

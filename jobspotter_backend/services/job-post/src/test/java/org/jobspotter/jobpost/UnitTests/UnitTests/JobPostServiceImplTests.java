@@ -1252,8 +1252,9 @@ public class JobPostServiceImplTests {
      * </p>
      */
     @Test
-    void startJobPost_Success() {
+    void startJobPost_Success() throws Exception {
         // Arrange
+        String accessToken = "mocked-access-token";
         UUID userId = UUID.randomUUID();
         Long jobPostId = 1L;
 
@@ -1279,18 +1280,22 @@ public class JobPostServiceImplTests {
                 .build();
 
         when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
+        when(jwtUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
 
         // Act
-        jobPostImpl.startJobPost(userId, jobPostId);
+        jobPostImpl.startJobPost(accessToken, jobPostId);
 
         // Assert
         assertEquals(JobStatus.IN_PROGRESS, jobPost.getStatus(), "Job post should be IN_PROGRESS");
+
         assertTrue(jobPost.getApplicants().stream()
-                .noneMatch(applicant -> applicant.getStatus() == ApplicantStatus.PENDING), "All PENDING applicants must be REJECTED");
+                        .noneMatch(applicant -> applicant.getStatus() == ApplicantStatus.PENDING),
+                "All PENDING applicants must be REJECTED");
 
         verify(applicantRepository).saveAll(applicants);
         verify(jobPostRepository).save(jobPost);
     }
+
 
     //no accepted applicants
     /**
@@ -1301,8 +1306,9 @@ public class JobPostServiceImplTests {
      * </p>
      */
     @Test
-    void startJobPost_NoAcceptedApplicants_ThrowsInvalidRequestException() {
+    void startJobPost_NoAcceptedApplicants_ThrowsInvalidRequestException() throws Exception {
         // Arrange
+        String accessToken = "mocked-access-token";
         UUID userId = UUID.randomUUID();
         Long jobPostId = 1L;
 
@@ -1322,14 +1328,17 @@ public class JobPostServiceImplTests {
                 .build();
 
         when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
+        when(jwtUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
 
         // Act & Assert
         InvalidRequestException exception = assertThrows(InvalidRequestException.class,
-                () -> jobPostImpl.startJobPost(userId, jobPostId));
+                () -> jobPostImpl.startJobPost(accessToken, jobPostId));
+
         assertTrue(exception.getMessage().contains("At least 1 applicant must be accepted"));
 
         verify(jobPostRepository).findById(jobPostId);
     }
+
 //Canncel Job Post
     //===================================================================================================================
     /**
