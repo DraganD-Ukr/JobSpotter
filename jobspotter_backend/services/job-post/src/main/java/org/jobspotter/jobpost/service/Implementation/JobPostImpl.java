@@ -515,6 +515,7 @@ public class JobPostImpl implements JobPostService {
      * @param jobPostId The ID of the job post to delete
      * @throws Exception If the user is not an admin or job poster, or job post status is not OPEN
      */
+    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Transactional
     @Override
     public void deleteJobPost(String accessToken, Long jobPostId) throws Exception {
@@ -592,7 +593,7 @@ public class JobPostImpl implements JobPostService {
     }
 
 
-
+    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Transactional
     @Override
     public void takeApplicantsAction(UUID userId, Long jobPostId, List<ApplicantActionRequest> applicantsActionRequest) {
@@ -699,7 +700,7 @@ public class JobPostImpl implements JobPostService {
      * @param message The new message to update
      * @throws Exception If the user is not an admin or job poster, job post status is not OPEN, applicant does not exist, or message is empty
      */
-
+    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Override
     public void updateApplicantMessage(String accessToken, Long jobPostId, Long applicantId, String message) throws Exception{
 //        Get the job post from the database
@@ -737,6 +738,7 @@ public class JobPostImpl implements JobPostService {
      * @throws Exception If the user is not an admin or job poster, job post status is not OPEN, or applicant does not exist
      */
     @Transactional
+    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Override
     public void deleteApplicant(String accessToken, Long jobPostId, Long applicantId) throws Exception {
 //        Get the job post from the database
@@ -825,6 +827,7 @@ public class JobPostImpl implements JobPostService {
         log.info("Job post started successfully");
     }
 
+    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Transactional
     @Override
     public void cancelJobPost(String accessToken, Long jobPostId) throws Exception {
