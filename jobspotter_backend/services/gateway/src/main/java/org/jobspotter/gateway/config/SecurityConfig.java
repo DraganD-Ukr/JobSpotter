@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/webjars/**",
                                 "/actuator/prometheus",
-
+                                "api/v1/job-posts/top-10",
                                 "/api/v1/users/v3/api-docs", // Service specific documentation paths
                                 "/api/v1/job-posts/v3/api-docs",
                                 "/api/v1/reviews/v3/api-docs",
