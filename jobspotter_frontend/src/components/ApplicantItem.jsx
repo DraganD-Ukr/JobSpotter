@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle, FaStar } from "react-icons/fa";
 import { ThemeContext } from "./ThemeContext";
 import { Link } from "react-router-dom";
 import ProfilePicture from './ProfilePicture';
@@ -8,9 +8,11 @@ const ApplicantItem = React.memo(({
   applicant,
   handleApplicantAction,
   isJobOpen,
+  isJobFinished,
   applicantCounts,
   jobMaxApplicants,
-  jobPostId
+  jobPostId,
+  handleReviewApplicant
 }) => {
   const { darkMode } = useContext(ThemeContext);
   const [localStatus, setLocalStatus] = useState(applicant.status);
@@ -34,6 +36,12 @@ const ApplicantItem = React.memo(({
       handleApplicantAction(applicant.applicantId, "rejected");
       setLocalStatus('REJECTED');
     }
+  };
+
+  const onReview = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleReviewApplicant(applicant);
   };
 
   return (
@@ -100,6 +108,16 @@ const ApplicantItem = React.memo(({
                 <FaTimesCircle className="text-white h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
               </button>
             </>
+          )}
+          {isJobFinished && (localStatus === 'ACCEPTED' || localStatus === 'APPROVED') && (
+            <button
+              id={`review-applicant-popup-${applicant.applicantId}`}
+              onClick={onReview}
+              className={`p-1 xs:p-2 sm:p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-opacity-50 bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500`}
+              aria-label="Review"
+            >
+              <FaStar className="text-white h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
+            </button>
           )}
           <Link 
             to={`/userreportformpopup?jobId=${jobPostId}&reportedUserId=${applicant.userId}&applicantId=${applicant.applicantId}`}

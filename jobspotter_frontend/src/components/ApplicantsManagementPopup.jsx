@@ -25,7 +25,9 @@ const ApplicantsManagementPopup = React.memo(({
     totalPages,
     job, 
     isJobOpen,
-    jobPostId
+    isJobFinished,
+    jobPostId,
+    handleReviewApplicant
 }) => {
     const { darkMode } = useContext(ThemeContext);
     if (!isApplicantsPopupVisible) {
@@ -46,7 +48,7 @@ const ApplicantsManagementPopup = React.memo(({
                     ${darkMode ? "bg-gray-800 border-b border-gray-700" : "bg-gray-100 border-b border-gray-200"}
                 `}>
                     <h3 className="text-base xs:text-lg sm:text-lg font-semibold flex flex-col sm:flex-row items-start sm:items-center justify-between" id="applicant-popup-title">
-                        Manage Applicants
+                        {isJobFinished ? "Review Applicants" : "Manage Applicants"}
                         <span className={`text-xs xs:text-sm sm:text-sm font-normal mt-2 sm:mt-0 ${darkMode ? "text-gray-300" : "text-gray-500"}`}>
                             <FaUserCheck className="inline-block mr-1 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" /> 
                             Approved: {applicantCounts.approved} / {job?.maxApplicants}
@@ -74,28 +76,8 @@ const ApplicantsManagementPopup = React.memo(({
                         </animated.div>
                     )}
 
-                    {/* Pending Applicants */}
-                    {pendingApplicants.length > 0 && (
-                        <div className="mb-4 xs:mb-5 sm:mb-6">
-                            <h4 className={`text-sm xs:text-md sm:text-md font-semibold mb-2 xs:mb-3 sm:mb-3 ${darkMode ? "text-gray-200" : "text-gray-800"}`}>Pending Applicants</h4>
-                            <div className="space-y-2 xs:space-y-3 sm:space-y-4">
-                                {currentPendingApplicants.map((applicant) => (
-                                    <ApplicantItem
-                                        key={applicant.applicantId}
-                                        applicant={applicant}
-                                        handleApplicantAction={handleApplicantAction}
-                                        isJobOpen={isJobOpen}
-                                        applicantCounts={applicantCounts}
-                                        jobMaxApplicants={job?.maxApplicants}
-                                        jobPostId={jobPostId}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Approved Applicants */}
-                    {approvedApplicants.length > 0 && (
+                    {/* Approved Applicants (for finished jobs) */}
+                    {isJobFinished && approvedApplicants.length > 0 && (
                         <div className="mb-4 xs:mb-5 sm:mb-6">
                             <h4 className="text-sm xs:text-md sm:text-md font-semibold mb-2 xs:mb-3 sm:mb-3 text-green-500 dark:text-green-400">Approved Applicants</h4>
                             <div className="space-y-2 xs:space-y-3 sm:space-y-4">
@@ -105,17 +87,63 @@ const ApplicantsManagementPopup = React.memo(({
                                         applicant={applicant}
                                         handleApplicantAction={handleApplicantAction}
                                         isJobOpen={isJobOpen}
+                                        isJobFinished={isJobFinished}
                                         applicantCounts={applicantCounts}
                                         jobMaxApplicants={job?.maxApplicants}
                                         jobPostId={jobPostId}
+                                        handleReviewApplicant={handleReviewApplicant}
                                     />
                                 ))}
                             </div>
                         </div>
                     )}
 
-                    {/* Rejected Applicants */}
-                    {rejectedApplicants.length > 0 && (
+                    {/* Pending Applicants (for open jobs) */}
+                    {!isJobFinished && pendingApplicants.length > 0 && (
+                        <div className="mb-4 xs:mb-5 sm:mb-6">
+                            <h4 className={`text-sm xs:text-md sm:text-md font-semibold mb-2 xs:mb-3 sm:mb-3 ${darkMode ? "text-gray-200" : "text-gray-800"}`}>Pending Applicants</h4>
+                            <div className="space-y-2 xs:space-y-3 sm:space-y-4">
+                                {currentPendingApplicants.map((applicant) => (
+                                    <ApplicantItem
+                                        key={applicant.applicantId}
+                                        applicant={applicant}
+                                        handleApplicantAction={handleApplicantAction}
+                                        isJobOpen={isJobOpen}
+                                        isJobFinished={isJobFinished}
+                                        applicantCounts={applicantCounts}
+                                        jobMaxApplicants={job?.maxApplicants}
+                                        jobPostId={jobPostId}
+                                        handleReviewApplicant={handleReviewApplicant}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Approved Applicants (for open jobs) */}
+                    {!isJobFinished && approvedApplicants.length > 0 && (
+                        <div className="mb-4 xs:mb-5 sm:mb-6">
+                            <h4 className="text-sm xs:text-md sm:text-md font-semibold mb-2 xs:mb-3 sm:mb-3 text-green-500 dark:text-green-400">Approved Applicants</h4>
+                            <div className="space-y-2 xs:space-y-3 sm:space-y-4">
+                                {currentApprovedApplicants.map((applicant) => (
+                                    <ApplicantItem
+                                        key={applicant.applicantId}
+                                        applicant={applicant}
+                                        handleApplicantAction={handleApplicantAction}
+                                        isJobOpen={isJobOpen}
+                                        isJobFinished={isJobFinished}
+                                        applicantCounts={applicantCounts}
+                                        jobMaxApplicants={job?.maxApplicants}
+                                        jobPostId={jobPostId}
+                                        handleReviewApplicant={handleReviewApplicant}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Rejected Applicants (for open jobs) */}
+                    {!isJobFinished && rejectedApplicants.length > 0 && (
                         <div>
                             <h4 className="text-sm xs:text-md sm:text-md font-semibold mb-2 xs:mb-3 sm:mb-3 text-red-500 dark:text-red-400">Rejected Applicants</h4>
                             <div className="space-y-2 xs:space-y-3 sm:space-y-4">
@@ -125,9 +153,11 @@ const ApplicantsManagementPopup = React.memo(({
                                         applicant={applicant}
                                         handleApplicantAction={handleApplicantAction}
                                         isJobOpen={isJobOpen}
+                                        isJobFinished={isJobFinished}
                                         applicantCounts={applicantCounts}
                                         jobMaxApplicants={job?.maxApplicants}
                                         jobPostId={jobPostId}
+                                        handleReviewApplicant={handleReviewApplicant}
                                     />
                                 ))}
                             </div>
@@ -192,13 +222,15 @@ const ApplicantsManagementPopup = React.memo(({
                 <div className={`px-2 xs:px-3 sm:px-4 py-2 xs:py-3 sm:py-3 flex flex-col sm:flex-row justify-between items-center gap-2 xs:gap-3 sm:gap-4 ${darkMode 
                         ? "bg-gray-800 border-t border-gray-700" 
                         : "bg-gray-100 border-t border-gray-200"} text-right`}>
-                    <button
-                        onClick={handleSaveChanges}
-                        type="button"
-                        className="w-full sm:w-auto inline-flex justify-center px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                        Done
-                    </button>
+                    {!isJobFinished && (
+                        <button
+                            onClick={handleSaveChanges}
+                            type="button"
+                            className="w-full sm:w-auto inline-flex justify-center px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                            Done
+                        </button>
+                    )}
                     <button
                         onClick={handleCloseApplicantsPopup}
                         type="button"

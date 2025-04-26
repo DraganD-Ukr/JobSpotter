@@ -1,250 +1,221 @@
-import React, { useState, useContext, useEffect } from "react";
-import { FaStar, FaTimes, FaExclamationTriangle, FaEdit, FaTrash } from "react-icons/fa";
-import { ThemeContext } from "./ThemeContext";
-import { useSpring, animated } from "react-spring";
+import React, { useState, useContext } from 'react';
+import { FaExclamationTriangle, FaStar } from 'react-icons/fa';
+import { useSpring, animated } from 'react-spring';
+import { ThemeContext } from './ThemeContext';
 
-function UserReviewPopup({
-  isVisible,
-  onClose,
-  jobPostId,
-  reviewerID,
-  reviewedUserID,
-  roleOfReviewer,
-  existingReview 
-}) {
+const UserReviewPopup = React.memo(({ isVisible, onClose, jobPostId, reviewerID, reviewedUserID, roleOfReviewer }) => {
   const { darkMode } = useContext(ThemeContext);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [rating, setRating] = useState(existingReview?.rating || 0);
-  const [comment, setComment] = useState(existingReview?.comment || "");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [reviewId, setReviewId] = useState(existingReview?.reviewId || null);
-
-  // Animation for the modal
-  const modalAnimation = useSpring({
-    opacity: isVisible ? 1 : 0,
-    transform: isVisible ? "translateY(0)" : "translateY(-50px)",
-    config: { tension: 300, friction: 20 }
+  const errorBoxAnimation = useSpring({
+    opacity: errorMessage ? 1 : 0,
+    from: { opacity: 0 },
+    config: { duration: 300 },
+    reset: true,
   });
 
-  // Animation for error/success messages
-  const messageAnimation = useSpring({
-    opacity: errorMessage || successMessage ? 1 : 0,
-    transform: errorMessage || successMessage ? "translateY(0)" : "translateY(-20px)",
-    config: { tension: 300, friction: 20 },
-    reset: true
+  const successBoxAnimation = useSpring({
+    opacity: successMessage ? 1 : 0,
+    from: { opacity: 0 },
+    config: { duration: 300 },
+    reset: true,
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
-
-    // Validate required fields
-    if (!reviewerID) {
-      setErrorMessage("Reviewer user ID is required.");
-      return;
-    }
-    if (!roleOfReviewer) {
-      setErrorMessage("Reviewer role is required.");
-      return;
-    }
-    if (!reviewedUserID) {
-      setErrorMessage("Reviewed user ID is required.");
-      return;
-    }
-    if (rating < 1 || rating > 5) {
-      setErrorMessage("Please select a rating between 1 and 5 stars.");
-      return;
-    }
-
-    const payload = {
-      jobPostId,
-      reviewerID,
-      reviewedUserID,
-      roleOfReviewer,
-      rating,
-      comment
-    };
-
-    try {
-      let response;
-      if (reviewId) {
-        // Update existing review
-        response = await fetch(`/api/v1/reviews/${reviewId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(payload)
-        });
-      } else {
-        // Create new review
-        response = await fetch("/api/v1/reviews/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(payload)
-        });
-      }
-
-      if (!response.ok) {
-        throw new Error(`Failed to ${reviewId ? "update" : "submit"} review: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      if (!reviewId) {
-        setReviewId(data.reviewId);
-      }
-      setSuccessMessage(`Review ${reviewId ? "updated" : "submitted"} successfully!`);
-      setTimeout(() => {
-        onClose();
-      }, 2000);
-    } catch (error) {
-      setErrorMessage(error.message);
-    }
+  const handleRatingChange = (newRating) => {
+    setRating(newRating);
   };
 
-  const handleDelete = async () => {
-    if (!reviewId) {
-      setErrorMessage("No review to delete.");
+  const handleCommentChange = (e) => {
+    setComment(e.target.value);
+  };
+
+  const handleSubmitReview = async () => {
+    if (rating < 1 || rating > 5) {
+      setErrorMessage('Please select a rating between 1 and 5.');
+      setTimeout(() => setErrorMessage(''), 5000);
+      return;
+    }
+    if (!comment.trim()) {
+      setErrorMessage('Please provide a comment for the review.');
+      setTimeout(() => setErrorMessage(''), 5000);
       return;
     }
 
+    setIsSubmitting(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+
     try {
-      const response = await fetch(`/api/v1/reviews/${reviewId}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include"
+      const reviewData = {
+        reviewedUserId: reviewedUserID,
+        jobPostId: jobPostId,
+        reviewerRole: 'PROVIDER', // Hardcoded as per requirement
+        rating: rating,
+        comment: comment.trim(),
+      };
+
+      const response = await fetch('/api/v1/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(reviewData),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to delete review: ${response.statusText}`);
+        if (response.status === 401) {
+          throw new Error('Unauthorized: Please log in again.');
+        }
+        throw new Error(`Failed to submit review: ${response.status}`);
       }
 
-      setSuccessMessage("Review deleted successfully!");
+      setSuccessMessage('Review submitted successfully!');
       setTimeout(() => {
+        setSuccessMessage('');
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setErrorMessage(error.message);
+      setTimeout(() => setErrorMessage(''), 5000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm backdrop-brightness-75 flex justify-center items-center p-2 xs:p-3 sm:p-4 z-50">
-      <animated.div
-        style={modalAnimation}
-        className={`rounded-lg shadow-xl w-full max-w-[90%] xs:max-w-[80%] sm:max-w-md p-4 xs:p-5 sm:p-6 ${
-          darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-        } border ${darkMode ? "border-gray-700" : "border-gray-200"}`}
+    <div
+      className="fixed inset-0 backdrop-blur-sm backdrop-brightness-75 flex justify-center items-center p-2 xs:p-3 sm:p-4"
+      aria-labelledby="review-popup-title"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className={`
+          rounded-lg shadow-xl overflow-hidden 
+          w-full max-w-[90%] xs:max-w-[85%] sm:max-w-md 
+          ${darkMode ? 'bg-gray-900 text-white border border-gray-700' : 'bg-gray-50 text-gray-900 border border-gray-200'}
+        `}
       >
-        <div className="flex justify-between items-center mb-4 xs:mb-5 sm:mb-6">
-          <h2 className="text-xl xs:text-2xl sm:text-2xl font-semibold">
-            {reviewId ? "Edit Review" : "Submit a Review"}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-          >
-            <FaTimes className="h-4 xs:h-5 sm:h-6 w-4 xs:w-5 sm:w-6" />
-          </button>
+        {/* Header */}
+        <div
+          className={`
+            px-2 xs:px-3 sm:px-4 py-2 xs:py-3 sm:py-3 
+            ${darkMode ? 'bg-gray-800 border-b border-gray-700' : 'bg-gray-100 border-b border-gray-200'}
+          `}
+        >
+          <h3 className="text-base xs:text-lg sm:text-lg font-semibold" id="review-popup-title">
+            Submit Review
+          </h3>
         </div>
 
-        {(errorMessage || successMessage) && (
-          <animated.div
-            style={messageAnimation}
-            className={`mb-4 xs:mb-5 sm:mb-6 p-2 xs:p-3 sm:p-3 rounded-md flex items-center ${
-              errorMessage
-                ? "bg-red-100 border border-red-400 text-red-700"
-                : "bg-green-100 border border-green-400 text-green-700"
-            }`}
-          >
-            {errorMessage ? (
-              <FaExclamationTriangle className="mr-1 xs:mr-2 sm:mr-2 text-red-500 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
-            ) : (
-              <FaStar className="mr-1 xs:mr-2 sm:mr-2 text-green-500 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
-            )}
-            <span className="text-xs xs:text-sm sm:text-sm">{errorMessage || successMessage}</span>
-          </animated.div>
-        )}
+        {/* Body */}
+        <div className="p-4 xs:p-5 sm:p-6">
+          {errorMessage && (
+            <animated.div
+              style={errorBoxAnimation}
+              className="mb-2 xs:mb-3 sm:mb-4 p-2 xs:p-3 sm:p-3 bg-red-100 border border-red-400 text-red-700 rounded-md flex items-center"
+              role="alert"
+            >
+              <FaExclamationTriangle className="mr-1 xs:mr-2 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
+              <div>
+                <h3 className="font-bold text-xs xs:text-sm sm:text-sm">Error</h3>
+                <p className="text-xs xs:text-sm sm:text-sm">{errorMessage}</p>
+              </div>
+            </animated.div>
+          )}
 
-        <form onSubmit={handleSubmit}>
+          {successMessage && (
+            <animated.div
+              style={successBoxAnimation}
+              className="mb-2 xs:mb-3 sm:mb-4 p-2 xs:p-3 sm:p-3 bg-green-100 border border-green-400 text-green-700 rounded-md flex items-center"
+              role="alert"
+            >
+              <p className="text-xs xs:text-sm sm:text-sm">{successMessage}</p>
+            </animated.div>
+          )}
+
           <div className="mb-4 xs:mb-5 sm:mb-6">
             <label className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base">
               Rating
             </label>
-            <div className="flex space-x-1 xs:space-x-2 sm:space-x-2">
+            <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <FaStar
                   key={star}
-                  className={`cursor-pointer h-4 xs:h-5 sm:h-6 w-4 xs:w-5 sm:w-6 ${
-                    star <= rating
-                      ? "text-yellow-400"
-                      : darkMode
-                      ? "text-gray-600"
-                      : "text-gray-300"
-                  }`}
-                  onClick={() => setRating(star)}
+                  className={`
+                    h-5 xs:h-6 sm:h-6 w-5 xs:w-6 sm:w-6 cursor-pointer
+                    ${star <= rating ? 'text-yellow-400' : darkMode ? 'text-gray-600' : 'text-gray-300'}
+                  `}
+                  onClick={() => handleRatingChange(star)}
                 />
               ))}
             </div>
           </div>
 
           <div className="mb-4 xs:mb-5 sm:mb-6">
-            <label className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base" htmlFor="comment">
+            <label
+              className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base"
+              htmlFor="comment"
+            >
               Comment
             </label>
             <textarea
               id="comment"
               value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className={`w-full p-2 xs:p-2 sm:p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs xs:text-sm sm:text-sm resize-none ${
-                darkMode
-                  ? "bg-gray-800 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
-              }`}
+              onChange={handleCommentChange}
+              className={`
+                w-full p-2 xs:p-2 sm:p-2 border rounded-md focus:outline-none
+                focus:ring-2 focus:ring-blue-500 text-xs xs:text-sm sm:text-sm
+                ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
+              `}
               rows="4"
+              placeholder="Write your review here..."
             />
           </div>
+        </div>
 
-          <div className="flex justify-end gap-2 xs:gap-3 sm:gap-4">
-            {reviewId && (
-              <button
-                type="button"
-                onClick={handleDelete}
-                className={`px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs xs:text-sm sm:text-sm flex items-center`}
-              >
-                <FaTrash className="mr-1" />
-                Delete
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={onClose}
-              className={`px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-xs xs:text-sm sm:text-sm`}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className={`px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-xs xs:text-sm sm:text-sm flex items-center`}
-            >
-              {reviewId ? (
-                <>
-                  <FaEdit className="mr-1" />
-                  Update
-                </>
-              ) : (
-                "Submit"
-              )}
-            </button>
-          </div>
-        </form>
-      </animated.div>
+        {/* Footer */}
+        <div
+          className={`
+            px-2 xs:px-3 sm:px-4 py-2 xs:py-3 sm:py-3 flex flex-col sm:flex-row justify-between items-center gap-2 xs:gap-3 sm:gap-4
+            ${darkMode ? 'bg-gray-800 border-t border-gray-700' : 'bg-gray-100 border-t border-gray-200'}
+          `}
+        >
+          <button
+            onClick={onClose}
+            type="button"
+            className={`
+              w-full sm:w-auto inline-flex justify-center px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2
+              text-xs xs:text-sm sm:text-sm font-medium rounded-md border focus:outline-none
+              focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+              ${darkMode ? 'bg-gray-800 text-white border-gray-600 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}
+            `}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmitReview}
+            type="button"
+            className={`
+              w-full sm:w-auto inline-flex justify-center px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2
+              text-xs xs:text-sm sm:text-sm font-medium text-white bg-blue-600 border border-transparent
+              rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+              ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
+            `}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Review'}
+          </button>
+        </div>
+      </div>
     </div>
   );
-}
+});
 
 export default UserReviewPopup;

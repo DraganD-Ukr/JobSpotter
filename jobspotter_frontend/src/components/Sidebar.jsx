@@ -92,12 +92,6 @@ export default function Sidebar() {
         <Link to="/Profile" className="block text-xs xs:text-sm sm:text-base hover:text-green-400">
           Profile
         </Link>
-        <Link to="#" className="block text-xs xs:text-sm sm:text-base hover:text-green-400">
-          Job Preferences
-        </Link>
-        <Link to="#" className="block text-xs xs:text-sm sm:text-base hover:text-green-400">
-          Account Settings
-        </Link>
         <Link to="/Address" className="block text-xs xs:text-sm sm:text-base hover:text-green-400">
           Manage Address
         </Link>

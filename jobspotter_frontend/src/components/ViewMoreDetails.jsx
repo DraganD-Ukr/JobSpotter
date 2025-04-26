@@ -1,9 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-  useContext,
-  useCallback
-} from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   FaExclamationTriangle,
@@ -31,6 +26,7 @@ export function ViewMoreDetails() {
   });
   const [localApplicants, setLocalApplicants] = useState([]);
   const [isReviewPopupVisible, setIsReviewPopupVisible] = useState(false);
+  const [selectedApplicantForReview, setSelectedApplicantForReview] = useState(null);
   const { darkMode } = useContext(ThemeContext);
   const [tagMapping, setTagMapping] = useState(new Map());
   const [currentUser, setCurrentUser] = useState(null);
@@ -44,6 +40,7 @@ export function ViewMoreDetails() {
     address: "",
     maxApplicants: 1
   });
+  const [isUserLoading, setIsUserLoading] = useState(true);
 
   const errorBoxAnimation = useSpring({
     opacity: errorMessage ? 1 : 0,
@@ -60,17 +57,33 @@ export function ViewMoreDetails() {
   });
 
   useEffect(() => {
-    fetch("/api/v1/users/me", {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include"
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch current user");
-        return res.json();
-      })
-      .then(setCurrentUser)
-      .catch((err) => setErrorMessage(err.message));
+    const fetchCurrentUser = async () => {
+      setIsUserLoading(true);
+      try {
+        const res = await fetch("/api/v1/users/me", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include"
+        });
+        if (!res.ok) {
+          if (res.status === 401) {
+            window.location.href = "/login";
+            throw new Error("Redirecting to login...");
+          }
+          throw new Error(`Failed to fetch current user: ${res.status}`);
+        }
+        const userData = await res.json();
+        console.log("Fetched current user:", userData);
+        setCurrentUser(userData);
+      } catch (err) {
+        console.error("Error fetching current user:", err);
+        setErrorMessage(err.message);
+      } finally {
+        setIsUserLoading(false);
+      }
+    };
+
+    fetchCurrentUser();
   }, []);
 
   useEffect(() => {
@@ -80,7 +93,13 @@ export function ViewMoreDetails() {
       credentials: "include"
     })
       .then((res) => {
-        if (!res.ok) throw new Error(`Failed to fetch tags: ${res.status}`);
+        if (!res.ok) {
+          if (res.status === 401) {
+            window.location.href = "/login";
+            throw new Error("Redirecting to login...");
+          }
+          throw new Error(`Failed to fetch tags: ${res.status}`);
+        }
         return res.json();
       })
       .then((tagsData) => setTagMapping(new Map(Object.entries(tagsData))))
@@ -88,7 +107,13 @@ export function ViewMoreDetails() {
   }, []);
 
   const parseNoContent = (res) => {
-    if (!res.ok) throw new Error("Request failed");
+    if (!res.ok) {
+      if (res.status === 401) {
+        window.location.href = "/login";
+        throw new Error("Redirecting to login...");
+      }
+      throw new Error(`Request failed: ${res.status}`);
+    }
     return res.status === 204 || !res.headers.get("content-length")
       ? null
       : res.json();
@@ -107,7 +132,15 @@ export function ViewMoreDetails() {
       credentials: "include"
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch job details");
+        if (!res.ok) {
+          if (res.status === 401) {
+            window.location.href = "/login";
+            throw new Error("Redirecting to login...");
+          } else if (res.status === 404) {
+            throw new Error("Job post not found.");
+          }
+          throw new Error(`Failed to fetch job details: ${res.status}`);
+        }
         return res.json();
       })
       .then((data) => {
@@ -130,7 +163,10 @@ export function ViewMoreDetails() {
         });
         updateApplicantCounts(data.applicants);
       })
-      .catch((err) => setErrorMessage(err.message))
+      .catch((err) => {
+        console.error("Fetch job details error:", err);
+        setErrorMessage(err.message);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -185,16 +221,19 @@ export function ViewMoreDetails() {
       credentials: "include"
     })
       .then((res) => {
-        if (!res.ok) throw new Error(`Failed to ${action} job. Status: ${res.status}`);
+        if (!res.ok) {
+          if (res.status === 401) {
+            window.location.href = "/login";
+            throw new Error("Redirecting to login...");
+          }
+          throw new Error(`Failed to ${action} job. Status: ${res.status}`);
+        }
         return parseNoContent(res);
       })
       .then(() => {
         setActionMessage(successMessage);
         fetchJobDetails();
         setTimeout(() => setActionMessage(""), 3000);
-        if (action === "finish") {
-          setIsReviewPopupVisible(true);
-        }
       })
       .catch((err) => {
         setErrorMessage(`Failed to ${action} job: ${err.message}`);
@@ -215,6 +254,7 @@ export function ViewMoreDetails() {
   };
 
   const handleSaveChanges = async () => {
+    if (job.status === "COMPLETED") return;
     setActionMessage("Saving changes...");
     try {
       const applicantsToUpdate = localApplicants.map((applicant) => ({
@@ -226,10 +266,15 @@ export function ViewMoreDetails() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(applicantsToUpdate)
         }
       );
       if (!response.ok) {
+        if (response.status === 401) {
+          window.location.href = "/login";
+          throw new Error("Redirecting to login...");
+        }
         throw new Error(`Error saving applicant changes: ${response.status}`);
       }
       setActionMessage("Changes saved successfully!");
@@ -308,6 +353,10 @@ export function ViewMoreDetails() {
         body: JSON.stringify(editFormData)
       });
       if (!response.ok) {
+        if (response.status === 401) {
+          window.location.href = "/login";
+          throw new Error("Redirecting to login...");
+        }
         throw new Error(`Failed to update job post: ${response.status}`);
       }
       setActionMessage("Job post updated successfully!");
@@ -321,6 +370,53 @@ export function ViewMoreDetails() {
       setLoading(false);
     }
   };
+
+  const handleReviewApplicant = (applicant) => {
+    if (!currentUser || !currentUser.userId) {
+      setErrorMessage("User data is not available. Please try again later.");
+      setTimeout(() => setErrorMessage(""), 5000);
+      return;
+    }
+    if (!applicant.userId && !applicant.applicantId) {
+      setErrorMessage("Applicant user ID is not available.");
+      setTimeout(() => setErrorMessage(""), 5000);
+      return;
+    }
+    if (job.status !== "COMPLETED") {
+      setErrorMessage("Reviews can only be submitted for completed jobs.");
+      setTimeout(() => setErrorMessage(""), 5000);
+      return;
+    }
+    if (applicant.status !== "APPROVED" && applicant.status !== "ACCEPTED") {
+      setErrorMessage("Reviews can only be submitted for approved applicants.");
+      setTimeout(() => setErrorMessage(""), 5000);
+      return;
+    }
+    console.log("Opening review popup for applicant:", applicant);
+    setSelectedApplicantForReview(applicant);
+    setIsReviewPopupVisible(true);
+  };
+
+  const handleReviewSubmitted = () => {
+    setIsReviewPopupVisible(false);
+    setSelectedApplicantForReview(null);
+    fetchJobDetails();
+    setActionMessage("Review submitted successfully!");
+    setTimeout(() => setActionMessage(""), 3000);
+  };
+
+  if (isUserLoading) {
+    return (
+      <div
+        className={`my-6 xs:my-8 sm:my-10 main-content min-h-screen p-2 xs:p-4 sm:p-6 border rounded-4xl
+          transition-all duration-500 ${darkMode
+            ? "bg-gray-900 text-white border-gray-700"
+            : "bg-gray-50 text-gray-900 border-gray-200"} flex flex-col lg:flex-row gap-4 xs:gap-6 sm:gap-8`}
+      >
+        <p className="text-center text-sm xs:text-base sm:text-base">Loading user data...</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -446,8 +542,22 @@ export function ViewMoreDetails() {
     );
   }
 
+  if (!currentUser) {
+    return (
+      <div
+        className={`my-6 xs:my-8 sm:my-10 main-content min-h-screen p-2 xs:p-4 sm:p-6 border rounded-4xl
+          transition-all duration-500 ${darkMode
+            ? "bg-gray-900 text-white border-gray-700"
+            : "bg-gray-50 text-gray-900 border-gray-200"} flex flex-col lg:flex-row gap-4 xs:gap-6 sm:gap-8`}
+      >
+        <p className="text-center text-sm xs:text-base sm:text-base">Please log in to continue.</p>
+      </div>
+    );
+  }
+
   const isJobOpen = job.status === "OPEN";
   const isJobInProgress = job.status === "IN_PROGRESS";
+  const isJobFinished = job.status === "COMPLETED";
   const canEditJob = isJobOpen && applicantCounts.approved === 0;
   const canStartJob = isJobOpen && applicantCounts.approved >= job.maxApplicants;
 
@@ -661,7 +771,7 @@ export function ViewMoreDetails() {
             hover:bg-blue-600 transition duration-300 focus:outline-none
             focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-xs xs:text-sm sm:text-sm"
         >
-          Manage Applicants
+          {isJobFinished ? "Review Applicants" : "Manage Applicants"}
         </button>
         {job.applicants?.length > 0 ? (
           <div className="space-y-2 xs:space-y-3 sm:space-y-4"></div>
@@ -689,19 +799,21 @@ export function ViewMoreDetails() {
         totalPages={totalPages}
         job={job}
         isJobOpen={isJobOpen}
+        isJobFinished={isJobFinished}
         jobPostId={job.jobPostId}
+        handleReviewApplicant={handleReviewApplicant}
       />
 
-      <UserReviewPopup
-        isVisible={isReviewPopupVisible}
-        onClose={() => setIsReviewPopupVisible(false)}
-        jobPostId={job.jobPostId}
-        reviewerID={currentUser?.userId}
-        reviewedUserID={approvedApplicants.length > 0
-          ? approvedApplicants[0].userId // Use userId instead of applicantId
-          : null}
-        roleOfReviewer="POSTER"
-      />
+      {currentUser && selectedApplicantForReview && (
+        <UserReviewPopup
+          isVisible={isReviewPopupVisible}
+          onClose={handleReviewSubmitted}
+          jobPostId={job.jobPostId}
+          reviewerID={currentUser.userId}
+          reviewedUserID={selectedApplicantForReview.userId || selectedApplicantForReview.applicantId}
+          roleOfReviewer="POSTER"
+        />
+      )}
 
       {isEditModalOpen && (
         <div
