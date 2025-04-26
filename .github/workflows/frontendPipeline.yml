@@ -2,7 +2,16 @@ name: Frontend
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+    paths:
+      - 'Jobspotter_frontend/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Jobspotter_frontend/**'
+
 
 jobs:
   build-and-deploy:
