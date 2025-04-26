@@ -36,6 +36,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public void generateReport(UUID reporterId, ReportRequest reportRequest) {
 
+
         Report existingReport = Report.builder()
                 .reporterId(reporterId)
                 .reportedUserId(reportRequest.getReportedUserId())
