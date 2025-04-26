@@ -20,6 +20,8 @@ import org.jobspotter.jobpost.service.JobPostService;
 import org.jobspotter.jobpost.service.NotificationService;
 import org.jobspotter.jobpost.service.SearchTitleSuggestionService;
 import org.jobspotter.jobpost.utils.GeoUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -55,6 +57,8 @@ public class JobPostImpl implements JobPostService {
 
     private static final String TOP_JOB_POSTS_KEY = "top10:jobposts";
 
+    @Autowired
+    private CacheManager cacheManager;
     //----------------------------------------------------------------------------------------------------------------
     //                                     Job Post Get View Queries implementation
     //----------------------------------------------------------------------------------------------------------------
@@ -840,6 +844,9 @@ public class JobPostImpl implements JobPostService {
         jobPost.setStatus(JobStatus.IN_PROGRESS);
         jobPostRepository.save(jobPost);
 
+        // Manual cache eviction
+        cacheManager.getCache("jobPostCache").evict(jobPostId);
+
         notificationService.sendNotification(Notification.builder()
                 .message("Your job post '" + jobPost.getTitle() + "' have started. Good luck!:")
                 .destinationUserId(jobPost.getJobPosterId())
@@ -895,6 +902,9 @@ public class JobPostImpl implements JobPostService {
 //        Save the updated applicants
         applicantRepository.saveAll(applicants);
 
+//        Save the updated job post
+        cacheManager.getCache("jobPostCache").evict(jobPostId);
+
 //        Set the status of the job post to CANCELLED
         jobPost.setStatus(JobStatus.CANCELLED);
         jobPostRepository.save(jobPost);
@@ -937,6 +947,8 @@ public class JobPostImpl implements JobPostService {
         jobPost.setStatus(JobStatus.COMPLETED);
 
         jobPostRepository.save(jobPost);
+
+        cacheManager.getCache("jobPostCache").evict(jobPostId);
 
 //       TODO: Send notifications to all participating applicants
         notificationService.sendNotification(Notification.builder()
