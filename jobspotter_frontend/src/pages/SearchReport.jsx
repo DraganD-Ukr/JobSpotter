@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { FaList, FaTh, FaCircle } from "react-icons/fa"; // <-- Added FaCircle
+import { FaList, FaTh, FaCircle } from "react-icons/fa";
 import { ThemeContext } from "../components/ThemeContext";
 
 // Helper function to determine icon/color/text for each report status
 function getReportStatusInfo(report) {
   let statusColor = "text-gray-400";
   let statusText = "N/A";
-  let StatusIcon = FaCircle; // Default icon
+  let StatusIcon = FaCircle;
 
   switch (report.status) {
     case "OPEN":
@@ -119,15 +119,11 @@ export function SearchReport() {
     "createdAt",
   ];
 
-  /**
-   * On mount or when searchParams/page/pageSize change:
-   * 1) Sync local filter state from URL
-   * 2) Fetch reports
-   */
+
   useEffect(() => {
     syncFiltersFromUrl();
     fetchReports();
-    // eslint-disable-next-line
+
   }, [searchParams, page, pageSize]);
 
   // 1) Sync local filters from the URL
@@ -247,9 +243,11 @@ export function SearchReport() {
           <button
             key={i}
             onClick={() => handlePageChange(i)}
-            className={`px-4 py-2 mx-1 rounded-full ${
+            className={`px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 mx-1 rounded-full text-sm xs:text-base sm:text-base ${
               page === i
                 ? "bg-green-500 text-white"
+                : darkMode
+                ? "bg-gray-700 text-white hover:bg-gray-600"
                 : "bg-gray-300 text-black hover:bg-gray-400"
             }`}
           >
@@ -270,9 +268,11 @@ export function SearchReport() {
           <button
             key={i}
             onClick={() => handlePageChange(i)}
-            className={`px-4 py-2 mx-1 rounded-full ${
+            className={`px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 mx-1 rounded-full text-sm xs:text-base sm:text-base ${
               page === i
                 ? "bg-green-500 text-white"
+                : darkMode
+                ? "bg-gray-700 text-white hover:bg-gray-600"
                 : "bg-gray-300 text-black hover:bg-gray-400"
             }`}
           >
@@ -286,7 +286,11 @@ export function SearchReport() {
           <button
             key="start-ellipsis"
             onClick={() => handlePageChange(startPage - 1)}
-            className="px-4 py-2 mx-1 bg-gray-300 text-black rounded-full hover:bg-gray-400"
+            className={`px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 mx-1 rounded-full text-sm xs:text-base sm:text-base ${
+              darkMode
+                ? "bg-gray-700 text-white hover:bg-gray-600"
+                : "bg-gray-300 text-black hover:bg-gray-400"
+            }`}
           >
             ...
           </button>
@@ -297,7 +301,11 @@ export function SearchReport() {
           <button
             key="end-ellipsis"
             onClick={() => handlePageChange(endPage)}
-            className="px-4 py-2 mx-1 bg-gray-300 text-black rounded-full hover:bg-gray-400"
+            className={`px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 mx-1 rounded-full text-sm xs:text-base sm:text-base ${
+              darkMode
+                ? "bg-gray-700 text-white hover:bg-gray-600"
+                : "bg-gray-300 text-black hover:bg-gray-400"
+            }`}
           >
             ...
           </button>
@@ -311,101 +319,54 @@ export function SearchReport() {
   // 6) Render
   if (loading) {
     return (
-      <div className="main-content min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+      <div className="main-content min-h-screen flex items-center justify-center p-4 xs:p-6 sm:p-8">
+        <p className="text-sm xs:text-base sm:text-lg">Loading...</p>
       </div>
     );
   }
 
-  // Add a helper for status icons/colors
-  function getReportStatusInfo(report) {
-    // Default
-    let statusColor = "text-gray-400";
-    let statusText = "N/A";
-    let StatusIcon = FaCircle;
-
-    switch (report.reportStatus) {
-      case "Open":
-        statusColor = "text-green-500";
-        statusText = "Open";
-        break;
-      case "Under Review":
-        statusColor = "text-yellow-500";
-        statusText = "Under Review";
-        break;
-      case "Pending Response":
-        statusColor = "text-orange-500";
-        statusText = "Pending Response";
-        break;
-      case "Resolved":
-        statusColor = "text-blue-500";
-        statusText = "Resolved";
-        break;
-      case "Rejected":
-        statusColor = "text-red-500";
-        statusText = "Rejected";
-        break;
-      case "Action Taken":
-        statusColor = "text-green-600";
-        statusText = "Action Taken";
-        break;
-      case "Escalated":
-        statusColor = "text-purple-500";
-        statusText = "Escalated";
-        break;
-      case "On Hold":
-        statusColor = "text-indigo-500";
-        statusText = "On Hold";
-        break;
-      case "Auto Resolved":
-        statusColor = "text-teal-500";
-        statusText = "Auto Resolved";
-        break;
-      default:
-        statusColor = "text-gray-400";
-        statusText = "N/A";
-    }
-    return { statusColor, statusText, StatusIcon };
-  }
-
   return (
     <div
-      className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${
+      className={`my-6 xs:my-8 sm:my-10 main-content min-h-screen p-4 xs:p-6 sm:p-8 border rounded-4xl transition-all ease-in-out duration-500 ${
         darkMode
           ? "bg-gray-900 text-white border-gray-700"
           : "bg-white text-gray-900 border-gray-200"
       }`}
     >
       {/* Top bar: toggle view, pageSize */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 xs:mb-8 sm:mb-8 gap-3 xs:gap-4 sm:gap-5">
         <button
           onClick={toggleView}
-          className="px-4 py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400 flex items-center"
+          className={`px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400 flex items-center w-full sm:w-auto text-sm xs:text-base sm:text-base`}
           id="toggle-view"
         >
           {viewType === "card" ? (
             <>
-              <FaList className="mr-2" />
+              <FaList className="mr-1 xs:mr-2" />
               List View
             </>
           ) : (
             <>
-              <FaTh className="mr-2" />
+              <FaTh className="mr-1 xs:mr-2" />
               Card View
             </>
           )}
         </button>
 
         {/* Show Results Dropdown */}
-        <div className="flex items-center">
-          <label htmlFor="pageSize" className="mr-2">
+        <div className="flex items-center w-full sm:w-auto">
+          <label htmlFor="pageSize" className="mr-2 text-sm xs:text-base sm:text-base">
             Show Results:
           </label>
           <select
             id="pageSize"
             value={pageSize}
             onChange={handlePageSizeChange}
-            className="px-2 py-1 border rounded"
+            className={`px-2 xs:px-2 sm:px-2 py-1 xs:py-1 sm:py-1 border rounded text-sm xs:text-base sm:text-base ${
+              darkMode
+                ? "bg-gray-800 border-gray-600 text-white"
+                : "bg-white border-gray-300 text-black"
+            }`}
           >
             <option value="5">5</option>
             <option value="10">10</option>
@@ -415,14 +376,16 @@ export function SearchReport() {
         </div>
       </div>
 
-      <div className="flex">
+      <div className="flex flex-col lg:flex-row">
         {/* Left column: Filters */}
-        <div className="w-1/4 pr-8 border-r mr-4">
-          <h3 className="text-xl font-bold mb-4">Filters</h3>
-          <form onSubmit={handleFilterSubmit} className="space-y-6">
+        <div className="w-full lg:w-1/4 pr-0 lg:pr-6 xs:pr-8 mb-6 lg:mb-0">
+          <h3 className="text-lg xs:text-xl sm:text-xl font-bold mb-4 xs:mb-6 sm:mb-8">
+            Filters
+          </h3>
+          <form onSubmit={handleFilterSubmit} className="space-y-4 xs:space-y-6 sm:space-y-8">
             {/* reportedUserId */}
             <div>
-              <label className="block mb-1 font-semibold">
+              <label className="block mb-1 xs:mb-2 sm:mb-2 font-semibold text-sm xs:text-base sm:text-base">
                 Reported User ID
               </label>
               <input
@@ -434,7 +397,7 @@ export function SearchReport() {
                     reportedUserId: e.target.value,
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 border rounded-md text-sm xs:text-base sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -444,7 +407,7 @@ export function SearchReport() {
             </div>
             {/* reportedJobPostId */}
             <div>
-              <label className="block mb-1 font-semibold">
+              <label className="block mb-1 xs:mb-2 sm:mb-2 font-semibold text-sm xs:text-base sm:text-base">
                 Reported Job Post ID
               </label>
               <input
@@ -456,7 +419,7 @@ export function SearchReport() {
                     reportedJobPostId: e.target.value,
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 border rounded-md text-sm xs:text-base sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -466,7 +429,7 @@ export function SearchReport() {
             </div>
             {/* reportedApplicantId */}
             <div>
-              <label className="block mb-1 font-semibold">
+              <label className="block mb-1 xs:mb-2 sm:mb-2 font-semibold text-sm xs:text-base sm:text-base">
                 Reported Applicant ID
               </label>
               <input
@@ -478,7 +441,7 @@ export function SearchReport() {
                     reportedApplicantId: e.target.value,
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 border rounded-md text-sm xs:text-base sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -488,7 +451,7 @@ export function SearchReport() {
             </div>
             {/* reportedReviewId */}
             <div>
-              <label className="block mb-1 font-semibold">
+              <label className="block mb-1 xs:mb-2 sm:mb-2 font-semibold text-sm xs:text-base sm:text-base">
                 Reported Review ID
               </label>
               <input
@@ -500,7 +463,7 @@ export function SearchReport() {
                     reportedReviewId: e.target.value,
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 border rounded-md text-sm xs:text-base sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -510,7 +473,9 @@ export function SearchReport() {
             </div>
             {/* status */}
             <div>
-              <label className="block mb-1 font-semibold">Status</label>
+              <label className="block mb-1 xs:mb-2 sm:mb-2 font-semibold text-sm xs:text-base sm:text-base">
+                Status
+              </label>
               <select
                 value={filters.status}
                 onChange={(e) =>
@@ -519,7 +484,7 @@ export function SearchReport() {
                     status: e.target.value,
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 border rounded-md text-sm xs:text-base sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -535,12 +500,14 @@ export function SearchReport() {
             </div>
             {/* tags (multi-check) */}
             <div>
-              <label className="block mb-1 font-semibold">Tags</label>
-              <div className="flex flex-wrap gap-2">
+              <label className="block mb-1 xs:mb-2 sm:mb-2 font-semibold text-sm xs:text-base sm:text-base">
+                Tags
+              </label>
+              <div className="flex flex-wrap gap-2 xs:gap-3 sm:gap-4">
                 {possibleTags.map((tag) => (
                   <label
                     key={tag}
-                    className={`inline-flex items-center space-x-2 px-3 py-1 border rounded-md cursor-pointer ${
+                    className={`inline-flex items-center space-x-2 px-2 xs:px-3 sm:px-3 py-1 xs:py-1 sm:py-1 border rounded-md cursor-pointer text-sm xs:text-base sm:text-base ${
                       darkMode
                         ? filters.tags.includes(tag)
                           ? "bg-blue-900 border-blue-700 text-white"
@@ -578,7 +545,9 @@ export function SearchReport() {
             </div>
             {/* Sorting Field */}
             <div>
-              <label className="block mb-1 font-semibold">Sort By</label>
+              <label className="block mb-1 xs:mb-2 sm:mb-2 font-semibold text-sm xs:text-base sm:text-base">
+                Sort By
+              </label>
               <select
                 value={filters.sort}
                 onChange={(e) =>
@@ -587,7 +556,7 @@ export function SearchReport() {
                     sort: e.target.value,
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 border rounded-md text-sm xs:text-base sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -602,7 +571,9 @@ export function SearchReport() {
             </div>
             {/* Sort Order */}
             <div>
-              <label className="block mb-1 font-semibold">Sort Order</label>
+              <label className="block mb-1 xs:mb-2 sm:mb-2 font-semibold text-sm xs:text-base sm:text-base">
+                Sort Order
+              </label>
               <select
                 value={filters.isAsc ? "true" : "false"}
                 onChange={(e) =>
@@ -611,7 +582,7 @@ export function SearchReport() {
                     isAsc: e.target.value === "true",
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 border rounded-md text-sm xs:text-base sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -623,7 +594,7 @@ export function SearchReport() {
             </div>
             <button
               type="submit"
-              className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+              className="w-full bg-green-500 text-white px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 rounded-md hover:bg-green-600 text-sm xs:text-base sm:text-base"
             >
               Apply Filters
             </button>
@@ -631,9 +602,9 @@ export function SearchReport() {
         </div>
 
         {/* Right column: Reports list */}
-        <div className="w-3/4 p-4 ml-4">
-          <div className="flex flex-col items-start mb-4">
-            <h2 className="text-2xl font-bold mb-2">
+        <div className="w-full lg:w-3/4 p-4 xs:p-6 sm:p-8">
+          <div className="flex flex-col items-start mb-4 xs:mb-6 sm:mb-8">
+            <h2 className="text-lg xs:text-xl sm:text-2xl font-bold mb-2 xs:mb-3 sm:mb-4">
               {totalElements > 0
                 ? `Found ${totalElements} report(s)`
                 : "No reports found"}
@@ -641,17 +612,21 @@ export function SearchReport() {
           </div>
 
           {errorMessage && (
-            <div className="text-red-500 mb-4 text-center">{errorMessage}</div>
+            <div className="text-red-500 mb-4 xs:mb-6 sm:mb-8 text-center text-sm xs:text-base sm:text-lg">
+              {errorMessage}
+            </div>
           )}
 
           {reportsData.length === 0 ? (
-            <p className="text-center">No reports found.</p>
+            <p className="text-center text-sm xs:text-base sm:text-lg">
+              No reports found.
+            </p>
           ) : (
             <div
               className={
                 viewType === "card"
-                  ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto"
-                  : "max-w-6xl mx-auto space-y-4"
+                  ? "grid gap-4 xs:gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-full mx-auto"
+                  : "max-w-full mx-auto space-y-4 xs:space-y-6 sm:space-y-8"
               }
             >
               {reportsData.map((report) => {
@@ -662,7 +637,7 @@ export function SearchReport() {
 
                 // Get status color/icon
                 const { statusColor, statusText, StatusIcon } = getReportStatusInfo(report);
-                
+
                 // Build query params for the "Manage" link
                 const queryParams = new URLSearchParams({
                   reportId: report.reportId?.toString() || "",
@@ -679,33 +654,35 @@ export function SearchReport() {
                 return (
                   <div
                     key={report.reportId}
-                    className={`border border-gray-300 p-4 rounded-lg ${
+                    className={`border p-4 xs:p-6 sm:p-8 rounded-lg ${
+                      darkMode ? "border-gray-700" : "border-gray-300"
+                    } ${
                       viewType === "card"
                         ? "hover:shadow-md hover:border-green-500 transition"
                         : "shadow"
                     }`}
                   >
-                    <h2 className="text-lg font-semibold mb-2">
+                    <h2 className="text-base xs:text-lg sm:text-lg font-semibold mb-2 xs:mb-3 sm:mb-4">
                       {report.reportTitle ? report.reportTitle : "No Title"}
                     </h2>
 
                     {/* Display the color-coded status */}
-                    <p className="flex items-center text-sm mb-2">
+                    <p className="flex items-center text-xs xs:text-sm sm:text-sm mb-2 xs:mb-3 sm:mb-4">
                       <strong className="mr-1">Status:</strong>
                       <StatusIcon className={`${statusColor} mr-1`} />
                       <span className={`${statusColor}`}>{statusText}</span>
                     </p>
 
-                    <p className="text-sm mb-2">
+                    <p className="text-xs xs:text-sm sm:text-sm mb-2 xs:mb-3 sm:mb-4">
                       <strong>Tags:</strong>{" "}
                       {report.reportTags?.length
                         ? report.reportTags.join(", ")
                         : "None"}
                     </p>
-                    <p className="text-sm mb-2">
+                    <p className="text-xs xs:text-sm sm:text-sm mb-2 xs:mb-3 sm:mb-4">
                       <strong>Created At:</strong> {createdAtReadable}
                     </p>
-                    <p className="text-sm mb-4 line-clamp-3">
+                    <p className="text-xs xs:text-sm sm:text-sm mb-2 xs:mb-3 sm:mb-4 line-clamp-3">
                       <strong>Message:</strong>{" "}
                       {report.reportMessage || "N/A"}
                     </p>
@@ -713,7 +690,7 @@ export function SearchReport() {
                     {/* "Manage" link => AdminReportManagementPopup */}
                     <Link
                       to={`/adminreportmanagementpopup?${queryParams}`}
-                      className="text-blue-500 hover:underline"
+                      className="text-blue-500 hover:underline text-sm xs:text-base sm:text-base"
                     >
                       Manage
                     </Link>
@@ -724,11 +701,11 @@ export function SearchReport() {
           )}
 
           {/* Pagination */}
-          <div className="flex justify-center mt-8">
+          <div className="flex justify-center mt-6 xs:mt-8 sm:mt-8">
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 0}
-              className="w-32 px-4 py-2 mr-6 mx-1 bg-gray-300 text-black rounded-l-full rounded-r-md hover:bg-gray-400 disabled:opacity-50 flex justify-center"
+              className="w-28 xs:w-32 sm:w-32 px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 mr-4 xs:mr-6 sm:mr-6 mx-1 bg-gray-300 text-black rounded-l-full rounded-r-md hover:bg-gray-400 disabled:opacity-50 flex justify-center text-sm xs:text-base sm:text-base"
               style={{
                 clipPath: "polygon(100% 0%, 85% 50%, 100% 100%, 0% 100%, 0% 0%)",
               }}
@@ -739,7 +716,7 @@ export function SearchReport() {
             <button
               onClick={() => handlePageChange(page + 1)}
               disabled={page === totalPages - 1 || reportsData.length === 0}
-              className="w-26 px-4 py-2 ml-6 mx-1 bg-gray-300 text-black rounded-r-full rounded-l-md hover:bg-gray-400 disabled:opacity-50 flex justify-center"
+              className="w-24 xs:w-26 sm:w-26 px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 ml-4 xs:ml-6 sm:ml-6 mx-1 bg-gray-300 text-black rounded-r-full rounded-l-md hover:bg-gray-400 disabled:opacity-50 flex justify-center text-sm xs:text-base sm:text-base"
               style={{
                 clipPath:
                   "polygon(0% 0%, 15% 50%, 0% 100%, 100% 100%, 100% 0%)",

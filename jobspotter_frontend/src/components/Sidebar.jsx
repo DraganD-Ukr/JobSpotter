@@ -75,48 +75,47 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="p-4 border-r">
+    <aside className="p-4 xs:p-6 sm:p-8 border-r">
       {/* User Info */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 mb-4 xs:mb-6 sm:mb-8">
         <ProfilePicture userId={userId} darkMode={darkMode} />
         <div>
-          <h3 className="text-lg font-semibold">
+          <h3 className="text-base xs:text-lg sm:text-xl font-semibold">
             {firstName} {lastName}
           </h3>
-          <p className="text-sm">{userType}</p>
+          <p className="text-xs xs:text-sm sm:text-base">{userType}</p>
         </div>
       </div>
 
-
       {/* Nav links */}
-      <nav className="space-y-3">
-        <Link to="/Profile" className="block text-sm hover:text-green-400">
+      <nav className="space-y-2 xs:space-y-3 sm:space-y-4">
+        <Link to="/Profile" className="block text-xs xs:text-sm sm:text-base hover:text-green-400">
           Profile
         </Link>
-        <Link to="#" className="block text-sm hover:text-green-400">
+        <Link to="#" className="block text-xs xs:text-sm sm:text-base hover:text-green-400">
           Job Preferences
         </Link>
-        <Link to="#" className="block text-sm hover:text-green-400">
+        <Link to="#" className="block text-xs xs:text-sm sm:text-base hover:text-green-400">
           Account Settings
         </Link>
-        <Link to="/Address" className="block text-sm hover:text-green-400">
+        <Link to="/Address" className="block text-xs xs:text-sm sm:text-base hover:text-green-400">
           Manage Address
         </Link>
-              {/* Notification component with variant "text" for Sidebar */}
-      <div className="mb-4">
-        <Notification variant="text" />
-      </div>
+        {/* Notification component with variant text for Sidebar */}
+        <div className="mb-2 xs:mb-3 sm:mb-4">
+          <Notification variant="text" />
+        </div>
         <Link
           to="#"
           onClick={handleLogout}
-          className="block text-sm hover:text-green-400"
+          className="block text-xs xs:text-sm sm:text-base hover:text-green-400"
         >
           Sign Out
         </Link>
         <Link
           to="#"
           onClick={handleDeleteAccount}
-          className="block text-sm hover:text-red-400"
+          className="block text-xs xs:text-sm sm:text-base hover:text-red-400"
         >
           Delete Account
         </Link>
