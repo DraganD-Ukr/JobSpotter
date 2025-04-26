@@ -130,7 +130,7 @@ export default function AdminReportManagementPopup() {
         setSuccessMessage("Job post deleted successfully!");
         setIsSuccessMessageVisible(true);
         setIsDeleteJobPostConfirmationVisible(false);
-        setJobPostData(null); // Clear job post data after deletion
+        setJobPostData(null); 
       })
       .catch((error) => {
         console.error("Error deleting job post:", error.message);
@@ -157,7 +157,7 @@ export default function AdminReportManagementPopup() {
         setSuccessMessage("Applicant deleted successfully!");
         setIsSuccessMessageVisible(true);
         setIsDeleteApplicantConfirmationVisible(false);
-        setApplicantData(null); // Clear applicant data after deletion
+        setApplicantData(null); 
       })
       .catch((error) => {
         console.error("Error deleting applicant:", error.message);
@@ -193,7 +193,7 @@ export default function AdminReportManagementPopup() {
         setSuccessMessage("Applicant updated successfully!");
         setIsSuccessMessageVisible(true);
         setIsEditApplicantFormVisible(false);
-        setApplicantData((prev) => ({ ...prev, message })); // Update local state
+        setApplicantData((prev) => ({ ...prev, message })); 
       })
       .catch((error) => {
         console.error("Error updating applicant:", error.message);
@@ -226,7 +226,7 @@ export default function AdminReportManagementPopup() {
         setSuccessMessage("Review updated successfully!");
         setIsSuccessMessageVisible(true);
         setIsEditReviewFormVisible(false);
-        setReportedReview((prev) => ({ ...prev, ...reviewData })); // Update local state
+        setReportedReview((prev) => ({ ...prev, ...reviewData })); 
       })
       .catch((error) => {
         console.error("Error updating review:", error.message);
@@ -248,7 +248,7 @@ export default function AdminReportManagementPopup() {
         setSuccessMessage("Review removed successfully!");
         setIsSuccessMessageVisible(true);
         setIsRemoveReviewConfirmationVisible(false);
-        setReportedReview(null); // Clear review data after deletion
+        setReportedReview(null);
       })
       .catch((error) => {
         console.error("Error removing review:", error.message);
@@ -380,10 +380,11 @@ export default function AdminReportManagementPopup() {
         console.log("Disabled user:", userId);
         setSuccessMessage("User disabled successfully!");
         setIsSuccessMessageVisible(true);
+        
         // Update user details to reflect disabled state
         setUserDetails((prev) => ({
           ...prev,
-          isDisabled: true, // Assuming the API might not return this, we set it locally
+          isDisabled: true, 
         }));
       })
       .catch((error) => {

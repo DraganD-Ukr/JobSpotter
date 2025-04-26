@@ -1,238 +1,176 @@
 import React, { useState, useContext } from "react";
-import { FaTimes } from "react-icons/fa";
+import { FaStar, FaTimes, FaExclamationTriangle } from "react-icons/fa";
 import { ThemeContext } from "./ThemeContext";
+import { useSpring, animated } from "react-spring";
 
-export default function UserReviewPopup({
+function UserReviewPopup({
   isVisible,
   onClose,
   jobPostId,
   reviewerID,
   reviewedUserID,
-  roleOfReviewer,
-  fallbackUserId
+  roleOfReviewer
 }) {
   const { darkMode } = useContext(ThemeContext);
 
-  // Form field states
-  const [rating, setRating] = useState("");
+  const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  // Submits the user review to the server
-  const handleSubmitReview = async () => {
+  // Animation for the modal
+  const modalAnimation = useSpring({
+    opacity: isVisible ? 1 : 0,
+    transform: isVisible ? "translateY(0)" : "translateY(-50px)",
+    config: { tension: 300, friction: 20 }
+  });
 
+  // Animation for error/success messages
+  const messageAnimation = useSpring({
+    opacity: errorMessage || successMessage ? 1 : 0,
+    transform: errorMessage || successMessage ? "translateY(0)" : "translateY(-20px)",
+    config: { tension: 300, friction: 20 },
+    reset: true
+  });
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setErrorMessage("");
+    setSuccessMessage("");
 
-    // Validate that reviewerID and roleOfReviewer are provided
-    if (!reviewerID) {
-      setErrorMessage("Reviewer user ID is required.");
-      return;
-    }
-    if (!roleOfReviewer) {
-      setErrorMessage("Reviewer role is required.");
+    if (rating < 1 || rating > 5) {
+      setErrorMessage("Please select a rating between 1 and 5 stars.");
       return;
     }
 
-    // Validate the rating
-    const parsedRating = parseFloat(rating);
-    if (isNaN(parsedRating) || parsedRating < 1 || parsedRating > 5) {
-      setErrorMessage("Rating must be between 1 and 5.");
-      return;
-    }
-    // Validate the comment
-    if (comment.trim().length < 5) {
-      setErrorMessage("Comment must be at least 5 characters.");
-      return;
-    }
-
-    let finalReviewedUserID = reviewedUserID;
-    if (!finalReviewedUserID && fallbackUserId) {
-      try {
-        const response = await fetch(`/api/v1/users/${fallbackUserId}`);
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch user data: ${response.status} ${response.statusText}`
-          );
-        }
-        const userData = await response.json();
-
-
-        finalReviewedUserID = userData.userId || userData.id;
-
-        if (!finalReviewedUserID) {
-          setErrorMessage("User record found, but user ID is missing.");
-          return;
-        }
-      } catch (fetchErr) {
-        console.error(fetchErr);
-        setErrorMessage(fetchErr.message);
-        return;
-      }
-    }
-
-    if (!finalReviewedUserID) {
-      setErrorMessage("Reviewed user ID is required, but none was provided.");
-      return;
-    }
-
-    const requestBody = {
-      reviewerID,
-      reviewedUserID: finalReviewedUserID,
-      rating: parsedRating,
-      comment,
-      roleOfReviewer,
+    const payload = {
       jobPostId,
+      reviewerID,
+      reviewedUserID,
+      roleOfReviewer,
+      rating,
+      comment
     };
 
     try {
       const response = await fetch("/api/v1/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
+        credentials: "include",
+        body: JSON.stringify(payload)
       });
+
       if (!response.ok) {
-        throw new Error(
-          `Review submit failed: ${response.status} ${response.statusText}`
-        );
+        throw new Error(`Failed to submit review: ${response.statusText}`);
       }
-      onClose();
-    } catch (err) {
-      console.error(err);
-      setErrorMessage(err.message);
+
+      setSuccessMessage("Review submitted successfully!");
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setErrorMessage(error.message);
     }
   };
 
-  // Exit if popup is not visible
   if (!isVisible) return null;
 
   return (
-    <div
-      className={`
-        fixed inset-0 z-50 flex items-center justify-center
-        transition-colors duration-200
-        ${darkMode ? "bg-black/50" : "bg-gray-700/50"}
-      `}
-    >
-      <div
-        className={`
-          w-11/12 max-w-md p-6 sm:p-8 rounded-xl shadow-2xl border transition-all
-          ${darkMode ? "bg-gray-900 text-green-200 border-green-700" : "bg-white text-gray-900 border-gray-200"}
-        `}
+    <div className="fixed inset-0 backdrop-blur-sm backdrop-brightness-75 flex justify-center items-center p-2 xs:p-3 sm:p-4 z-50">
+      <animated.div
+        style={modalAnimation}
+        className={`rounded-lg shadow-xl w-full max-w-[90%] xs:max-w-[80%] sm:max-w-md p-4 xs:p-5 sm:p-6 ${
+          darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+        } border ${darkMode ? "border-gray-700" : "border-gray-200"}`}
       >
-        {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h2
-            className={`text-xl font-bold ${
-              darkMode ? "text-green-300" : "text-gray-900"
-            }`}
-          >
-            Write a Review
+        <div className="flex justify-between items-center mb-4 xs:mb-5 sm:mb-6">
+          <h2 className="text-xl xs:text-2xl sm:text-2xl font-semibold">
+            Submit a Review
           </h2>
           <button
             onClick={onClose}
-            className="text-xl hover:text-red-500 transition-colors"
-            aria-label="Close popup"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
           >
-            <FaTimes />
+            <FaTimes className="h-4 xs:h-5 sm:h-6 w-4 xs:w-5 sm:w-6" />
           </button>
         </div>
 
-        {/* Error Message */}
-        {errorMessage && (
-          <div
-            className={`
-              mb-4 p-3 border rounded-md
-              ${
-                darkMode
-                  ? "bg-red-900 border-red-600 text-red-300"
-                  : "bg-red-100 border-red-400 text-red-600"
-              }
-            `}
+        {(errorMessage || successMessage) && (
+          <animated.div
+            style={messageAnimation}
+            className={`mb-4 xs:mb-5 sm:mb-6 p-2 xs:p-3 sm:p-3 rounded-md flex items-center ${
+              errorMessage
+                ? "bg-red-100 border border-red-400 text-red-700"
+                : "bg-green-100 border border-green-400 text-green-700"
+            }`}
           >
-            {errorMessage}
-          </div>
+            {errorMessage ? (
+              <FaExclamationTriangle className="mr-1 xs:mr-2 sm:mr-2 text-red-500 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
+            ) : (
+              <FaStar className="mr-1 xs:mr-2 sm:mr-2 text-green-500 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
+            )}
+            <span className="text-xs xs:text-sm sm:text-sm">{errorMessage || successMessage}</span>
+          </animated.div>
         )}
 
-        {/* Rating */}
-        <div className="mb-4">
-          <label className="block font-medium mb-1 text-sm">
-            Rating (1-5)
-          </label>
-          <input
-            type="number"
-            min="1"
-            max="5"
-            step="0.1"
-            placeholder="e.g. 4.5"
-            className={`
-              w-full rounded-md p-2.5 focus:outline-none focus:ring-2
-              ${
-                darkMode
-                  ? "bg-gray-800 border border-green-700 text-green-200 focus:ring-green-500"
-                  : "bg-white border border-gray-300 focus:ring-blue-500"
-              }
-            `}
-            value={rating}
-            onChange={(e) => setRating(e.target.value)}
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4 xs:mb-5 sm:mb-6">
+            <label className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base">
+              Rating
+            </label>
+            <div className="flex space-x-1 xs:space-x-2 sm:space-x-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <FaStar
+                  key={star}
+                  className={`cursor-pointer h-4 xs:h-5 sm:h-6 w-4 xs:w-5 sm:w-6 ${
+                    star <= rating
+                      ? "text-yellow-400"
+                      : darkMode
+                      ? "text-gray-600"
+                      : "text-gray-300"
+                  }`}
+                  onClick={() => setRating(star)}
+                />
+              ))}
+            </div>
+          </div>
 
-        {/* Comment */}
-        <div className="mb-4">
-          <label className="block font-medium mb-1 text-sm">
-            Comment
-          </label>
-          <textarea
-            placeholder="Share your experience..."
-            className={`
-              w-full rounded-md p-2.5 resize-none h-28 focus:outline-none focus:ring-2
-              ${
+          <div className="mb-4 xs:mb-5 sm:mb-6">
+            <label className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base" htmlFor="comment">
+              Comment
+            </label>
+            <textarea
+              id="comment"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className={`w-full p-2 xs:p-2 sm:p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs xs:text-sm sm:text-sm resize-none ${
                 darkMode
-                  ? "bg-gray-800 border border-green-700 text-green-200 focus:ring-green-500"
-                  : "bg-white border border-gray-300 focus:ring-blue-500"
-              }
-            `}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            maxLength={400}
-          />
-          <p className="text-xs text-gray-400 mt-1 text-right">
-            {comment.length}/400
-          </p>
-        </div>
+                  ? "bg-gray-800 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
+              rows="4"
+            />
+          </div>
 
-        {/* Buttons */}
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className={`
-              px-4 py-2 rounded-md text-sm font-medium border transition-colors
-              ${
-                darkMode
-                  ? "bg-gray-800 border-green-700 text-green-200 hover:bg-gray-700"
-                  : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
-              }
-            `}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmitReview}
-            className={`
-              px-4 py-2 rounded-md text-sm font-medium transition-colors
-              focus:outline-none focus:ring-2 focus:ring-opacity-50
-              ${
-                darkMode
-                  ? "bg-green-700 text-white hover:bg-green-600 focus:ring-green-500"
-                  : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
-              }
-            `}
-          >
-            Submit Review
-          </button>
-        </div>
-      </div>
+          <div className="flex justify-end gap-2 xs:gap-3 sm:gap-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className={`px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-xs xs:text-sm sm:text-sm`}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className={`px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-xs xs:text-sm sm:text-sm`}
+            >
+              Submit
+            </button>
+          </div>
+        </form>
+      </animated.div>
     </div>
   );
 }
+
+export default UserReviewPopup;

@@ -1,12 +1,12 @@
-import React, { useContext, useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useState, useEffect, useContext } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ThemeContext } from "./ThemeContext";
 import { FaExclamationTriangle, FaCheckCircle } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
 
 export function UserReportFormPopup() {
   const { darkMode } = useContext(ThemeContext);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Fields for the report
   const [reportedUserId, setReportedUserId] = useState("");
@@ -134,31 +134,27 @@ export function UserReportFormPopup() {
     }
   };
 
-
   // 4: Redirect after success message is shown
-  const navigate = useNavigate();
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        navigate(-1); // Go back to the previous page
+      }, 2000);
 
-// Redirect after success message is shown
-useEffect(() => {
-  if (successMessage) {
-    const timer = setTimeout(() => {
-      navigate(-1); // Go back to the previous page
-    }, 2000);
-
-    return () => clearTimeout(timer); // Cleanup timeout on unmount
-  }
-}, [successMessage, navigate]);
+      return () => clearTimeout(timer); // Cleanup timeout on unmount
+    }
+  }, [successMessage, navigate]);
 
   return (
     <div
-      className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${
+      className={`my-6 xs:my-8 sm:my-10 main-content min-h-screen p-2 xs:p-4 sm:p-6 border rounded-4xl transition-all ease-in-out duration-500 ${
         darkMode
           ? "bg-gray-900 text-white border-gray-700"
           : "bg-white text-gray-900 border-gray-200"
       }`}
     >
       <h1
-        className={`text-2xl font-bold mb-6 ${
+        className={`text-xl xs:text-2xl sm:text-3xl font-bold mb-4 xs:mb-5 sm:mb-6 ${
           darkMode ? "text-green-400" : "text-green-600"
         }`}
       >
@@ -167,27 +163,27 @@ useEffect(() => {
 
       {/* Error Message */}
       {errorMessage && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md flex items-center">
-          <FaExclamationTriangle className="mr-2 text-red-500 h-5 w-5" />
+        <div className="mb-2 xs:mb-3 sm:mb-4 p-2 xs:p-3 sm:p-3 bg-red-100 border border-red-400 text-red-700 rounded-md flex items-center">
+          <FaExclamationTriangle className="mr-1 xs:mr-2 sm:mr-2 text-red-500 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
           <div>
-            <p className="font-bold">Error:</p>
-            <p>{errorMessage}</p>
+            <p className="font-bold text-xs xs:text-sm sm:text-sm">Error:</p>
+            <p className="text-xs xs:text-sm sm:text-sm">{errorMessage}</p>
           </div>
         </div>
       )}
 
       {/* Success Message */}
       {successMessage && (
-        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-md flex items-center">
-          <FaCheckCircle className="mr-2 text-green-500 h-5 w-5" />
-          <div>{successMessage}</div>
+        <div className="mb-2 xs:mb-3 sm:mb-4 p-2 xs:p-3 sm:p-3 bg-green-100 border border-green-400 text-green-700 rounded-md flex items-center">
+          <FaCheckCircle className="mr-1 xs:mr-2 sm:mr-2 text-green-500 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
+          <div className="text-xs xs:text-sm sm:text-sm">{successMessage}</div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 xs:space-y-5 sm:space-y-6">
         {/* reportedUserId */}
         <div>
-          <label className="block font-medium mb-1" htmlFor="reportedUserId">
+          <label className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base" htmlFor="reportedUserId">
             reported UserId
           </label>
           <input
@@ -195,14 +191,14 @@ useEffect(() => {
             id="reportedUserId"
             value={reportedUserId}
             readOnly={reportedUserId !== ""} 
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
+            className={`w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 border rounded-md focus:outline-none text-xs xs:text-sm sm:text-sm ${
               darkMode
                 ? "bg-gray-800 border-gray-600 text-white"
                 : "bg-gray-100 border-gray-300 text-gray-900"
             } ${reportedUserId !== "" ? "cursor-not-allowed bg-gray-300 text-gray-500" : ""}`}
           />
           {userDetails && (
-            <div className="mt-2 text-sm text-gray-500">
+            <div className="mt-1 xs:mt-2 sm:mt-2 text-xs xs:text-sm sm:text-sm text-gray-500">
               <p>
                 <strong>First Name:</strong> {userDetails.firstName || "N/A"}
               </p>
@@ -221,7 +217,7 @@ useEffect(() => {
 
         {/* reportedJobPostId */}
         <div>
-          <label className="block font-medium mb-1" htmlFor="reportedJobPostId">
+          <label className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base" htmlFor="reportedJobPostId">
             reportedJobPostId
           </label>
           <input
@@ -229,7 +225,7 @@ useEffect(() => {
             id="reportedJobPostId"
             value={reportedJobPostId}
             readOnly={reportedJobPostId !== ""} 
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
+            className={`w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 border rounded-md focus:outline-none text-xs xs:text-sm sm:text-sm ${
               darkMode
                 ? "bg-gray-800 border-gray-600 text-white"
                 : "bg-gray-100 border-gray-300 text-gray-900"
@@ -240,7 +236,7 @@ useEffect(() => {
         {/* reportedApplicantId */}
         <div>
           <label
-            className="block font-medium mb-1"
+            className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base"
             htmlFor="reportedApplicantId"
           >
             reportedApplicantId
@@ -250,7 +246,7 @@ useEffect(() => {
             id="reportedApplicantId"
             value={reportedApplicantId}
             readOnly
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
+            className={`w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 border rounded-md focus:outline-none text-xs xs:text-sm sm:text-sm ${
               darkMode
                 ? "bg-gray-800 border-gray-600 text-white"
                 : "bg-gray-100 border-gray-300 text-gray-900"
@@ -260,7 +256,7 @@ useEffect(() => {
 
         {/* reportedReviewId */}
         <div>
-          <label className="block font-medium mb-1" htmlFor="reportedReviewId">
+          <label className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base" htmlFor="reportedReviewId">
             reportedReviewId
           </label>
           <input
@@ -268,17 +264,17 @@ useEffect(() => {
             id="reportedReviewId"
             value={reportedReviewId}
             readOnly
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none ${
+            className={`w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 border rounded-md focus:outline-none text-xs xs:text-sm sm:text-sm ${
               darkMode
                 ? "bg-gray-800 border-gray-600 text-white"
                 : "bg-gray-100 border-gray-300 text-gray-900"
-            } ${reportedUserId !== "" ? "cursor-not-allowed caret-transparent  bg-gray-300 text-gray-500" : ""}`}
+            } ${reportedUserId !== "" ? "cursor-not-allowed caret-transparent bg-gray-300 text-gray-500" : ""}`}
           />
         </div>
 
         {/* Report Title */}
         <div>
-          <label className="block font-medium mb-1" htmlFor="reportMessage">
+          <label className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base" htmlFor="reportTitle">
             Report Title (Short description)
           </label>
           <textarea
@@ -287,16 +283,17 @@ useEffect(() => {
             onChange={(e) => setReportTitle(e.target.value)}
             rows={4}
             required
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none resize-none ${
+            className={`w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 border rounded-md focus:outline-none resize-none text-xs xs:text-sm sm:text-sm ${
               darkMode
                 ? "bg-gray-800 border-gray-600 text-white"
                 : "bg-white border-gray-300 text-gray-900"
             }`}
           />
         </div>
+
         {/* Report message */}
         <div>
-          <label className="block font-medium mb-1" htmlFor="reportMessage">
+          <label className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base" htmlFor="reportMessage">
             Report Message (Describe the issue)
           </label>
           <textarea
@@ -304,7 +301,7 @@ useEffect(() => {
             value={reportMessage}
             onChange={(e) => setReportMessage(e.target.value)}
             rows={4}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none resize-none ${
+            className={`w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 border rounded-md focus:outline-none resize-none text-xs xs:text-sm sm:text-sm ${
               darkMode
                 ? "bg-gray-800 border-gray-600 text-white"
                 : "bg-white border-gray-300 text-gray-900"
@@ -312,16 +309,16 @@ useEffect(() => {
           />
         </div>
 
-        
-
         {/* reportTags */}
         <div>
-          <label className="block font-medium mb-1">reportTags</label>
-          <div className="flex flex-wrap gap-2">
+          <label className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base">
+            reportTags
+          </label>
+          <div className="flex flex-wrap gap-1 xs:gap-2 sm:gap-2">
             {possibleTags.map((tag) => (
               <label
                 key={tag}
-                className={`inline-flex items-center space-x-2 px-3 py-1 border rounded-md cursor-pointer ${
+                className={`inline-flex items-center space-x-1 xs:space-x-2 sm:space-x-2 px-2 xs:px-3 sm:px-4 py-1 xs:py-1 sm:py-1 border rounded-md cursor-pointer text-xs xs:text-sm sm:text-sm ${
                   darkMode
                     ? reportTags.includes(tag)
                       ? "bg-blue-900 border-blue-700 text-white"
@@ -344,10 +341,10 @@ useEffect(() => {
         </div>
 
         {/* Submit */}
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end mt-2 xs:mt-3 sm:mt-4">
           <button
             type="submit"
-            className="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+            className="px-4 xs:px-5 sm:px-5 py-1 xs:py-2 sm:py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 text-xs xs:text-sm sm:text-sm"
           >
             Submit Report
           </button>
@@ -356,3 +353,5 @@ useEffect(() => {
     </div>
   );
 }
+
+export default UserReportFormPopup;

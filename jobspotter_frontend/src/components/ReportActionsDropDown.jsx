@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useContext } from "react";
 import { ThemeContext } from "./ThemeContext";
-import { useContext } from "react";
 
 function ReportActionsDropdown({ report, onActionSelect }) {
   const [selectedAction, setSelectedAction] = useState("");
@@ -11,18 +10,18 @@ function ReportActionsDropdown({ report, onActionSelect }) {
     onActionSelect(action); // Inform the parent component about the selected action
   };
 
-  
-
   return (
-    <div className="my-6">
-      <label className="block mb-2 font-semibold">Actions</label>
+    <div className="my-4 xs:my-5 sm:my-6">
+      <label className="block mb-1 xs:mb-2 sm:mb-2 font-semibold text-sm xs:text-base sm:text-base">
+        Actions
+      </label>
       <select
         value={selectedAction}
         onChange={handleActionChange}
-        className={`rounded w-full px-3 py-2 focus:outline-none ${
+        className={`rounded w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 focus:outline-none text-xs xs:text-sm sm:text-sm ${
           useContext(ThemeContext).darkMode
             ? "bg-gray-900 border border-gray-700 text-white"
-            : "bg-white border border-gray-300"
+            : "bg-white border border-gray-300 text-gray-900"
         }`}
       >
         <option value="">Select Action</option>
