@@ -1,5 +1,6 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useContext } from "react";
 import { useTranslation } from "react-i18next";
+import { ThemeContext } from "../components/ThemeContext";
 
 const colorPool = [
   "bg-red-200",
@@ -18,6 +19,7 @@ function getRandomColorClass() {
 
 export function CreateJobPost() {
   const { t } = useTranslation();
+  const { darkMode } = useContext(ThemeContext);
 
   const [jobData, setJobData] = useState({
     tags: [],
@@ -33,7 +35,6 @@ export function CreateJobPost() {
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Dynamic tag mapping fetched from API (friendly name -> enum)
   const [tagMapping, setTagMapping] = useState(new Map());
   useEffect(() => {
     const fetchTags = async () => {
@@ -64,7 +65,6 @@ export function CreateJobPost() {
     fetchTags();
   }, [t]);
 
-  // Convert dynamic Map to an array of friendly tag strings
   const allTags = useMemo(() => Array.from(tagMapping.keys()), [tagMapping]);
 
   useEffect(() => {
@@ -123,7 +123,6 @@ export function CreateJobPost() {
     setJobData((prev) => ({ ...prev, [name]: value }));
   }
 
-  // When a user clicks on a tag from the all-tags list
   function handleSelectTag(tagName) {
     const alreadySelected = jobData.tags.some(
       (tagObj) => tagObj.name === tagName
@@ -162,7 +161,6 @@ export function CreateJobPost() {
       alert(t("noTagAlert", { defaultValue: "Please add at least one tag." }));
       return;
     }
-    // Convert the selected tags to enum values
     const tagsAsEnums = jobData.tags.map((tagObj) =>
       tagMapping.get(tagObj.name)
     );
@@ -191,7 +189,6 @@ export function CreateJobPost() {
             defaultValue: "Job post created successfully!",
           })
         );
-        // Reset form
         setJobData({
           tags: [],
           title: "",
@@ -209,137 +206,182 @@ export function CreateJobPost() {
 
   if (loading) {
     return (
-      <div className="main-content flex items-center justify-center min-h-screen">
-        <p>{t("loadingUser", { defaultValue: "Loading user..." })}</p>
+      <div
+        className={`main-content min-h-screen flex items-center justify-center ${darkMode ? "bg-gray-800" : "bg-gray-50"} font-sans`}
+      >
+        <section
+          className="fade-in max-w-2xl xs:max-w-3xl sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto p-4 xs:p-6 sm:p-8 flex items-center justify-center"
+        >
+          <p className={`text-base xs:text-lg sm:text-xl ${darkMode ? "text-gray-300" : "text-gray-600"} font-semibold`}>
+            {t("loadingUser", { defaultValue: "Loading user..." })}
+          </p>
+        </section>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="main-content flex items-center justify-center min-h-screen">
-        <p>
-          {t("errorLoadingUser", {
-            defaultValue: "Error loading user. Please try again later.",
-          })}
-        </p>
+      <div
+        className={`main-content min-h-screen flex items-center justify-center ${darkMode ? "bg-gray-800" : "bg-gray-50"} font-sans`}
+      >
+        <section
+          className="fade-in max-w-2xl xs:max-w-3xl sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto p-4 xs:p-6 sm:p-8 flex items-center justify-center"
+        >
+          <p className={`text-base xs:text-lg sm:text-xl ${darkMode ? "text-gray-300" : "text-gray-600"} font-semibold`}>
+            {t("errorLoadingUser", {
+              defaultValue: "Error loading user. Please try again later.",
+            })}
+          </p>
+        </section>
       </div>
     );
   }
 
   return (
-    <div className="my-10 border-1 rounded-4xl main-content min-h-screen p-6 bg-white text-black">
-      <div className="max-w-2xl mx-auto border border-gray-300 rounded-md shadow-md p-6">
-        <h1 className="text-2xl font-bold mb-4">
-          {t("createJobPost", { defaultValue: "Create Job Post" })}
-        </h1>
-        {errorMessage && (
-          <div className="text-red-500 mb-4">{errorMessage}</div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Title */}
-          <input
-            type="text"
-            name="title"
-            value={jobData.title}
-            onChange={handleChange}
-            placeholder={t("jobTitle", { defaultValue: "Job Title" })}
-            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-
-          {/* Description */}
-          <textarea
-            name="description"
-            value={jobData.description}
-            onChange={handleChange}
-            placeholder={t("jobDescription", { defaultValue: "Job Description" })}
-            rows={3}
-            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-
-          {/* Tag Selection */}
-          <div>
-            <label className="block mb-2 font-semibold">
-              {t("availableTags", { defaultValue: "Available Tags" })}
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {allTags.map((tagName) => (
-                <button
-                  key={tagName}
-                  type="button"
-                  onClick={() => handleSelectTag(tagName)}
-                  className="px-2 py-1 rounded-md border border-gray-300 bg-gray-100 text-black hover:bg-gray-200 transition focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  {tagName}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Display Selected Tags */}
-          <div className="mt-4">
-            <label className="block mb-2 font-semibold">
-              {t("selectedTags", { defaultValue: "Selected Tags" })}
-            </label>
-            <div className="flex flex-wrap">
-              {jobData.tags.map((tagObj, index) => (
-                <div
-                  key={index}
-                  className={`flex items-center px-2 py-1 mr-2 mb-2 rounded text-black ${tagObj.color}`}
-                >
-                  <span>{tagObj.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTag(index)}
-                    className="ml-2 text-red-600 font-bold"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Address Dropdown */}
-          <div>
-            <label className="block mb-1 font-semibold">
-              {t("selectAddress", { defaultValue: "Select Address" })}
-            </label>
-            <select
-              value={jobData.addressId}
-              onChange={(e) =>
-                setJobData((prev) => ({
-                  ...prev,
-                  addressId: parseInt(e.target.value, 10),
-                }))
-              }
-              className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="">
-                {t("selectAnAddress", { defaultValue: "Select an address" })}
-              </option>
-              {addresses.map((addr) => (
-                <option key={addr.addressId} value={addr.addressId}>
-                  {addr.streetAddress}, {addr.city}, {addr.county},{" "}
-                  {addr.eirCode}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={saving}
-            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+    <div
+      className={`main-content min-h-screen p-4 xs:p-6 sm:p-8 ${darkMode ? "bg-gray-800 text-gray-100" : "bg-gray-50 text-gray-900"} font-sans`}
+    >
+      <main
+        className="@container max-w-7xl mx-auto px-4 xs:px-6 sm:px-8 lg:px-10 py-10 xs:py-12 sm:py-16"
+      >
+        <section className="fade-in max-w-2xl xs:max-w-3xl sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto">
+          <div
+            className={`enhanced-card feature-card ${
+              darkMode
+                ? "border-gray-700 bg-gray-800 hover:border-emerald-500"
+                : "border-gray-200 bg-white hover:border-emerald-500"
+            } p-4 xs:p-6 sm:p-8 rounded-lg transition-all duration-300`}
           >
-            {saving
-              ? t("creating", { defaultValue: "Creating..." })
-              : t("createJobPost", { defaultValue: "Create Job Post" })}
-          </button>
-        </form>
-      </div>
+            <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold mb-4 xs:mb-6 sm:mb-8">
+              {t("createJobPost", { defaultValue: "Create Job Post" })}
+            </h1>
+            {errorMessage && (
+              <div className={`${darkMode ? "text-rose-400" : "text-rose-500"} mb-4 xs:mb-6 sm:mb-8 text-sm xs:text-base sm:text-lg font-medium`}>
+                {errorMessage}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4 xs:space-y-5 sm:space-y-6 md:space-y-7 lg:space-y-8">
+              {/* Title */}
+              <input
+                type="text"
+                name="title"
+                value={jobData.title}
+                onChange={handleChange}
+                placeholder={t("jobTitle", { defaultValue: "Job Title" })}
+                className={`w-full px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 sm:py-3 border rounded-lg text-sm xs:text-base sm:text-lg ${
+                  darkMode
+                    ? "bg-gray-700 text-white border-gray-600"
+                    : "bg-white text-black border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-green-500`}
+              />
+
+              {/* Description */}
+              <textarea
+                name="description"
+                value={jobData.description}
+                onChange={handleChange}
+                placeholder={t("jobDescription", { defaultValue: "Job Description" })}
+                rows={3}
+                className={`w-full px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 sm:py-3 border rounded-lg text-sm xs:text-base sm:text-lg ${
+                  darkMode
+                    ? "bg-gray-700 text-white border-gray-600"
+                    : "bg-white text-black border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-green-500`}
+              />
+
+              {/* Tag Selection */}
+              <div>
+                <label className="block mb-1 xs:mb-1.5 sm:mb-2 text-sm xs:text-base sm:text-lg font-semibold">
+                  {t("availableTags", { defaultValue: "Available Tags" })}
+                </label>
+                <div className="flex flex-wrap gap-1 xs:gap-2 sm:gap-3">
+                  {allTags.map((tagName) => (
+                    <button
+                      key={tagName}
+                      type="button"
+                      onClick={() => handleSelectTag(tagName)}
+                      className={`px-2 xs:px-2.5 sm:px-3 py-1 xs:py-1.5 rounded-md border text-xs xs:text-sm sm:text-base ${
+                        darkMode
+                          ? "bg-gray-700 text-white border-gray-600 hover:bg-gray-600"
+                          : "bg-gray-100 text-black border-gray-300 hover:bg-gray-200"
+                      } transition focus:outline-none focus:ring-2 focus:ring-green-500`}
+                    >
+                      {tagName}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Display Selected Tags */}
+              <div>
+                <label className="block mb-1 xs:mb-1.5 sm:mb-2 text-sm xs:text-base sm:text-lg font-semibold">
+                  {t("selectedTags", { defaultValue: "Selected Tags" })}
+                </label>
+                <div className="flex flex-wrap gap-1 xs:gap-2 sm:gap-3">
+                  {jobData.tags.map((tagObj, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center px-2 xs:px-2.5 sm:px-3 py-0.5 xs:py-1 sm:py-1.5 mr-1 xs:mr-2 mb-1 xs:mb-2 rounded text-black text-xs xs:text-sm sm:text-base ${tagObj.color}`}
+                    >
+                      <span>{tagObj.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(index)}
+                        className="ml-1 xs:ml-2 text-red-600 font-bold"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Address Dropdown */}
+              <div>
+                <label className="block mb-1 xs:mb-1.5 sm:mb-2 text-sm xs:text-base sm:text-lg font-semibold">
+                  {t("selectAddress", { defaultValue: "Select Address" })}
+                </label>
+                <select
+                  value={jobData.addressId}
+                  onChange={(e) =>
+                    setJobData((prev) => ({
+                      ...prev,
+                      addressId: parseInt(e.target.value, 10),
+                    }))
+                  }
+                  className={`w-full px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 sm:py-3 border rounded-lg text-sm xs:text-base sm:text-lg ${
+                    darkMode
+                      ? "bg-gray-700 text-white border-gray-600"
+                      : "bg-white text-black border-gray-300"
+                    } focus:outline-none focus:ring-2 focus:ring-green-500`}
+                >
+                  <option value="">
+                    {t("selectAnAddress", { defaultValue: "Select an address" })}
+                  </option>
+                  {addresses.map((addr) => (
+                    <option key={addr.addressId} value={addr.addressId}>
+                      {addr.streetAddress}, {addr.city}, {addr.county}, {addr.eirCode}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={saving}
+                className={`px-4 xs:px-6 sm:px-8 py-2 xs:py-2.5 sm:py-3 text-sm xs:text-base sm:text-lg bg-green-500 text-white rounded-full font-semibold shadow-md hover:bg-green-600 hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-green-500`}
+              >
+                {saving
+                  ? t("creating", { defaultValue: "Creating..." })
+                  : t("createJobPost", { defaultValue: "Create Job Post" })}
+              </button>
+            </form>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

@@ -6,8 +6,8 @@ import MyProfilePicture from "../components/MyProfilePicture";
 import { FaCheckCircle } from "react-icons/fa";
 
 const LoadingSkeleton = () => (
-  <div className="flex min-h-screen items-center justify-center">
-    <p>Loading...</p>
+  <div className="flex min-h-screen items-center justify-center p-4 xs:p-6 sm:p-8">
+    <p className="text-sm xs:text-base sm:text-lg">Loading...</p>
   </div>
 );
 
@@ -41,7 +41,6 @@ export default function Profile() {
   const { darkMode } = useContext(ThemeContext);
   const navigate = useNavigate();
 
-
   const [showUploadPanel, setShowUploadPanel] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedFilePreview, setSelectedFilePreview] = useState("");
@@ -67,26 +66,25 @@ export default function Profile() {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      setSelectedFilePreview(e.target.result); 
+      setSelectedFilePreview(e.target.result);
     };
     reader.readAsDataURL(file);
   };
 
-  //Send multipart/form-data instead of JSON
+  // Send multipart/form-data instead of JSON
   const handleConfirmUpload = async () => {
     try {
       if (!selectedFile) {
         alert("Please select an image before uploading.");
         return;
       }
-      // Create a FormData object and append the raw file
       const formData = new FormData();
       formData.append("profileImage", selectedFile);
 
       const res = await fetch("/api/v1/users/me/profile-image", {
         method: "PUT",
         credentials: "include",
-        body: formData, // Let fetch auto-set the Content-Type
+        body: formData,
       });
       if (!res.ok) {
         throw new Error(`Failed to update profile image. Status: ${res.status}`);
@@ -126,7 +124,7 @@ export default function Profile() {
     }
   };
 
-  // handle drag & drop events
+  // Handle drag & drop events
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -194,10 +192,10 @@ export default function Profile() {
     }
   };
 
-  // 3) Calculate completeness:
+  // 3) Calculate completeness
   function calculateCompleteness() {
     if (!user) return 0;
-    const total = 6; // firstName, lastName, email, phoneNumber, about, addresses
+    const total = 6; 
     let filled = 0;
     if (user.firstName?.trim()) filled++;
     if (user.lastName?.trim()) filled++;
@@ -222,7 +220,7 @@ export default function Profile() {
   }
   const missingItems = getMissingItems();
 
-  // Compare current form data with originalData 
+  // Compare current form data with originalData
   function checkEdited(newData) {
     return (
       newData.firstName !== (originalData.firstName || "") ||
@@ -308,25 +306,29 @@ export default function Profile() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Error loading user profile. Please try again later.</p>
+      <div className="flex items-center justify-center min-h-screen p-4 xs:p-6 sm:p-8">
+        <p className="text-sm xs:text-base sm:text-lg">
+          Error loading user profile. Please try again later.
+        </p>
       </div>
     );
   }
 
   const renderField = (label, name, type = "text") => (
     <div>
-      <label className="text-sm font-medium mb-1 block">{label}</label>
+      <label className="text-xs xs:text-sm sm:text-base font-medium mb-1 block">
+        {label}
+      </label>
       {editing ? (
         <input
           type={type}
           name={name}
           value={formData[name]}
           onChange={handleChange}
-          className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400 border-gray-300"
+          className="w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400 border-gray-300 text-sm xs:text-base sm:text-lg"
         />
       ) : (
-        <p className="mt-1">
+        <p className="mt-1 text-sm xs:text-base sm:text-lg">
           {formData[name] || (name === "phoneNumber" ? "Not provided" : "")}
         </p>
       )}
@@ -339,20 +341,20 @@ export default function Profile() {
     : "bg-gray-100 text-black";
 
   return (
-    <div className={`my-10 border-1 rounded-4xl main-content min-h-screen p-4 ${containerClasses}`}>
-      <div className="flex">
+    <div className={`my-6 xs:my-8 sm:my-10 border-1 rounded-4xl main-content min-h-screen p-4 xs:p-6 sm:p-8 ${containerClasses}`}>
+      <div className="flex flex-col xl:flex-row">
         <Sidebar />
-        <div className="w-4/5 p-4 ml-4 mr-30">
+        <div className="w-full xl:w-4/5 p-4 xs:p-6 sm:p-8 ml-0 xl:ml-4 mr-0 xl:mr-30">
           {/* Banner */}
           <div
-            className={`relative w-full h-48 md:h-52 lg:h-56 flex items-center ${
+            className={`relative w-full h-32 xs:h-36 sm:h-40 md:h-48 lg:h-52 xl:h-56 flex items-center ${
               editing ? "border border-white border-dashed" : ""
             }`}
             style={{ background: bannerColor }}
           >
             {editing && (
-              <div className="absolute top-4 right-4 flex items-center space-x-2 text-white">
-                <label htmlFor="bannerColor" className="text-sm">
+              <div className="absolute top-1 xs:top-2 sm:top-3 md:top-4 right-1 xs:right-2 sm:right-3 md:right-4 flex items-center space-x-1 xs:space-x-2 text-white">
+                <label htmlFor="bannerColor" className="text-xs xs:text-sm sm:text-base">
                   Banner Color:
                 </label>
                 <input
@@ -360,78 +362,70 @@ export default function Profile() {
                   type="color"
                   value={bannerColor}
                   onChange={(e) => setBannerColor(e.target.value)}
-                  className="w-8 h-8 p-0 border-none cursor-pointer"
+                  className="w-5 xs:w-6 sm:w-7 md:w-8 h-5 xs:h-6 sm:h-7 md:h-8 p-0 border-none cursor-pointer"
                 />
               </div>
             )}
           </div>
 
           {/* Profile Picture + Basic Info */}
-          <div className="relative px-4 -mt-28 flex items-end">
-            <div className="relative w-24 h-24">
-              <div className="absolute inset-0 rounded-full p-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
-                {/* Pass profileImageVersion as key to force reload of image */}
-                <div className="w-full h-full rounded-full bg-white dark:bg-gray-900 p-1">
+          <div className="relative px-2 xs:px-3 sm:px-4 -mt-20 xs:-mt-22 sm:-mt-24 md:-mt-26 lg:-mt-28 flex items-end">
+            <div className="relative w-16 xs:w-18 sm:w-20 md:w-22 lg:w-24 h-16 xs:h-18 sm:h-20 md:h-22 lg:h-24">
+              <div className="absolute inset-0 rounded-full p-0.5 xs:p-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
+                <div className="w-full h-full rounded-full bg-white dark:bg-gray-900 p-0.5 xs:p-1">
                   <MyProfilePicture userId={user.userId} darkMode={darkMode} key={profileImageVersion} />
                 </div>
               </div>
             </div>
-            <div className="ml-4 mb-2">
-              <h1 className={`text-xl md:text-2xl font-bold ${darkMode ? "text-white" : "text-black"}`}>
+            <div className="ml-2 xs:ml-3 sm:ml-4 mb-1 xs:mb-2 sm:mb-2">
+              <h1 className={`text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold ${darkMode ? "text-white" : "text-black"}`}>
                 {formData.firstName} {formData.lastName}
               </h1>
-              <p className={`text-sm ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
+              <p className={`text-xs xs:text-sm sm:text-base ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
                 {formData.email}
               </p>
             </div>
           </div>
 
           {/* Profile Image Upload/Delete Section */}
-          <div className={`mt-4 mb-8 p-4 rounded shadow ${darkMode ? "bg-gray-800" : "bg-white"}`}>
-            <div className="flex items-center gap-4">
-              {/* Upload" & "Delete buttons outside the panel */}
+          <div className={`mt-2 xs:mt-3 sm:mt-4 mb-4 xs:mb-6 sm:mb-8 p-4 xs:p-6 sm:p-8 rounded shadow ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+            <div className="flex flex-col sm:flex-row items-center gap-2 xs:gap-3 sm:gap-4">
               <button
                 onClick={toggleUploadPanel}
-                className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                className="w-full sm:w-auto px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 bg-blue-600 text-white text-xs xs:text-sm sm:text-base rounded hover:bg-blue-700"
               >
                 {showUploadPanel ? "Cancel" : "Upload"}
               </button>
               <button
                 onClick={handleDeleteProfileImage}
-                className="px-4 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+                className="w-full sm:w-auto px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 bg-red-500 text-white text-xs xs:text-sm sm:text-base rounded hover:bg-red-600"
               >
                 Delete
               </button>
             </div>
 
-            {/* Concealed upload panel appears only after clicking "Upload" */}
             {showUploadPanel && (
               <div
-                className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded relative"
+                className="mt-2 xs:mt-3 sm:mt-4 p-4 xs:p-6 sm:p-8 bg-gray-100 dark:bg-gray-700 rounded relative"
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
               >
-                <div className="text-sm mb-2 text-gray-700 dark:text-gray-200">
+                <div className="text-xs xs:text-sm sm:text-base mb-1 xs:mb-2 sm:mb-2 text-gray-700 dark:text-gray-200">
                   Drag and drop an image file here or click the box below.
                 </div>
 
-                {/* The "drop zone" or clickable area */}
                 <label
                   htmlFor="fileInput"
-                  className="flex flex-col items-center justify-center 
-                             border-2 border-dashed border-gray-400 dark:border-gray-500 
-                             rounded p-4 cursor-pointer hover:bg-gray-200 
-                             dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 
-                             transition"
+                  className="flex flex-col items-center justify-center border-2 border-dashed border-gray-400 dark:border-gray-500 rounded p-4 xs:p-6 sm:p-8 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition"
                 >
                   {selectedFilePreview ? (
                     <img
                       src={selectedFilePreview}
                       alt="Preview"
-                      className="max-h-32 object-contain"
+                      className="max-h-20 xs:max-h-24 sm:max-h-28 md:max-h-32 object-contain"
                     />
                   ) : (
-                    <span className="text-center text-xs md:text-sm">
+                    <span className="text-center text-xs xs:text-sm sm:text-base">
                       Click to select a file
                     </span>
                   )}
@@ -447,12 +441,11 @@ export default function Profile() {
                   />
                 </label>
 
-                {/* Confirmation Button */}
-                <div className="mt-4 flex justify-end">
+                <div className="mt-2 xs:mt-3 sm:mt-4 flex justify-end">
                   <button
                     onClick={handleConfirmUpload}
                     disabled={!selectedFile}
-                    className={`px-4 py-2 rounded text-white text-sm ${
+                    className={`w-full sm:w-auto px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 rounded text-white text-xs xs:text-sm sm:text-base ${
                       selectedFile
                         ? "bg-green-600 hover:bg-green-700"
                         : "bg-gray-400 cursor-not-allowed"
@@ -466,31 +459,31 @@ export default function Profile() {
           </div>
 
           {/* Progress Bar */}
-          <div className="flex flex-col items-start mb-8">
+          <div className="flex flex-col items-start mb-4 xs:mb-6 sm:mb-8">
             {showProgressBar && (
-              <div className="mt-2 w-full space-y-1">
-                <div className="flex items-center gap-2">
-                  {/* Progress bar */}
-                  <div className="relative flex-1 bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+              <div className="mt-1 xs:mt-2 sm:mt-2 w-full space-y-1">
+                <div className="flex flex-col sm:flex-row items-center gap-1 xs:gap-2 sm:gap-2">
+                  <div className="relative w-full sm:flex-1 bg-gray-200 rounded-full h-2 xs:h-2.5 sm:h-2.5 dark:bg-gray-700">
                     <div
-                      className="bg-blue-600 h-2.5 rounded-full"
+                      className="bg-blue-600 h-2 xs:h-2.5 sm:h-2.5 rounded-full"
                       style={{ width: `${profileCompleteness}%` }}
                     ></div>
                   </div>
-                  {/* Proceed button if 100% */}
                   {profileCompleteness === 100 && (
                     <button
                       onClick={handleDismissProgressBar}
-                      className="px-3 py-1 bg-green-500 text-white rounded flex items-center text-xs hover:bg-green-600 shadow-md"
+                      className="w-full sm:w-auto mt-2 sm:mt-0 px-2 xs:px-3 sm:px-3 py-1 bg-green-500 text-white rounded flex items-center text-xs xs:text-sm sm:text-base hover:bg-green-600 shadow-md"
                     >
                       <FaCheckCircle className="mr-1" />
                       Proceed
                     </button>
                   )}
                 </div>
-                <p className="text-sm">Profile completion: {profileCompleteness}%</p>
+                <p className="text-xs xs:text-sm sm:text-base">
+                  Profile completion: {profileCompleteness}%
+                </p>
                 {profileCompleteness < 100 && missingItems.length > 0 && (
-                  <p className="text-xs text-red-500">
+                  <p className="text-xs xs:text-sm sm:text-base text-red-500">
                     Missing: {missingItems.join(", ")}
                   </p>
                 )}
@@ -500,38 +493,46 @@ export default function Profile() {
 
           {/* My Information Section */}
           <div
-            className={`border border-gray-300 hover:shadow-md hover:border-green-500 transition rounded-lg p-6 ${darkMode ? "bg-transparent" : "bg-white"}`}
+            className={`border border-gray-300 hover:shadow-md hover:border-green-500 transition rounded-lg p-4 xs:p-6 sm:p-8 ${darkMode ? "bg-transparent" : "bg-white"}`}
           >
-            <h2 className="font-semibold text-lg mb-4">My Information</h2>
-            {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
-            <div className="grid grid-cols-2 gap-6">
+            <h2 className="font-semibold text-base xs:text-lg sm:text-xl mb-2 xs:mb-3 sm:mb-4">
+              My Information
+            </h2>
+            {errorMessage && (
+              <div className="text-red-500 mb-2 xs:mb-3 sm:mb-4 text-sm xs:text-base sm:text-lg">
+                {errorMessage}
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 xs:gap-6 sm:gap-8">
               {renderField("First Name", "firstName")}
               {renderField("Last Name", "lastName")}
               {renderField("Email", "email", "email")}
               {renderField("Phone Number", "phoneNumber")}
-              <div className="col-span-2">
-                <label className="text-sm font-medium mb-1 block">About</label>
+              <div className="col-span-1 sm:col-span-2">
+                <label className="text-xs xs:text-sm sm:text-base font-medium mb-1 block">
+                  About
+                </label>
                 {editing ? (
                   <textarea
                     name="about"
                     value={formData.about}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400 border-gray-300"
+                    className="w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400 border-gray-300 text-sm xs:text-base sm:text-lg"
                   />
                 ) : (
-                  <p className="mt-1">
+                  <p className="mt-1 text-sm xs:text-base sm:text-lg">
                     {formData.about || "No description available"}
                   </p>
                 )}
               </div>
             </div>
-            <div className="mt-6 flex gap-4">
+            <div className="mt-4 xs:mt-6 sm:mt-6 flex flex-col sm:flex-row gap-2 xs:gap-3 sm:gap-4">
               {editing ? (
                 <>
                   <button
                     onClick={handleSave}
                     disabled={!isEdited}
-                    className={`px-6 py-2 rounded text-white ${
+                    className={`w-full sm:w-auto px-4 xs:px-5 sm:px-6 py-1 xs:py-2 sm:py-2 rounded text-white text-xs xs:text-sm sm:text-base ${
                       isEdited
                         ? "bg-green-500 hover:bg-green-600"
                         : "bg-gray-400 cursor-not-allowed"
@@ -541,7 +542,7 @@ export default function Profile() {
                   </button>
                   <button
                     onClick={handleCancel}
-                    className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                    className="w-full sm:w-auto px-4 xs:px-5 sm:px-6 py-1 xs:py-2 sm:py-2 bg-red-500 text-white rounded hover:bg-red-600 text-xs xs:text-sm sm:text-base"
                   >
                     Cancel
                   </button>
@@ -549,7 +550,7 @@ export default function Profile() {
               ) : (
                 <button
                   onClick={() => setEditing(true)}
-                  className="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                  className="w-full sm:w-auto px-4 xs:px-5 sm:px-6 py-1 xs:py-2 sm:py-2 bg-green-500 text-white rounded hover:bg-green-600 text-xs xs:text-sm sm:text-base"
                 >
                   Edit Profile
                 </button>

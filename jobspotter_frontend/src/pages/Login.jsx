@@ -30,11 +30,9 @@ export function Login() {
 
   // Calculate form progress only count valid fields with checkmarks
   useEffect(() => {
-    // Count fields that have content and don't have validation errors
     const validFields = Object.entries(formValues)
       .filter(([key, value]) => {
         if (key === 'rememberMe') return false;
-        // Only count fields that have content and no errors
         return typeof value === 'string' && 
                value.length > 0 && 
                !errors[key];
@@ -47,7 +45,6 @@ export function Login() {
   const validateForm = (values) => {
     let validationErrors = {};
 
-    // Username validation
     if (!values.username.trim()) {
       validationErrors.username = "Username cannot be empty.";
     } else if (!usernameRegex.test(values.username)) {
@@ -55,7 +52,6 @@ export function Login() {
         "Username must be at least 4 characters long and contain only letters and digits.";
     }
 
-    // Password validation
     if (!values.password) {
       validationErrors.password = "Password cannot be empty.";
     } else if (!passwordRegex.test(values.password)) {
@@ -71,11 +67,9 @@ export function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Proceed only if there are no validation errors
     if (Object.keys(errors).length === 0) {
       setIsLoading(true);
       try {
-        // 1) First, attempt login
         const response = await fetch("/api/v1/users/auth/login", {
           method: "POST",
           headers: {
@@ -88,7 +82,6 @@ export function Login() {
         });
 
         if (response.ok) {
-          // 2) If login was successful, fetch user info from /api/v1/users/me
           const meResponse = await fetch("/api/v1/users/me", {
             method: "GET",
             headers: { "Content-Type": "application/json" },
@@ -97,12 +90,10 @@ export function Login() {
 
           if (meResponse.ok) {
             const userData = await meResponse.json();
-            // 3) Store the userId in sessionStorage if it exists
             if (userData.userId) {
               sessionStorage.setItem("userId", userData.userId);
             }
 
-            // 4) Redirect based on user role
             if (userData.userType === "ADMIN") {
               window.location.href = "/dashboard";
             } else {
@@ -117,12 +108,10 @@ export function Login() {
             );
           }
         } else if (response.status === 403) {
-          // Handle banned user case
           setErrors({
             general: "You have been banned. Please contact support.",
           });
         } else {
-          // If login fails for other reasons, extract error messages from the response
           const errorData = await response.json();
           setErrors(
             errorData.errors || {
@@ -168,10 +157,10 @@ export function Login() {
       initial="hidden"
       animate="visible"
       variants={container}
-      className="login-page main-content min-h-screen p-4 flex items-center justify-center my-10 rounded-4xl border"
+      className="login-page main-content min-h-screen p-4 xs:p-6 sm:p-8 flex items-center justify-center my-6 xs:my-8 sm:my-10 rounded-3xl border font-sans"
     >
       {/* Outer container with two columns */}
-      <div className="card w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 overflow-hidden relative">
+      <div className="card w-full max-w-2xl xs:max-w-3xl sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl grid grid-cols-1 md:grid-cols-2 overflow-hidden relative">
         {/* Progress bar */}
         <motion.div 
           className="absolute top-0 left-0 h-1 bg-gradient-to-r from-green-500 to-lime-500"
@@ -186,15 +175,17 @@ export function Login() {
           initial={{ x: -200, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.6 }}
-          className="hidden md:flex flex-col justify-center items-center p-10 lava-lamp-background text-white"
+          className="hidden md:flex flex-col justify-center items-center p-4 xs:p-6 sm:p-8 lava-lamp-background text-white"
         >
-          <h2 className="text-3xl font-bold mb-2 drop-shadow-lg">
+          <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold mb-2 xs:mb-3 sm:mb-4 drop-shadow-lg">
             Welcome Back!
           </h2>
-          <p className="drop-shadow-sm mb-4">Don't have an account?</p>
+          <p className="text-sm xs:text-base sm:text-lg md:text-xl drop-shadow-sm mb-4 xs:mb-6 sm:mb-8">
+            Don't have an account?
+          </p>
           <Link
             to="/register"
-            className="mt-4 px-6 py-2 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-200 transition flex items-center"
+            className="mt-2 xs:mt-4 px-4 xs:px-6 py-2 text-sm xs:text-base sm:text-lg md:text-xl bg-white text-green-600 font-bold rounded-lg hover:bg-gray-200 transition flex items-center"
           >
             Sign Up <FaArrowRight className="ml-2" />
           </Link>
@@ -205,14 +196,16 @@ export function Login() {
           initial={{ x: 200, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.6 }}
-          className="p-10"
+          className="p-4 xs:p-6 sm:p-8"
         >
-          <h2 className="text-3xl font-bold mb-6">Sign In</h2>
+          <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold mb-4 xs:mb-6 sm:mb-8">
+            Sign In
+          </h2>
           {errors.general && (
             <motion.p
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-red-500 mb-4 p-3 bg-red-50 rounded-lg"
+              className="text-red-500 mb-4 xs:mb-6 sm:mb-8 p-2 xs:p-3 bg-red-50 rounded-lg text-sm xs:text-base sm:text-lg"
             >
               {errors.general}
             </motion.p>
@@ -222,11 +215,13 @@ export function Login() {
             variants={container}
             initial="hidden"
             animate="visible"
-            className="space-y-4"
+            className="space-y-4 xs:space-y-5 sm:space-y-6"
           >
             {/* Username */}
-            <motion.div variants={fieldAnim} className="relative mb-4">
-              <label className="block text-sm font-medium mb-1">Username</label>
+            <motion.div variants={fieldAnim} className="relative mb-4 xs:mb-6 sm:mb-8">
+              <label className="block text-sm xs:text-base sm:text-lg font-medium mb-1 xs:mb-2">
+                Username
+              </label>
               <div className="flex items-center">
                 <div className="relative flex-grow">
                   <motion.input
@@ -235,12 +230,12 @@ export function Login() {
                     value={formValues.username}
                     onChange={handleChange}
                     placeholder="Username or Email"
-                    className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-gray-400"
+                    className="mt-1 block w-full px-4 py-2 xs:px-5 xs:py-3 sm:px-6 sm:py-4 border rounded-lg focus:outline-none focus:border-gray-400 text-sm xs:text-base sm:text-lg"
                     whileHover={{ scale: 1 }}
                     whileFocus={{ scale: 1 }}
                   />
                 </div>
-                <div className="flex-shrink-0 ml-3 w-6 h-6 flex items-center justify-center">
+                <div className="flex-shrink-0 ml-2 xs:ml-3 sm:ml-4 w-6 h-6 flex items-center justify-center">
                   <AnimatePresence>
                     {formValues.username && !errors.username && (
                       <motion.div
@@ -250,7 +245,7 @@ export function Login() {
                         exit={{ opacity: 0, scale: 0.5 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <FaCheck className="text-green-500 text-xl" />
+                        <FaCheck className="text-green-500 text-lg xs:text-xl sm:text-2xl" />
                       </motion.div>
                     )}
                     {errors.username && (
@@ -261,7 +256,7 @@ export function Login() {
                         exit={{ opacity: 0, scale: 0.5 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <FaTimes className="text-red-500 text-xl" />
+                        <FaTimes className="text-red-500 text-lg xs:text-xl sm:text-2xl" />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -272,7 +267,7 @@ export function Login() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="text-red-500 text-sm mt-1"
+                  className="text-red-500 text-xs xs:text-sm sm:text-base mt-1 xs:mt-2"
                 >
                   {errors.username}
                 </motion.p>
@@ -280,8 +275,10 @@ export function Login() {
             </motion.div>
 
             {/* Password */}
-            <motion.div variants={fieldAnim} className="relative mb-4">
-              <label className="block text-sm font-medium mb-1">Password</label>
+            <motion.div variants={fieldAnim} className="relative mb-4 xs:mb-6 sm:mb-8">
+              <label className="block text-sm xs:text-base sm:text-lg font-medium mb-1 xs:mb-2">
+                Password
+              </label>
               <div className="flex items-center">
                 <div className="relative flex-grow">
                   <motion.input
@@ -290,7 +287,7 @@ export function Login() {
                     value={formValues.password}
                     onChange={handleChange}
                     placeholder="Password"
-                    className="mt-1 block w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-gray-400 pr-10"
+                    className="mt-1 block w-full px-4 py-2 xs:px-5 xs:py-3 sm:px-6 sm:py-4 border rounded-lg focus:outline-none focus:border-gray-400 pr-10 text-sm xs:text-base sm:text-lg"
                     whileHover={{ scale: 1 }}
                     whileFocus={{ scale: 1 }}
                   />
@@ -299,10 +296,10 @@ export function Login() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 mt-1"
                   >
-                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    {showPassword ? <FaEyeSlash className="text-lg xs:text-xl sm:text-2xl" /> : <FaEye className="text-lg xs:text-xl sm:text-2xl" />}
                   </button>
                 </div>
-                <div className="flex-shrink-0 ml-3 w-6 h-6 flex items-center justify-center">
+                <div className="flex-shrink-0 ml-2 xs:ml-3 sm:ml-4 w-6 h-6 flex items-center justify-center">
                   <AnimatePresence>
                     {formValues.password && !errors.password && (
                       <motion.div
@@ -312,7 +309,7 @@ export function Login() {
                         exit={{ opacity: 0, scale: 0.5 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <FaCheck className="text-green-500 text-xl" />
+                        <FaCheck className="text-green-500 text-lg xs:text-xl sm:text-2xl" />
                       </motion.div>
                     )}
                     {errors.password && (
@@ -323,7 +320,7 @@ export function Login() {
                         exit={{ opacity: 0, scale: 0.5 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <FaTimes className="text-red-500 text-xl" />
+                        <FaTimes className="text-red-500 text-lg xs:text-xl sm:text-2xl" />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -334,7 +331,7 @@ export function Login() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="text-red-500 text-sm mt-1"
+                  className="text-red-500 text-xs xs:text-sm sm:text-base mt-1 xs:mt-2"
                 >
                   {errors.password}
                 </motion.p>
@@ -348,7 +345,7 @@ export function Login() {
                 disabled={isButtonDisabled || isLoading}
                 whileHover={!isButtonDisabled && !isLoading ? { scale: 1.05 } : {}}
                 whileTap={!isButtonDisabled && !isLoading ? { scale: 0.95 } : {}}
-                className={`flex-grow text-white font-bold py-2 rounded-lg transition flex items-center justify-center ${isButtonDisabled || isLoading
+                className={`flex-grow text-white font-bold py-2 xs:py-3 sm:py-4 rounded-lg transition flex items-center justify-center text-sm xs:text-base sm:text-lg md:text-xl ${isButtonDisabled || isLoading
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gradient-to-r from-green-500 to-lime-500 hover:opacity-90"
                 }`}
@@ -361,30 +358,30 @@ export function Login() {
                       transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                     />
                     <span className="ml-2">Signing In...</span>
-                  </>              
+                  </>
                 ) : (
                   "Sign In"
                 )}
               </motion.button>
-              <div className="flex-shrink-0 ml-3 w-6 h-6"></div>
+              <div className="flex-shrink-0 ml-2 xs:ml-3 sm:ml-4 w-6 h-6"></div>
             </div>
 
             {/* Extras */}
             <motion.div 
               variants={fieldAnim}
-              className="flex items-center justify-between mt-2"
+              className="flex items-center justify-between mt-2 xs:mt-4 sm:mt-6"
             >
-              <label className="flex items-center text-sm">
+              <label className="flex items-center text-xs xs:text-sm sm:text-base">
                 <input 
                   type="checkbox" 
                   name="rememberMe"
                   checked={formValues.rememberMe}
                   onChange={handleChange}
-                  className="mr-2 h-4 w-4 text-green-500"
+                  className="mr-2 h-4 w-4 xs:h-5 xs:w-5 text-green-500"
                 />
                 Remember Me
               </label>
-              <Link to="/forgot-password" className="text-sm text-green-600 hover:underline">
+              <Link to="/forgot-password" className="text-xs xs:text-sm sm:text-base text-green-600 hover:underline">
                 Forgot Password?
               </Link>
             </motion.div>
@@ -394,7 +391,7 @@ export function Login() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="mt-4 text-sm"
+            className="mt-2 xs:mt-4 sm:mt-6 text-xs xs:text-sm sm:text-base"
           >
             <div className="flex items-center justify-center">
               <span>Don't have an account?{' '}</span>

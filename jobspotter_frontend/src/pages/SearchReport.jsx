@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { FaList, FaTh, FaCircle } from "react-icons/fa"; // <-- Added FaCircle
+import { FaList, FaTh, FaCircle } from "react-icons/fa"; 
 import { ThemeContext } from "../components/ThemeContext";
 
 // Helper function to determine icon/color/text for each report status
@@ -247,7 +247,7 @@ export function SearchReport() {
           <button
             key={i}
             onClick={() => handlePageChange(i)}
-            className={`px-4 py-2 mx-1 rounded-full ${
+            className={`px-4 py-2 mx-1 rounded-full text-sm sm:text-base ${
               page === i
                 ? "bg-green-500 text-white"
                 : "bg-gray-300 text-black hover:bg-gray-400"
@@ -270,7 +270,7 @@ export function SearchReport() {
           <button
             key={i}
             onClick={() => handlePageChange(i)}
-            className={`px-4 py-2 mx-1 rounded-full ${
+            className={`px-4 py-2 mx-1 rounded-full text-sm sm:text-base ${
               page === i
                 ? "bg-green-500 text-white"
                 : "bg-gray-300 text-black hover:bg-gray-400"
@@ -286,7 +286,7 @@ export function SearchReport() {
           <button
             key="start-ellipsis"
             onClick={() => handlePageChange(startPage - 1)}
-            className="px-4 py-2 mx-1 bg-gray-300 text-black rounded-full hover:bg-gray-400"
+            className="px-4 py-2 mx-1 bg-gray-300 text-black rounded-full hover:bg-gray-400 text-sm sm:text-base"
           >
             ...
           </button>
@@ -297,7 +297,7 @@ export function SearchReport() {
           <button
             key="end-ellipsis"
             onClick={() => handlePageChange(endPage)}
-            className="px-4 py-2 mx-1 bg-gray-300 text-black rounded-full hover:bg-gray-400"
+            className="px-4 py-2 mx-1 bg-gray-300 text-black rounded-full hover:bg-gray-400 text-sm sm:text-base"
           >
             ...
           </button>
@@ -312,7 +312,7 @@ export function SearchReport() {
   if (loading) {
     return (
       <div className="main-content min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+        <p className="text-base sm:text-lg">Loading...</p>
       </div>
     );
   }
@@ -370,17 +370,17 @@ export function SearchReport() {
 
   return (
     <div
-      className={`my-10 main-content min-h-screen p-4 border rounded-4xl transition-all ease-in-out duration-500 ${
+      className={`my-6 sm:my-8 md:my-10 main-content min-h-screen p-2 sm:p-4 md:p-6 border rounded-2xl sm:rounded-4xl transition-all ease-in-out duration-500 ${
         darkMode
           ? "bg-gray-900 text-white border-gray-700"
           : "bg-white text-gray-900 border-gray-200"
       }`}
     >
       {/* Top bar: toggle view, pageSize */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 space-y-4 sm:space-y-0">
         <button
           onClick={toggleView}
-          className="px-4 py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400 flex items-center"
+          className="px-3 py-1 sm:px-4 sm:py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400 flex items-center text-sm sm:text-base"
           id="toggle-view"
         >
           {viewType === "card" ? (
@@ -398,14 +398,14 @@ export function SearchReport() {
 
         {/* Show Results Dropdown */}
         <div className="flex items-center">
-          <label htmlFor="pageSize" className="mr-2">
+          <label htmlFor="pageSize" className="mr-2 text-sm sm:text-base">
             Show Results:
           </label>
           <select
             id="pageSize"
             value={pageSize}
             onChange={handlePageSizeChange}
-            className="px-2 py-1 border rounded"
+            className="px-2 py-1 sm:px-3 sm:py-2 border rounded text-sm sm:text-base"
           >
             <option value="5">5</option>
             <option value="10">10</option>
@@ -415,14 +415,14 @@ export function SearchReport() {
         </div>
       </div>
 
-      <div className="flex">
+      <div className="flex flex-col md:flex-row space-y-6 md:space-y-0 md:space-x-4">
         {/* Left column: Filters */}
-        <div className="w-1/4 pr-8 border-r mr-4">
-          <h3 className="text-xl font-bold mb-4">Filters</h3>
-          <form onSubmit={handleFilterSubmit} className="space-y-6">
+        <div className="w-full md:w-1/3 lg:w-1/4 pr-0 md:pr-4 md:border-r mr-0 md:mr-4">
+          <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-4">Filters</h3>
+          <form onSubmit={handleFilterSubmit} className="space-y-4 sm:space-y-6">
             {/* reportedUserId */}
             <div>
-              <label className="block mb-1 font-semibold">
+              <label className="block mb-1 font-semibold text-sm sm:text-base">
                 Reported User ID
               </label>
               <input
@@ -434,7 +434,7 @@ export function SearchReport() {
                     reportedUserId: e.target.value,
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-2 py-1 sm:px-3 sm:py-2 border rounded-md text-sm sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -444,7 +444,7 @@ export function SearchReport() {
             </div>
             {/* reportedJobPostId */}
             <div>
-              <label className="block mb-1 font-semibold">
+              <label className="block mb-1 font-semibold text-sm sm:text-base">
                 Reported Job Post ID
               </label>
               <input
@@ -456,7 +456,7 @@ export function SearchReport() {
                     reportedJobPostId: e.target.value,
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-2 py-1 sm:px-3 sm:py-2 border rounded-md text-sm sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -466,7 +466,7 @@ export function SearchReport() {
             </div>
             {/* reportedApplicantId */}
             <div>
-              <label className="block mb-1 font-semibold">
+              <label className="block mb-1 font-semibold text-sm sm:text-base">
                 Reported Applicant ID
               </label>
               <input
@@ -478,7 +478,7 @@ export function SearchReport() {
                     reportedApplicantId: e.target.value,
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-2 py-1 sm:px-3 sm:py-2 border rounded-md text-sm sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -488,7 +488,7 @@ export function SearchReport() {
             </div>
             {/* reportedReviewId */}
             <div>
-              <label className="block mb-1 font-semibold">
+              <label className="block mb-1 font-semibold text-sm sm:text-base">
                 Reported Review ID
               </label>
               <input
@@ -500,7 +500,7 @@ export function SearchReport() {
                     reportedReviewId: e.target.value,
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-2 py-1 sm:px-3 sm:py-2 border rounded-md text-sm sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -510,7 +510,7 @@ export function SearchReport() {
             </div>
             {/* status */}
             <div>
-              <label className="block mb-1 font-semibold">Status</label>
+              <label className="block mb-1 font-semibold text-sm sm:text-base">Status</label>
               <select
                 value={filters.status}
                 onChange={(e) =>
@@ -519,7 +519,7 @@ export function SearchReport() {
                     status: e.target.value,
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-2 py-1 sm:px-3 sm:py-2 border rounded-md text-sm sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -535,12 +535,12 @@ export function SearchReport() {
             </div>
             {/* tags (multi-check) */}
             <div>
-              <label className="block mb-1 font-semibold">Tags</label>
+              <label className="block mb-1 font-semibold text-sm sm:text-base">Tags</label>
               <div className="flex flex-wrap gap-2">
                 {possibleTags.map((tag) => (
                   <label
                     key={tag}
-                    className={`inline-flex items-center space-x-2 px-3 py-1 border rounded-md cursor-pointer ${
+                    className={`inline-flex items-center space-x-2 px-2 py-1 sm:px-3 sm:py-1 border rounded-md cursor-pointer text-sm sm:text-base ${
                       darkMode
                         ? filters.tags.includes(tag)
                           ? "bg-blue-900 border-blue-700 text-white"
@@ -578,7 +578,7 @@ export function SearchReport() {
             </div>
             {/* Sorting Field */}
             <div>
-              <label className="block mb-1 font-semibold">Sort By</label>
+              <label className="block mb-1 font-semibold text-sm sm:text-base">Sort By</label>
               <select
                 value={filters.sort}
                 onChange={(e) =>
@@ -587,7 +587,7 @@ export function SearchReport() {
                     sort: e.target.value,
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-2 py-1 sm:px-3 sm:py-2 border rounded-md text-sm sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -602,7 +602,7 @@ export function SearchReport() {
             </div>
             {/* Sort Order */}
             <div>
-              <label className="block mb-1 font-semibold">Sort Order</label>
+              <label className="block mb-1 font-semibold text-sm sm:text-base">Sort Order</label>
               <select
                 value={filters.isAsc ? "true" : "false"}
                 onChange={(e) =>
@@ -611,7 +611,7 @@ export function SearchReport() {
                     isAsc: e.target.value === "true",
                   }))
                 }
-                className={`w-full px-3 py-2 border rounded-md ${
+                className={`w-full px-2 py-1 sm:px-3 sm:py-2 border rounded-md text-sm sm:text-base ${
                   darkMode
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-black"
@@ -623,7 +623,7 @@ export function SearchReport() {
             </div>
             <button
               type="submit"
-              className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+              className="w-full bg-green-500 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-md hover:bg-green-600 text-sm sm:text-base"
             >
               Apply Filters
             </button>
@@ -631,9 +631,9 @@ export function SearchReport() {
         </div>
 
         {/* Right column: Reports list */}
-        <div className="w-3/4 p-4 ml-4">
+        <div className="w-full md:w-2/3 lg:w-3/4 p-2 sm:p-4 ml-0 md:ml-4">
           <div className="flex flex-col items-start mb-4">
-            <h2 className="text-2xl font-bold mb-2">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">
               {totalElements > 0
                 ? `Found ${totalElements} report(s)`
                 : "No reports found"}
@@ -641,17 +641,17 @@ export function SearchReport() {
           </div>
 
           {errorMessage && (
-            <div className="text-red-500 mb-4 text-center">{errorMessage}</div>
+            <div className="text-red-500 mb-4 text-center text-sm sm:text-base">{errorMessage}</div>
           )}
 
           {reportsData.length === 0 ? (
-            <p className="text-center">No reports found.</p>
+            <p className="text-center text-sm sm:text-base">No reports found.</p>
           ) : (
             <div
               className={
                 viewType === "card"
-                  ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto"
-                  : "max-w-6xl mx-auto space-y-4"
+                  ? "grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-full mx-auto"
+                  : "max-w-full mx-auto space-y-4"
               }
             >
               {reportsData.map((report) => {
@@ -679,33 +679,33 @@ export function SearchReport() {
                 return (
                   <div
                     key={report.reportId}
-                    className={`border border-gray-300 p-4 rounded-lg ${
+                    className={`border border-gray-300 p-3 sm:p-4 rounded-lg ${
                       viewType === "card"
                         ? "hover:shadow-md hover:border-green-500 transition"
                         : "shadow"
                     }`}
                   >
-                    <h2 className="text-lg font-semibold mb-2">
+                    <h2 className="text-base sm:text-lg md:text-xl font-semibold mb-2">
                       {report.reportTitle ? report.reportTitle : "No Title"}
                     </h2>
 
                     {/* Display the color-coded status */}
-                    <p className="flex items-center text-sm mb-2">
+                    <p className="flex items-center text-xs sm:text-sm mb-2">
                       <strong className="mr-1">Status:</strong>
                       <StatusIcon className={`${statusColor} mr-1`} />
                       <span className={`${statusColor}`}>{statusText}</span>
                     </p>
 
-                    <p className="text-sm mb-2">
+                    <p className="text-xs sm:text-sm mb-2">
                       <strong>Tags:</strong>{" "}
                       {report.reportTags?.length
                         ? report.reportTags.join(", ")
                         : "None"}
                     </p>
-                    <p className="text-sm mb-2">
+                    <p className="text-xs sm:text-sm mb-2">
                       <strong>Created At:</strong> {createdAtReadable}
                     </p>
-                    <p className="text-sm mb-4 line-clamp-3">
+                    <p className="text-xs sm:text-sm mb-4 line-clamp-3">
                       <strong>Message:</strong>{" "}
                       {report.reportMessage || "N/A"}
                     </p>
@@ -713,7 +713,7 @@ export function SearchReport() {
                     {/* "Manage" link => AdminReportManagementPopup */}
                     <Link
                       to={`/adminreportmanagementpopup?${queryParams}`}
-                      className="text-blue-500 hover:underline"
+                      className="text-blue-500 hover:underline text-sm sm:text-base"
                     >
                       Manage
                     </Link>
@@ -724,11 +724,11 @@ export function SearchReport() {
           )}
 
           {/* Pagination */}
-          <div className="flex justify-center mt-8">
+          <div className="flex flex-wrap justify-center mt-4 sm:mt-6 md:mt-8 space-x-1 sm:space-x-2">
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 0}
-              className="w-32 px-4 py-2 mr-6 mx-1 bg-gray-300 text-black rounded-l-full rounded-r-md hover:bg-gray-400 disabled:opacity-50 flex justify-center"
+              className="w-24 sm:w-32 px-2 py-1 sm:px-4 sm:py-2 mr-2 sm:mr-6 mx-1 bg-gray-300 text-black rounded-l-full rounded-r-md hover:bg-gray-400 disabled:opacity-50 flex justify-center text-sm sm:text-base"
               style={{
                 clipPath: "polygon(100% 0%, 85% 50%, 100% 100%, 0% 100%, 0% 0%)",
               }}
@@ -739,7 +739,7 @@ export function SearchReport() {
             <button
               onClick={() => handlePageChange(page + 1)}
               disabled={page === totalPages - 1 || reportsData.length === 0}
-              className="w-26 px-4 py-2 ml-6 mx-1 bg-gray-300 text-black rounded-r-full rounded-l-md hover:bg-gray-400 disabled:opacity-50 flex justify-center"
+              className="w-24 sm:w-32 px-2 py-1 sm:px-4 sm:py-2 ml-2 sm:ml-6 mx-1 bg-gray-300 text-black rounded-r-full rounded-l-md hover:bg-gray-400 disabled:opacity-50 flex justify-center text-sm sm:text-base"
               style={{
                 clipPath:
                   "polygon(0% 0%, 15% 50%, 0% 100%, 100% 100%, 100% 0%)",

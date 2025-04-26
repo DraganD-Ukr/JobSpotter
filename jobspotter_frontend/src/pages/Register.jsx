@@ -241,9 +241,9 @@ export function Register() {
       initial="hidden"
       animate="visible"
       variants={container}
-      className="register-page main-content min-h-screen p-4 flex items-center justify-center my-10 rounded-4xl border"
+      className="register-page main-content min-h-screen p-4 xs:p-6 sm:p-8 flex items-center justify-center my-6 xs:my-8 sm:my-10 rounded-4xl border font-sans"
     >
-      <div className="card w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 overflow-hidden relative">
+      <div className="card w-full max-w-2xl xs:max-w-3xl sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl grid grid-cols-1 md:grid-cols-2 overflow-hidden relative">
         <motion.div 
           className="absolute top-0 left-0 h-1 bg-gradient-to-r from-green-500 to-lime-500"
           style={{ width: `${formProgress}%` }}
@@ -256,14 +256,16 @@ export function Register() {
           initial={{ x: -200, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.6 }}
-          className="hidden md:flex flex-col items-center p-10 lava-lamp-background text-white"
+          className="hidden md:flex flex-col items-center p-4 xs:p-6 sm:p-8 lava-lamp-background text-white"
         >
-          <h2 className="text-3xl font-extrabold mb-4 text-center">Welcome to JobSpotter!</h2>
-          <p className="mb-6 text-center max-w-sm leading-relaxed">
+          <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-extrabold mb-2 xs:mb-3 sm:mb-4 text-center">
+            Welcome to JobSpotter!
+          </h2>
+          <p className="mb-4 xs:mb-6 sm:mb-8 text-center max-w-sm leading-relaxed text-sm xs:text-base sm:text-lg md:text-xl">
             Create an account to discover
             new job opportunities.
           </p>
-          <p className="mt-4 text-sm text-center">
+          <p className="mt-2 xs:mt-4 sm:mt-6 text-xs xs:text-sm sm:text-base text-center">
             Already have an account?{' '}
             <Link to="/login"
               className="underline font-bold hover:opacity-90"
@@ -278,14 +280,16 @@ export function Register() {
           initial={{ x: 200, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.6 }}
-          className="p-10"
+          className="p-4 xs:p-6 sm:p-8"
         >
-          <h2 className="text-3xl font-bold mb-6">Sign Up</h2>
+          <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold mb-4 xs:mb-6 sm:mb-8">
+            Sign Up
+          </h2>
           {errors.general && (
             <motion.p
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-red-500 mb-4 p-3 bg-red-50 rounded-lg"
+              className="text-red-500 mb-4 xs:mb-6 sm:mb-8 p-2 xs:p-3 bg-red-50 rounded-lg text-sm xs:text-base sm:text-lg"
             >
               {errors.general}
             </motion.p>
@@ -296,7 +300,7 @@ export function Register() {
             variants={container}
             initial="hidden"
             animate="visible"
-            className="space-y-4"
+            className="space-y-4 xs:space-y-5 sm:space-y-6"
           >
             {[
               { name: 'firstName', placeholder: 'First Name', type: 'text' },
@@ -312,7 +316,7 @@ export function Register() {
                 <motion.div
                   key={name}
                   variants={fieldAnim}
-                  className="relative mb-8"
+                  className="relative mb-4 xs:mb-6 sm:mb-8"
                 >
                   <div className="flex items-center">
                     <div className="relative flex-grow">
@@ -335,7 +339,7 @@ export function Register() {
                             ? () => setPwdFocus(false)
                             : undefined
                         }
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-gray-400"
+                        className="w-full px-4 py-2 xs:px-5 xs:py-3 sm:px-6 sm:py-4 border rounded-lg focus:outline-none focus:border-gray-400 text-sm xs:text-base sm:text-lg"
                         {...inputInt}
                       />
                       {(name === 'password' || name === 'confirmPassword') && (
@@ -349,13 +353,13 @@ export function Register() {
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
                         >
                           {name === 'password'
-                            ? (showPassword ? <FaEyeSlash /> : <FaEye />)
-                            : (showConfirmPassword ? <FaEyeSlash /> : <FaEye />)}
+                            ? (showPassword ? <FaEyeSlash className="text-lg xs:text-xl sm:text-2xl" /> : <FaEye className="text-lg xs:text-xl sm:text-2xl" />)
+                            : (showConfirmPassword ? <FaEyeSlash className="text-lg xs:text-xl sm:text-2xl" /> : <FaEye className="text-lg xs:text-xl sm:text-2xl" />)}
                         </button>
                       )}
                     </div>
                     
-                    <div className="flex-shrink-0 ml-3 w-6 h-6 flex items-center justify-center">
+                    <div className="flex-shrink-0 ml-2 xs:ml-3 sm:ml-4 w-6 h-6 flex items-center justify-center">
                       <AnimatePresence>
                         {ok && (
                           <motion.div
@@ -365,7 +369,7 @@ export function Register() {
                             exit={{ opacity: 0, scale: 0.5 }}
                             transition={{ duration: 0.2 }}
                           >
-                            <FaCheck className="text-green-500 text-xl" />
+                            <FaCheck className="text-green-500 text-lg xs:text-xl sm:text-2xl" />
                           </motion.div>
                         )}
                         {bad && (
@@ -376,7 +380,7 @@ export function Register() {
                             exit={{ opacity: 0, scale: 0.5 }}
                             transition={{ duration: 0.2 }}
                           >
-                            <FaTimes className="text-red-500 text-xl" />
+                            <FaTimes className="text-red-500 text-lg xs:text-xl sm:text-2xl" />
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -388,7 +392,7 @@ export function Register() {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="text-red-500 text-sm mt-1"
+                      className="text-red-500 text-xs xs:text-sm sm:text-base mt-1 xs:mt-2"
                     >
                       {errors[name]}
                     </motion.p>
@@ -403,12 +407,12 @@ export function Register() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="mt-2 mb-4 text-sm bg-gray-50 p-4 rounded-lg shadow-sm"
+                  className="mt-2 xs:mt-4 sm:mt-6 mb-4 xs:mb-6 sm:mb-8 text-xs xs:text-sm sm:text-base bg-gray-50 p-4 xs:p-5 sm:p-6 rounded-lg shadow-sm"
                 >
-                  <div className="mb-3">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-xs font-medium">Password Strength</span>
-                      <span className="text-xs font-medium">
+                  <div className="mb-3 xs:mb-4 sm:mb-5">
+                    <div className="flex justify-between mb-1 xs:mb-2">
+                      <span className="text-xs xs:text-sm sm:text-base font-medium">Password Strength</span>
+                      <span className="text-xs xs:text-sm sm:text-base font-medium">
                         {pwdStrength < 40 ? 'Weak' : pwdStrength < 70 ? 'Medium' : 'Strong'}
                       </span>
                     </div>
@@ -422,7 +426,7 @@ export function Register() {
                     </div>
                   </div>
                   
-                  <ul className="space-y-1">
+                  <ul className="space-y-1 xs:space-y-2 sm:space-y-3">
                     {[
                       { key: 'minLength', label: 'At least 8 characters' },
                       { key: 'hasUpper', label: 'Contains uppercase' },
@@ -444,9 +448,9 @@ export function Register() {
                           transition={{ type: "spring", stiffness: 500, damping: 10 }}
                         >
                           {passwordReqs[req.key] ? (
-                            <FaCheck className="text-green-500" />
+                            <FaCheck className="text-green-500 text-base xs:text-lg sm:text-xl" />
                           ) : (
-                            <FaTimes className="text-red-500" />
+                            <FaTimes className="text-red-500 text-base xs:text-lg sm:text-xl" />
                           )}
                         </motion.div>
                         <span className={passwordReqs[req.key] ? 'text-green-600' : 'text-red-500'}>
@@ -461,17 +465,17 @@ export function Register() {
 
             <motion.div
               variants={fieldAnim}
-              className="flex items-center"
+              className="flex items-center mt-2 xs:mt-4 sm:mt-6"
             >
               <motion.input
                 type="checkbox"
                 name="agreeToTerms"
                 checked={formValues.agreeToTerms}
                 onChange={handleChange}
-                className="h-4 w-4 text-green-500"
+                className="h-4 w-4 xs:h-5 xs:w-5 text-green-500"
                 whileTap={{ scale: 1.2 }}
               />
-              <label className="ml-2 text-sm">
+              <label className="ml-2 text-xs xs:text-sm sm:text-base">
                 I agree to the
                 <Link
                   to="/terms-of-service"
@@ -482,20 +486,20 @@ export function Register() {
               </label>
             </motion.div>
             {errors.agreeToTerms && (
-              <p className="text-red-500 text-sm">
+              <p className="text-red-500 text-xs xs:text-sm sm:text-base mt-1 xs:mt-2">
                 {errors.agreeToTerms}
               </p>
             )}
 
-            <div className="flex items-center">
+            <div className="flex items-center mt-2 xs:mt-4 sm:mt-6">
               <motion.button
                 type="submit"
                 disabled={!isValidForm || isLoading}
                 whileHover={isValidForm && !isLoading ? { scale: 1.05 } : {}}
                 whileTap={isValidForm && !isLoading ? { scale: 0.95 } : {}}
-                className={`flex-grow py-2 ${isValidForm && !isLoading
+                className={`flex-grow py-2 xs:py-3 sm:py-4 ${isValidForm && !isLoading
                   ? 'bg-gradient-to-r from-green-500 to-lime-500'
-                  : 'bg-gray-300'} text-white font-bold rounded-lg transition flex items-center justify-center`}
+                  : 'bg-gray-300'} text-white font-bold rounded-lg transition flex items-center justify-center text-sm xs:text-base sm:text-lg md:text-xl`}
               >
                 {isLoading ? (
                   <>
@@ -510,7 +514,7 @@ export function Register() {
                   "Sign Up"
                 )}
               </motion.button>
-              <div className="flex-shrink-0 ml-3 w-6 h-6"></div>
+              <div className="flex-shrink-0 ml-2 xs:ml-3 sm:ml-4 w-6 h-6"></div>
             </div>
           </motion.form>
 
@@ -518,7 +522,7 @@ export function Register() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="mt-4 text-center text-sm"
+            className="mt-2 xs:mt-4 sm:mt-6 text-center text-xs xs:text-sm sm:text-base"
           >
             Already have an account?{' '}
             <Link

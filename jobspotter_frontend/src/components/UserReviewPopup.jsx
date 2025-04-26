@@ -1,238 +1,221 @@
-import React, { useState, useContext } from "react";
-import { FaTimes } from "react-icons/fa";
-import { ThemeContext } from "./ThemeContext";
+import React, { useState, useContext } from 'react';
+import { FaExclamationTriangle, FaStar } from 'react-icons/fa';
+import { useSpring, animated } from 'react-spring';
+import { ThemeContext } from './ThemeContext';
 
-export default function UserReviewPopup({
-  isVisible,
-  onClose,
-  jobPostId,
-  reviewerID,
-  reviewedUserID,
-  roleOfReviewer,
-  fallbackUserId
-}) {
+const UserReviewPopup = React.memo(({ isVisible, onClose, jobPostId, reviewerID, reviewedUserID, roleOfReviewer }) => {
   const { darkMode } = useContext(ThemeContext);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form field states
-  const [rating, setRating] = useState("");
-  const [comment, setComment] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const errorBoxAnimation = useSpring({
+    opacity: errorMessage ? 1 : 0,
+    from: { opacity: 0 },
+    config: { duration: 300 },
+    reset: true,
+  });
 
-  // Submits the user review to the server
+  const successBoxAnimation = useSpring({
+    opacity: successMessage ? 1 : 0,
+    from: { opacity: 0 },
+    config: { duration: 300 },
+    reset: true,
+  });
+
+  const handleRatingChange = (newRating) => {
+    setRating(newRating);
+  };
+
+  const handleCommentChange = (e) => {
+    setComment(e.target.value);
+  };
+
   const handleSubmitReview = async () => {
-
-
-    setErrorMessage("");
-
-    // Validate that reviewerID and roleOfReviewer are provided
-    if (!reviewerID) {
-      setErrorMessage("Reviewer user ID is required.");
+    if (rating < 1 || rating > 5) {
+      setErrorMessage('Please select a rating between 1 and 5.');
+      setTimeout(() => setErrorMessage(''), 5000);
       return;
     }
-    if (!roleOfReviewer) {
-      setErrorMessage("Reviewer role is required.");
+    if (!comment.trim()) {
+      setErrorMessage('Please provide a comment for the review.');
+      setTimeout(() => setErrorMessage(''), 5000);
       return;
     }
 
-    // Validate the rating
-    const parsedRating = parseFloat(rating);
-    if (isNaN(parsedRating) || parsedRating < 1 || parsedRating > 5) {
-      setErrorMessage("Rating must be between 1 and 5.");
-      return;
-    }
-    // Validate the comment
-    if (comment.trim().length < 5) {
-      setErrorMessage("Comment must be at least 5 characters.");
-      return;
-    }
-
-    let finalReviewedUserID = reviewedUserID;
-    if (!finalReviewedUserID && fallbackUserId) {
-      try {
-        const response = await fetch(`/api/v1/users/${fallbackUserId}`);
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch user data: ${response.status} ${response.statusText}`
-          );
-        }
-        const userData = await response.json();
-
-
-        finalReviewedUserID = userData.userId || userData.id;
-
-        if (!finalReviewedUserID) {
-          setErrorMessage("User record found, but user ID is missing.");
-          return;
-        }
-      } catch (fetchErr) {
-        console.error(fetchErr);
-        setErrorMessage(fetchErr.message);
-        return;
-      }
-    }
-
-    if (!finalReviewedUserID) {
-      setErrorMessage("Reviewed user ID is required, but none was provided.");
-      return;
-    }
-
-    const requestBody = {
-      reviewerID,
-      reviewedUserID: finalReviewedUserID,
-      rating: parsedRating,
-      comment,
-      roleOfReviewer,
-      jobPostId,
-    };
+    setIsSubmitting(true);
+    setErrorMessage('');
+    setSuccessMessage('');
 
     try {
-      const response = await fetch("/api/v1/reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
+      const reviewData = {
+        reviewedUserId: reviewedUserID,
+        jobPostId: jobPostId,
+        reviewerRole: 'PROVIDER', // Hardcoded as per requirement
+        rating: rating,
+        comment: comment.trim(),
+      };
+
+      const response = await fetch('/api/v1/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(reviewData),
       });
+
       if (!response.ok) {
-        throw new Error(
-          `Review submit failed: ${response.status} ${response.statusText}`
-        );
+        if (response.status === 401) {
+          throw new Error('Unauthorized: Please log in again.');
+        }
+        throw new Error(`Failed to submit review: ${response.status}`);
       }
-      onClose();
-    } catch (err) {
-      console.error(err);
-      setErrorMessage(err.message);
+
+      setSuccessMessage('Review submitted successfully!');
+      setTimeout(() => {
+        setSuccessMessage('');
+        onClose();
+      }, 3000);
+    } catch (error) {
+      setErrorMessage(error.message);
+      setTimeout(() => setErrorMessage(''), 5000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Exit if popup is not visible
   if (!isVisible) return null;
 
   return (
     <div
-      className={`
-        fixed inset-0 z-50 flex items-center justify-center
-        transition-colors duration-200
-        ${darkMode ? "bg-black/50" : "bg-gray-700/50"}
-      `}
+      className="fixed inset-0 backdrop-blur-sm backdrop-brightness-75 flex justify-center items-center p-2 xs:p-3 sm:p-4"
+      aria-labelledby="review-popup-title"
+      role="dialog"
+      aria-modal="true"
     >
       <div
         className={`
-          w-11/12 max-w-md p-6 sm:p-8 rounded-xl shadow-2xl border transition-all
-          ${darkMode ? "bg-gray-900 text-green-200 border-green-700" : "bg-white text-gray-900 border-gray-200"}
+          rounded-lg shadow-xl overflow-hidden 
+          w-full max-w-[90%] xs:max-w-[85%] sm:max-w-md 
+          ${darkMode ? 'bg-gray-900 text-white border border-gray-700' : 'bg-gray-50 text-gray-900 border border-gray-200'}
         `}
       >
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h2
-            className={`text-xl font-bold ${
-              darkMode ? "text-green-300" : "text-gray-900"
-            }`}
-          >
-            Write a Review
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-xl hover:text-red-500 transition-colors"
-            aria-label="Close popup"
-          >
-            <FaTimes />
-          </button>
+        <div
+          className={`
+            px-2 xs:px-3 sm:px-4 py-2 xs:py-3 sm:py-3 
+            ${darkMode ? 'bg-gray-800 border-b border-gray-700' : 'bg-gray-100 border-b border-gray-200'}
+          `}
+        >
+          <h3 className="text-base xs:text-lg sm:text-lg font-semibold" id="review-popup-title">
+            Submit Review
+          </h3>
         </div>
 
-        {/* Error Message */}
-        {errorMessage && (
-          <div
-            className={`
-              mb-4 p-3 border rounded-md
-              ${
-                darkMode
-                  ? "bg-red-900 border-red-600 text-red-300"
-                  : "bg-red-100 border-red-400 text-red-600"
-              }
-            `}
-          >
-            {errorMessage}
+        {/* Body */}
+        <div className="p-4 xs:p-5 sm:p-6">
+          {errorMessage && (
+            <animated.div
+              style={errorBoxAnimation}
+              className="mb-2 xs:mb-3 sm:mb-4 p-2 xs:p-3 sm:p-3 bg-red-100 border border-red-400 text-red-700 rounded-md flex items-center"
+              role="alert"
+            >
+              <FaExclamationTriangle className="mr-1 xs:mr-2 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
+              <div>
+                <h3 className="font-bold text-xs xs:text-sm sm:text-sm">Error</h3>
+                <p className="text-xs xs:text-sm sm:text-sm">{errorMessage}</p>
+              </div>
+            </animated.div>
+          )}
+
+          {successMessage && (
+            <animated.div
+              style={successBoxAnimation}
+              className="mb-2 xs:mb-3 sm:mb-4 p-2 xs:p-3 sm:p-3 bg-green-100 border border-green-400 text-green-700 rounded-md flex items-center"
+              role="alert"
+            >
+              <p className="text-xs xs:text-sm sm:text-sm">{successMessage}</p>
+            </animated.div>
+          )}
+
+          <div className="mb-4 xs:mb-5 sm:mb-6">
+            <label className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base">
+              Rating
+            </label>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <FaStar
+                  key={star}
+                  className={`
+                    h-5 xs:h-6 sm:h-6 w-5 xs:w-6 sm:w-6 cursor-pointer
+                    ${star <= rating ? 'text-yellow-400' : darkMode ? 'text-gray-600' : 'text-gray-300'}
+                  `}
+                  onClick={() => handleRatingChange(star)}
+                />
+              ))}
+            </div>
           </div>
-        )}
 
-        {/* Rating */}
-        <div className="mb-4">
-          <label className="block font-medium mb-1 text-sm">
-            Rating (1-5)
-          </label>
-          <input
-            type="number"
-            min="1"
-            max="5"
-            step="0.1"
-            placeholder="e.g. 4.5"
-            className={`
-              w-full rounded-md p-2.5 focus:outline-none focus:ring-2
-              ${
-                darkMode
-                  ? "bg-gray-800 border border-green-700 text-green-200 focus:ring-green-500"
-                  : "bg-white border border-gray-300 focus:ring-blue-500"
-              }
-            `}
-            value={rating}
-            onChange={(e) => setRating(e.target.value)}
-          />
+          <div className="mb-4 xs:mb-5 sm:mb-6">
+            <label
+              className="block font-medium mb-1 xs:mb-2 sm:mb-2 text-sm xs:text-base sm:text-base"
+              htmlFor="comment"
+            >
+              Comment
+            </label>
+            <textarea
+              id="comment"
+              value={comment}
+              onChange={handleCommentChange}
+              className={`
+                w-full p-2 xs:p-2 sm:p-2 border rounded-md focus:outline-none
+                focus:ring-2 focus:ring-blue-500 text-xs xs:text-sm sm:text-sm
+                ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
+              `}
+              rows="4"
+              placeholder="Write your review here..."
+            />
+          </div>
         </div>
 
-        {/* Comment */}
-        <div className="mb-4">
-          <label className="block font-medium mb-1 text-sm">
-            Comment
-          </label>
-          <textarea
-            placeholder="Share your experience..."
-            className={`
-              w-full rounded-md p-2.5 resize-none h-28 focus:outline-none focus:ring-2
-              ${
-                darkMode
-                  ? "bg-gray-800 border border-green-700 text-green-200 focus:ring-green-500"
-                  : "bg-white border border-gray-300 focus:ring-blue-500"
-              }
-            `}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            maxLength={400}
-          />
-          <p className="text-xs text-gray-400 mt-1 text-right">
-            {comment.length}/400
-          </p>
-        </div>
-
-        {/* Buttons */}
-        <div className="flex justify-end gap-3">
+        {/* Footer */}
+        <div
+          className={`
+            px-2 xs:px-3 sm:px-4 py-2 xs:py-3 sm:py-3 flex flex-col sm:flex-row justify-between items-center gap-2 xs:gap-3 sm:gap-4
+            ${darkMode ? 'bg-gray-800 border-t border-gray-700' : 'bg-gray-100 border-t border-gray-200'}
+          `}
+        >
           <button
             onClick={onClose}
+            type="button"
             className={`
-              px-4 py-2 rounded-md text-sm font-medium border transition-colors
-              ${
-                darkMode
-                  ? "bg-gray-800 border-green-700 text-green-200 hover:bg-gray-700"
-                  : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
-              }
+              w-full sm:w-auto inline-flex justify-center px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2
+              text-xs xs:text-sm sm:text-sm font-medium rounded-md border focus:outline-none
+              focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+              ${darkMode ? 'bg-gray-800 text-white border-gray-600 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}
             `}
+            disabled={isSubmitting}
           >
             Cancel
           </button>
           <button
             onClick={handleSubmitReview}
+            type="button"
             className={`
-              px-4 py-2 rounded-md text-sm font-medium transition-colors
-              focus:outline-none focus:ring-2 focus:ring-opacity-50
-              ${
-                darkMode
-                  ? "bg-green-700 text-white hover:bg-green-600 focus:ring-green-500"
-                  : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
-              }
+              w-full sm:w-auto inline-flex justify-center px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2
+              text-xs xs:text-sm sm:text-sm font-medium text-white bg-blue-600 border border-transparent
+              rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+              ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
             `}
+            disabled={isSubmitting}
           >
-            Submit Review
+            {isSubmitting ? 'Submitting...' : 'Submit Review'}
           </button>
         </div>
       </div>
     </div>
   );
-}
+});
+
+export default UserReviewPopup;

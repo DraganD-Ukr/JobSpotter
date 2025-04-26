@@ -43,22 +43,17 @@ export default function HelpAndSupportIcon() {
       style={{
         position: "fixed",
         bottom: `${bottomOffset}px`,
-        right: "20px",
+        right: "10px",
         zIndex: 9999,
-        cursor: "pointer",
-        backgroundColor: "#f00000", 
-        border: "none",
-        borderRadius: "50%",
-        width: "50px",
-        height: "50px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
       }}
+      className="
+        right-3 xs:right-4 sm:right-5 cursor-pointer bg-[#f00000] border-none rounded-full
+        w-10 xs:w-12 sm:w-14 h-10 xs:h-12 sm:h-14 shadow-[0_2px_8px_rgba(0,0,0,0.2)]
+        flex items-center justify-center
+      "
       title="Help and Support"
     >
-      <FaComments size={20} color="#ffffff" />
+      <FaComments className="h-4 xs:h-5 sm:h-6 w-4 xs:w-5 sm:w-6 text-[#ffffff]" />
     </button>
   );
 }

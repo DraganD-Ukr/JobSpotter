@@ -9,10 +9,7 @@ export function Address() {
   const [successMessage, setSuccessMessage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
-
-  // Toggle for the "Add Address" form
   const [showAddForm, setShowAddForm] = useState(false);
-
   const [formValues, setFormValues] = useState({
     streetAddress: "",
     city: "",
@@ -21,8 +18,6 @@ export function Address() {
     addressType: "HOME",
     default: false,
   });
-
-  // Pull darkMode from your ThemeContext
   const { darkMode } = useContext(ThemeContext);
 
   useEffect(() => {
@@ -62,7 +57,6 @@ export function Address() {
     setIsSubmitting(true);
     setSuccessMessage(null);
     setError(null);
-
     try {
       const response = await fetch("/api/v1/users/addresses", {
         method: "POST",
@@ -78,20 +72,17 @@ export function Address() {
             errorMessage = errorData.message;
           }
         } catch {
-          // Non-JSON error response
         }
         throw new Error(errorMessage);
       }
-
       setSuccessMessage("Address added successfully!");
       await fetchAddresses();
-      // Reset form and hide it again
       setFormValues({
         streetAddress: "",
         city: "",
         county: "",
         eirCode: "",
-        addressType: "OTHER",
+        addressType: "HOME",
         default: false,
       });
       setShowAddForm(false);
@@ -120,7 +111,6 @@ export function Address() {
             errorMessage = errorData.message;
           }
         } catch {
-          // Non-JSON error response
         }
         throw new Error(errorMessage);
       }
@@ -143,7 +133,6 @@ export function Address() {
     setIsSubmitting(true);
     setError(null);
     setSuccessMessage(null);
-
     try {
       const response = await fetch(
         `/api/v1/users/addresses/${editingAddress.addressId}`,
@@ -162,11 +151,9 @@ export function Address() {
             errorMessage = errorData.message;
           }
         } catch {
-          // Non-JSON error response
         }
         throw new Error(errorMessage);
       }
-
       setSuccessMessage("Address updated successfully!");
       await fetchAddresses();
       setEditingAddress(null);
@@ -180,237 +167,305 @@ export function Address() {
 
   return (
     <div
-      className={`my-10 border-1 rounded-4xl main-content min-h-screen p-6 ${
+      className={`min-h-screen py-6 px-4 sm:px-6 lg:px-8 ${
         darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
       }`}
     >
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1 p-6">
-          <h2 className="text-3xl font-bold mb-6">My Addresses</h2>
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar */}
+          <div className="lg:w-64 w-full">
+            <Sidebar />
+          </div>
 
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-          {successMessage && (
-            <p className="text-green-500 text-sm mb-4">{successMessage}</p>
-          )}
+          {/* Main Content */}
+          <div className="flex-1">
+            <h2
+              className={`text-2xl sm:text-3xl font-bold mb-6 ${
+                darkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
+              My Addresses
+            </h2>
 
-          {/* LOADING OR RENDER ADDRESSES */}
-          {loading ? (
-            <p>Loading addresses...</p>
-          ) : addresses.length === 0 ? (
-            <p>No addresses found. Please add one below.</p>
-          ) : (
-            <div className="space-y-4">
-              {addresses.map((addr) => (
-                <div key={addr.addressId} className="card p-4">
-                  <p>{addr.streetAddress}</p>
-                  <p>
-                    {addr.city}, {addr.county}
-                  </p>
-                  <p>{addr.eirCode}</p>
-                  <p>Type: {addr.addressType}</p>
-                  <p>{addr.default ? "Default Address" : "Secondary Address"}</p>
+            {error && (
+              <p className="text-red-500 text-sm mb-4 bg-red-100 dark:bg-red-900 p-3 rounded">
+                {error}
+              </p>
+            )}
+            {successMessage && (
+              <p className="text-green-500 text-sm mb-4 bg-green-100 dark:bg-green-900 p-3 rounded">
+                {successMessage}
+              </p>
+            )}
 
-                  {/* Buttons for Remove & Update */}
-                  <div className="flex justify-end space-x-2 mt-4">
-                    <button
-                      onClick={() => handleEdit(addr)}
-                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                    >
-                      Update
-                    </button>
-                    <button
-                      onClick={() => handleRemove(addr.addressId)}
-                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                    >
-                      Remove
-                    </button>
+            {/* Loading or Render Addresses */}
+            {loading ? (
+              <p className="text-base">Loading addresses...</p>
+            ) : addresses.length === 0 ? (
+              <p className="text-base">No addresses found. Please add one below.</p>
+            ) : (
+              <div className="space-y-4">
+                {addresses.map((addr) => (
+                  <div
+                    key={addr.addressId}
+                    className={`p-4 rounded-lg border ${
+                      darkMode
+                        ? "bg-gray-800 border-gray-700"
+                        : "bg-white border-gray-200"
+                    }`}
+                  >
+                    <p className="text-sm sm:text-base">{addr.streetAddress}</p>
+                    <p className="text-sm sm:text-base">
+                      {addr.city}, {addr.county}
+                    </p>
+                    <p className="text-sm sm:text-base">{addr.eirCode}</p>
+                    <p className="text-sm sm:text-base">
+                      Type: {addr.addressType}
+                    </p>
+                    <p className="text-sm sm:text-base">
+                      {addr.default ? "Default Address" : "Secondary Address"}
+                    </p>
+                    <div className="flex flex-wrap justify-end gap-2 mt-4">
+                      <button
+                        onClick={() => handleEdit(addr)}
+                        className="px-3 py-1 text-sm sm:text-base bg-blue-500 text-white rounded hover:bg-blue-600"
+                      >
+                        Update
+                      </button>
+                      <button
+                        onClick={() => handleRemove(addr.addressId)}
+                        className="px-3 py-1 text-sm sm:text-base bg-red-500 text-white rounded hover:bg-red-600"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
 
-          {/* Update Address Form (only shown when editingAddress is set) */}
-          {editingAddress && (
-            <div className="card mt-6 p-6">
-              <h3 className="text-lg font-semibold mb-2">Update Address</h3>
-              <form onSubmit={handleUpdateSubmit} className="space-y-4">
-                <InputField
-                  name="streetAddress"
-                  value={editingAddress.streetAddress}
-                  onChange={(e) =>
-                    setEditingAddress({
-                      ...editingAddress,
-                      streetAddress: e.target.value,
-                    })
-                  }
-                  placeholder="Street Address"
-                  required
-                />
-                <InputField
-                  name="city"
-                  value={editingAddress.city}
-                  onChange={(e) =>
-                    setEditingAddress({
-                      ...editingAddress,
-                      city: e.target.value,
-                    })
-                  }
-                  placeholder="City"
-                  required
-                />
-                <InputField
-                  name="county"
-                  value={editingAddress.county}
-                  onChange={(e) =>
-                    setEditingAddress({
-                      ...editingAddress,
-                      county: e.target.value,
-                    })
-                  }
-                  placeholder="County"
-                  required
-                />
-                <InputField
-                  name="eirCode"
-                  value={editingAddress.eirCode}
-                  onChange={(e) =>
-                    setEditingAddress({
-                      ...editingAddress,
-                      eirCode: e.target.value,
-                    })
-                  }
-                  placeholder="Eir Code"
-                  required
-                />
-
-                <select
-                  name="addressType"
-                  value={editingAddress.addressType}
-                  onChange={(e) =>
-                    setEditingAddress({
-                      ...editingAddress,
-                      addressType: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2 border rounded-lg 
-                             bg-white text-black 
-                             dark:bg-gray-700 dark:text-white"
+            {/* Update Address Form */}
+            {editingAddress && (
+              <div
+                className={`mt-6 p-6 rounded-lg border ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-700"
+                    : "bg-white border-gray-200"
+                }`}
+              >
+                <h3
+                  className={`text-lg sm:text-xl font-semibold mb-4 ${
+                    darkMode ? "text-white" : "text-gray-900"
+                  }`}
                 >
-                  <option value="HOME">Home</option>
-                  <option value="WORK">Work</option>
-                  <option value="OTHER">Other</option>
-                </select>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="default"
-                    checked={editingAddress.default}
+                  Update Address
+                </h3>
+                <form onSubmit={handleUpdateSubmit} className="space-y-4">
+                  <InputField
+                    name="streetAddress"
+                    value={editingAddress.streetAddress}
                     onChange={(e) =>
                       setEditingAddress({
                         ...editingAddress,
-                        default: e.target.checked,
+                        streetAddress: e.target.value,
                       })
                     }
-                    className="mr-2"
+                    placeholder="Street Address"
+                    required
+                    darkMode={darkMode}
                   />
-                  <label className="text-sm">Set as default address</label>
-                </div>
-                <div className="flex space-x-4">
+                  <InputField
+                    name="city"
+                    value={editingAddress.city}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        city: e.target.value,
+                      })
+                    }
+                    placeholder="City"
+                    required
+                    darkMode={darkMode}
+                  />
+                  <InputField
+                    name="county"
+                    value={editingAddress.county}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        county: e.target.value,
+                      })
+                    }
+                    placeholder="County"
+                    required
+                    darkMode={darkMode}
+                  />
+                  <InputField
+                    name="eirCode"
+                    value={editingAddress.eirCode}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        eirCode: e.target.value,
+                      })
+                    }
+                    placeholder="Eir Code"
+                    required
+                    darkMode={darkMode}
+                  />
+                  <select
+                    name="addressType"
+                    value={editingAddress.addressType}
+                    onChange={(e) =>
+                      setEditingAddress({
+                        ...editingAddress,
+                        addressType: e.target.value,
+                      })
+                    }
+                    className={`w-full px-4 py-2 border rounded-lg text-sm sm:text-base ${
+                      darkMode
+                        ? "bg-gray-700 text-white border-gray-600"
+                        : "bg-white text-black border-gray-300"
+                    }`}
+                  >
+                    <option value="HOME">Home</option>
+                    <option value="WORK">Work</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="default"
+                      checked={editingAddress.default}
+                      onChange={(e) =>
+                        setEditingAddress({
+                          ...editingAddress,
+                          default: e.target.checked,
+                        })
+                      }
+                      className="mr-2"
+                    />
+                    <label className="text-sm sm:text-base">
+                      Set as default address
+                    </label>
+                  </div>
+                  <div className="flex flex-wrap gap-4">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-6 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                    >
+                      {isSubmitting ? "Updating..." : "Update Address"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingAddress(null)}
+                      className46
+                      className="px-6 py-2 text-sm sm:text-base bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Add Address Section */}
+            <div
+              className={`mt-6 p-4 rounded-lg border ${
+                darkMode
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-white border-gray-200"
+              }`}
+            >
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h3
+                  className={`text-lg sm:text-xl font-semibold ${
+                    darkMode ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Add a New Address
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(!showAddForm)}
+                  className="px-4 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  {showAddForm ? "Cancel" : "Add Address"}
+                </button>
+              </div>
+
+              {showAddForm && (
+                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                  <InputField
+                    name="streetAddress"
+                    value={formValues.streetAddress}
+                    onChange={handleChange}
+                    placeholder="Street Address"
+                    required
+                    darkMode={darkMode}
+                  />
+                  <InputField
+                    name="city"
+                    value={formValues.city}
+                    onChange={handleChange}
+                    placeholder="City"
+                    required
+                    darkMode={darkMode}
+                  />
+                  <InputField
+                    name="county"
+                    value={formValues.county}
+                    onChange={handleChange}
+                    placeholder="County"
+                    required
+                    darkMode={darkMode}
+                  />
+                  <InputField
+                    name="eirCode"
+                    value={formValues.eirCode}
+                    onChange={handleChange}
+                    placeholder="Eir Code"
+                    required
+                    darkMode={darkMode}
+                  />
+                  <select
+                    name="addressType"
+                    value={formValues.addressType}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-2 border rounded-lg text-sm sm:text-base ${
+                      darkMode
+                        ? "bg-gray-700 text-white border-gray-600"
+                        : "bg-white text-black border-gray-300"
+                    }`}
+                  >
+                    <option value="HOME">Home</option>
+                    <option value="WORK">Work</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="default"
+                      checked={formValues.default}
+                      onChange={handleChange}
+                      className="mr-2"
+                    />
+                    <label className="text-sm sm:text-base">
+                      Set as default address
+                    </label>
+                  </div>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                    className="w-full sm:w-auto px-6 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400"
                   >
-                    {isSubmitting ? "Updating..." : "Update Address"}
+                    {isSubmitting ? "Saving..." : "Add Address"}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditingAddress(null)}
-                    className="px-6 py-3 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
+                </form>
+              )}
             </div>
-          )}
-
-          {/* ADD ADDRESS SECTION */}
-          <div className="card mt-6 p-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Add a New Address</h3>
-              <button
-                type="button"
-                onClick={() => setShowAddForm(!showAddForm)}
-                className="px-3 py-1 bg-green-600 text-white font-bold rounded hover:bg-green-700"
-              >
-                {showAddForm ? "Cancel" : "Add Address"}
-              </button>
-            </div>
-
-            {showAddForm && (
-              <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-                <InputField
-                  name="streetAddress"
-                  value={formValues.streetAddress}
-                  onChange={handleChange}
-                  placeholder="Street Address"
-                  required
-                />
-                <InputField
-                  name="city"
-                  value={formValues.city}
-                  onChange={handleChange}
-                  placeholder="City"
-                  required
-                />
-                <InputField
-                  name="county"
-                  value={formValues.county}
-                  onChange={handleChange}
-                  placeholder="County"
-                  required
-                />
-                <InputField
-                  name="eirCode"
-                  value={formValues.eirCode}
-                  onChange={handleChange}
-                  placeholder="Eir Code"
-                  required
-                />
-                <select
-                  name="addressType"
-                  value={formValues.addressType}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border rounded-lg
-                             bg-white text-black
-                             dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="HOME">Home</option>
-                  <option value="WORK">Work</option>
-                  <option value="OTHER">Other</option>
-                </select>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="default"
-                    checked={formValues.default}
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  <label className="text-sm">Set as default address</label>
-                </div>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-400"
-                >
-                  {isSubmitting ? "Saving..." : "Add Address"}
-                </button>
-              </form>
-            )}
           </div>
         </div>
       </div>
@@ -419,13 +474,17 @@ export function Address() {
 }
 
 // Reusable input component
-function InputField({ name, value, onChange, placeholder, required }) {
+function InputField({ name, value, onChange, placeholder, required, darkMode }) {
   return (
     <input
       name={name}
       value={value}
       onChange={onChange}
-      className="w-full px-4 py-2 border rounded-lg"
+      className={`w-full px-4 py-2 border rounded-lg text-sm sm:text-base ${
+        darkMode
+          ? "bg-gray-700 text-white border-gray-600"
+          : "bg-white text-black border-gray-300"
+      }`}
       placeholder={placeholder}
       required={required}
     />

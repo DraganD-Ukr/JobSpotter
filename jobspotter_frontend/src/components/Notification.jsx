@@ -124,6 +124,19 @@ export default function Notification({ variant = "icon", isLoggedIn = true }) {
     setIsPopupVisible((prev) => !prev);
   };
 
+  // Animation for the bell icon when new notifications arrive
+  const bellAnimation = useSpring({
+    transform: unreadCount > 0 ? 'rotate(12deg)' : 'rotate(0deg)',
+    config: { tension: 300, friction: 10 }
+  });
+
+  // Animation for the notification counter
+  const counterAnimation = useSpring({
+    from: { opacity: 0, transform: 'scale(0.5)' },
+    to: { opacity: unreadCount > 0 ? 1 : 0, transform: unreadCount > 0 ? 'scale(1)' : 'scale(0.5)' },
+    config: config.wobbly
+  });
+
   const handleMarkAsRead = (notificationID) => {
     // Update the UI by removing the notification
     setNotifications((prev) => {
@@ -184,7 +197,7 @@ export default function Notification({ variant = "icon", isLoggedIn = true }) {
             e.preventDefault();
             togglePopup();
           }}
-          className={`block text-sm relative transition-all duration-200 ${darkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-700 hover:text-green-600'}`}
+          className={`block text-xs xs:text-sm sm:text-sm relative transition-all duration-200 ${darkMode ? 'text-gray-300 hover:text-green-400' : 'text-gray-700 hover:text-green-600'}`}
           style={{
             transform: unreadCount > 0 ? 'translateX(0)' : 'translateX(0)',
             fontWeight: unreadCount > 0 ? 500 : 400
@@ -193,7 +206,7 @@ export default function Notification({ variant = "icon", isLoggedIn = true }) {
           Notifications {unreadCount > 0 && (
             <animated.span 
               style={counterAnimation}
-              className={`ml-1 font-medium ${darkMode ? 'text-green-400' : 'text-green-600'}`}
+              className={`ml-1 xs:ml-1.5 sm:ml-2 font-medium text-xs xs:text-xs sm:text-xs ${darkMode ? 'text-green-400' : 'text-green-600'}`}
             >
               ({unreadCount})
             </animated.span>
@@ -209,19 +222,6 @@ export default function Notification({ variant = "icon", isLoggedIn = true }) {
       </div>
     );
   }
-
-  // Animation for the bell icon when new notifications arrive
-  const bellAnimation = useSpring({
-    transform: unreadCount > 0 ? 'rotate(12deg)' : 'rotate(0deg)',
-    config: { tension: 300, friction: 10 }
-  });
-
-  // Animation for the notification counter
-  const counterAnimation = useSpring({
-    from: { opacity: 0, transform: 'scale(0.5)' },
-    to: { opacity: unreadCount > 0 ? 1 : 0, transform: unreadCount > 0 ? 'scale(1)' : 'scale(0.5)' },
-    config: config.wobbly
-  });
 
   // Hover animation for the bell button
   const [isHovered, setIsHovered] = useState(false);
@@ -240,15 +240,15 @@ export default function Notification({ variant = "icon", isLoggedIn = true }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={hoverAnimation}
-        className="bg-gradient-to-r from-green-500 to-lime-500 p-2 rounded-full text-white"
+        className="bg-gradient-to-r from-green-500 to-lime-500 p-1 xs:p-2 sm:p-2 rounded-full text-white"
       >
         <animated.div style={bellAnimation}>
-          <Bell size={24} className="text-white" />
+          <Bell size={16} xs:size={20} sm:size={24} className="text-white" />
         </animated.div>
         {unreadCount > 0 && (
           <animated.span 
             style={counterAnimation} 
-            className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-medium"
+            className="absolute -top-1 xs:-top-1 sm:-top-1 -right-1 xs:-right-1 sm:-right-1 bg-red-600 text-white rounded-full text-xs xs:text-xs sm:text-xs w-4 xs:w-5 sm:w-5 h-4 xs:h-5 sm:h-5 flex items-center justify-center font-medium"
           >
             {unreadCount}
           </animated.span>
