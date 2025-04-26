@@ -17,6 +17,7 @@ import org.jobspotter.jobpost.repository.JobPostSpecificationRepository;
 import org.jobspotter.jobpost.service.Implementation.JobPostImpl;
 import org.jobspotter.jobpost.service.NotificationService;
 import org.jobspotter.jobpost.service.SearchTitleSuggestionService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -25,6 +26,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -55,6 +58,12 @@ import static org.mockito.Mockito.mockStatic;
 public class JobPostServiceImplTests {
 
     @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache cache;
+
+    @Mock
     private RedisTemplate<String, Object> redisTemplate;
 
     @Mock
@@ -81,7 +90,10 @@ public class JobPostServiceImplTests {
     @InjectMocks
     private JobPostImpl jobPostImpl;
 
-
+    @BeforeEach
+    void setup() {
+        when(cacheManager.getCache("jobPostCache")).thenReturn(cache);
+    }
     //==================================================================================================================
     //                                     TESTS FOR MAIN JOB POST SERVICE METHODS
     //==================================================================================================================

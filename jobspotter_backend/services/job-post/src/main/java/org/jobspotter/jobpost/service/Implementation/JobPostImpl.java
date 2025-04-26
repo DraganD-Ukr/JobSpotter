@@ -57,8 +57,7 @@ public class JobPostImpl implements JobPostService {
 
     private static final String TOP_JOB_POSTS_KEY = "top10:jobposts";
 
-    @Autowired
-    private CacheManager cacheManager;
+    private final CacheManager cacheManager;
     //----------------------------------------------------------------------------------------------------------------
     //                                     Job Post Get View Queries implementation
     //----------------------------------------------------------------------------------------------------------------
