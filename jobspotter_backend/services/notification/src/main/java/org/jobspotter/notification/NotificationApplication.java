@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.config.EnableMongoAuditing;
 @EnableDiscoveryClient
 @EnableMongoAuditing
 public class NotificationApplication {
+
 	public static void main(String[] args) {
 		SpringApplication.run(NotificationApplication.class, args);
 	}

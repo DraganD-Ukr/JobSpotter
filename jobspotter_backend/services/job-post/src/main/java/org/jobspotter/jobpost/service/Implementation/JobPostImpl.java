@@ -20,11 +20,7 @@ import org.jobspotter.jobpost.service.JobPostService;
 import org.jobspotter.jobpost.service.NotificationService;
 import org.jobspotter.jobpost.service.SearchTitleSuggestionService;
 import org.jobspotter.jobpost.utils.GeoUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -57,7 +53,6 @@ public class JobPostImpl implements JobPostService {
 
     private static final String TOP_JOB_POSTS_KEY = "top10:jobposts";
 
-    private final CacheManager cacheManager;
     //----------------------------------------------------------------------------------------------------------------
     //                                     Job Post Get View Queries implementation
     //----------------------------------------------------------------------------------------------------------------
