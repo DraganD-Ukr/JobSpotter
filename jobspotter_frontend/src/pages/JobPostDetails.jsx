@@ -315,6 +315,31 @@ export function JobPostDetails() {
                                 Already applied: {job.applicantsCount}
                             </span>
                         </div>
+                        {/* Google Maps Iframe and Fallback Link */}
+                        {job.address && (
+                            <div className="mt-4 xs:mt-6 sm:mt-8">
+                                <iframe
+                                    className="w-full h-64 xs:h-72 sm:h-80 rounded-lg"
+                                    src={`https://www.google.com/maps?q=${encodeURIComponent(job.address)}&output=embed`}
+                                    allowFullScreen
+                                    loading="lazy"
+                                    referrerPolicy="no-referrer-when-downgrade"
+                                    title="Job Location Map"
+                                ></iframe>
+                                <div className="mt-2 text-center">
+                                    <a
+                                        href={`https://www.google.com/maps?q=${encodeURIComponent(job.address)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`text-xs xs:text-sm sm:text-base underline ${
+                                            darkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-800"
+                                        }`}
+                                    >
+                                        View on Google Maps
+                                    </a>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
