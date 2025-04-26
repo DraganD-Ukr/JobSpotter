@@ -6,6 +6,7 @@ import trollImage from "../assets/troll.jpg";
 import { ThemeContext } from "./ThemeContext";
 import Notification from "./Notification";
 import ProfilePicture from "../components/ProfilePicture";
+import Assistance from "./Assistance"; 
 
 /* helpers */
 function getJobStatusInfo(job) {
@@ -309,80 +310,23 @@ export default function Navbar() {
                 className={`absolute top-full sm:top-[calc(100%+0.5rem)] right-0 w-56 xs:w-64 rounded-lg shadow-lg z-50 p-2 xs:p-3 sm:p-4 border mt-1 xs:mt-2 sm:mt-0 ${
                   darkMode
                     ? "bg-gray-800 border-gray-700 text-white"
-                    : "bg-white border-gray-300 text-black"
+                    : "bg-gray-900 border-gray-800 text-white"
                 } transform origin-top scale-0 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100`}
               >
-                <div className="text-xs xs:text-sm sm:text-sm font-semibold mb-1 xs:mb-2 sm:mb-2">
+                <div className="text-xs xs:text-sm sm:text-sm font-semibold mb-1 xs:mb-2 sm:mb-2 text-blue-300">
                   {profileCompletion}% Profile Complete
                 </div>
                 {missingItems.length > 0 && (
                   <div
                     className={`text-xs xs:text-sm sm:text-sm mb-2 xs:mb-3 sm:mb-3 ${
-                      darkMode ? "text-gray-300" : "text-gray-600"
+                      darkMode ? "text-gray-300" : "text-gray-400"
                     }`}
                   >
                     Missing: {missingItems.join(", ")}
                   </div>
                 )}
                 {profileCompletion === 100 && (
-                  <>
-                    <button
-                      className="w-full bg-green-500 text-white text-xs xs:text-sm sm:text-sm py-1 xs:py-1.5 sm:py-1 px-2 xs:px-3 sm:px-3 rounded hover:bg-green-600 transition-colors duration-300 mt-1"
-                      onClick={() => setStartMenuOpen(!startMenuOpen)}
-                    >
-                      Let's Get You Started
-                    </button>
-                    {startMenuOpen && (
-                      <div
-                        className={`w-full rounded-lg shadow-lg mt-1 xs:mt-2 sm:mt-2 flex flex-col overflow-hidden ${
-                          darkMode
-                            ? "bg-gray-800 border-gray-700"
-                            : "bg-white border-gray-300"
-                        }`}
-                      >
-                        <Link
-                          to="/SearchJobPost"
-                          className={`block px-2 xs:px-3 sm:px-3 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
-                            darkMode
-                              ? "hover:bg-gray-700 text-white"
-                              : "hover:bg-gray-100 text-black"
-                          }`}
-                        >
-                          Search for Jobs
-                        </Link>
-                        <Link
-                          to="/MyJobs"
-                          className={`block px-2 xs:px-3 sm:px-3 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
-                            darkMode
-                              ? "hover:bg-gray-700 text-white"
-                              : "hover:bg-gray-100 text-black"
-                          }`}
-                        >
-                          My Job Posts
-                        </Link>
-                        <Link
-                          to="/JobPostHistory"
-                          className={`block px-2 xs:px-3 sm:px-3 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
-                            darkMode
-                              ? "hover:bg-gray-700 text-white"
-                              : "hover:bg-gray-100 text-black"
-                          }`}
-                        >
-                          Job Post History
-                        </Link>
-                        <Link
-                          to="/profile"
-                          className={`block px-2 xs:px-3 sm:px-3 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
-                            darkMode
-                              ? "hover:bg-gray-700 text-white"
-                              : "hover:bg-gray-100 text-black"
-                          }`}
-                        >
-                          My Profile
-                        </Link>
-                      </div>
-                    )}
-                  </>
+                  <Assistance /> // Render Assistance component in the dropdown
                 )}
               </div>
             </div>

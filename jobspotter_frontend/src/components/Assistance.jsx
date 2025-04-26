@@ -1,31 +1,33 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Assistance() {
+  const navigate = useNavigate();
+
   return (
-    <div className="p-4 xs:p-6 sm:p-8">
-      <h1 className="text-xl xs:text-2xl sm:text-3xl font-bold mb-2 xs:mb-3 sm:mb-4">
+    <div>
+      <h1 className="text-sm xs:text-base sm:text-lg font-bold mb-1 xs:mb-2 sm:mb-2">
         Need Assistance?
       </h1>
-      <p className="text-sm xs:text-base sm:text-lg mb-4 xs:mb-5 sm:mb-6">
-        Congratulations on completing your profile, Where would you like to go next?
+      <p className="text-xs xs:text-sm sm:text-sm mb-2 xs:mb-3 sm:mb-3">
+        Congratulations on completing your profile. Where would you like to go next?
       </p>
-
-      <div className="mt-2 xs:mt-3 sm:mt-4 flex flex-col sm:flex-row gap-2 xs:gap-3 sm:gap-4">
+      <div className="flex flex-col gap-1 xs:gap-2 sm:gap-2">
         <button
-          onClick={() => window.location.href = "/searchjobpost"}
-          className="w-full sm:w-auto px-4 xs:px-5 sm:px-6 py-2 xs:py-2.5 sm:py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-xs xs:text-sm sm:text-base"
+          onClick={() => navigate("/SearchJobPost")}
+          className="w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-xs xs:text-sm sm:text-sm"
         >
           Search for Jobs
         </button>
         <button
-          onClick={() => window.location.href = "/myjobposts"}
-          className="w-full sm:w-auto px-4 xs:px-5 sm:px-6 py-2 xs:py-2.5 sm:py-3 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 text-xs xs:text-sm sm:text-base"
+          onClick={() => navigate("/MyJobs")}
+          className="w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 text-xs xs:text-sm sm:text-sm"
         >
           View My Job Posts
         </button>
         <button
-          onClick={() => window.location.href = "/"}
-          className="w-full sm:w-auto px-4 xs:px-5 sm:px-6 py-2 xs:py-2.5 sm:py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 text-xs xs:text-sm sm:text-base"
+          onClick={() => navigate("/")}
+          className="w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 text-xs xs:text-sm sm:text-sm"
         >
           Go to Home
         </button>
