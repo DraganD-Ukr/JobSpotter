@@ -254,7 +254,7 @@ export default function Navbar() {
 
   /* render */
   return (
-    <nav className="sticky top-0 z-50 lava-lamp-background py-3 px-4 xs:px-6 sm:px-8 shadow-lg flex flex-col sm:flex-row sm:justify-between sm:items-center">
+    <nav className="sticky top-0 z-50 lava-lamp-background py-2 xs:py-3 sm:py-3 px-4 xs:px-6 sm:px-8 shadow-lg flex flex-col sm:flex-row sm:justify-between sm:items-center">
       {/* Logo */}
       <div className="flex justify-between items-center w-full sm:w-auto">
         <Link to="/" className="flex items-center">
@@ -269,7 +269,7 @@ export default function Navbar() {
           className="sm:hidden text-white"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          {isMobileMenuOpen ? <X size={20} xs:size={24} /> : <Menu size={20} xs:size={24} />}
         </button>
       </div>
 
@@ -277,19 +277,19 @@ export default function Navbar() {
       <div
         className={`${
           isMobileMenuOpen ? "flex" : "hidden"
-        } sm:flex flex-col sm:flex-row flex-1 justify-center items-center gap-2 xs:gap-3 sm:gap-6 mt-4 sm:mt-0`}
+        } sm:flex flex-col sm:flex-row flex-1 justify-center items-center gap-2 xs:gap-3 sm:gap-6 mt-2 xs:mt-3 sm:mt-0`}
       >
         {isAdmin ? (
           <>
             <Link
               to="/dashboard"
-              className="text-white font-medium hover:underline hover:text-green-300 transition-all duration-300 py-2 sm:py-0"
+              className="text-white font-medium hover:underline hover:text-green-300 transition-all duration-300 py-1 xs:py-2 sm:py-0 text-xs xs:text-sm sm:text-base"
             >
               Dashboard
             </Link>
             <Link
               to="/searchreport"
-              className="text-white font-medium hover:underline hover:text-green-300 transition-all duration-300 py-2 sm:py-0"
+              className="text-white font-medium hover:underline hover:text-green-300 transition-all duration-300 py-1 xs:py-2 sm:py-0 text-xs xs:text-sm sm:text-base"
             >
               Search Reports
             </Link>
@@ -306,18 +306,18 @@ export default function Navbar() {
                 muted
               />
               <div
-                className={`absolute top-full sm:top-[calc(100%+1rem)] right-0 w-56 xs:w-64 rounded-lg shadow-lg z-50 p-4 border mt-2 sm:mt-0 ${
+                className={`absolute top-full sm:top-[calc(100%+0.5rem)] right-0 w-56 xs:w-64 rounded-lg shadow-lg z-50 p-2 xs:p-3 sm:p-4 border mt-1 xs:mt-2 sm:mt-0 ${
                   darkMode
                     ? "bg-gray-800 border-gray-700 text-white"
                     : "bg-white border-gray-300 text-black"
                 } transform origin-top scale-0 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100`}
               >
-                <div className="text-xs xs:text-sm font-semibold mb-2">
+                <div className="text-xs xs:text-sm sm:text-sm font-semibold mb-1 xs:mb-2 sm:mb-2">
                   {profileCompletion}% Profile Complete
                 </div>
                 {missingItems.length > 0 && (
                   <div
-                    className={`text-xs mb-3 ${
+                    className={`text-xs xs:text-sm sm:text-sm mb-2 xs:mb-3 sm:mb-3 ${
                       darkMode ? "text-gray-300" : "text-gray-600"
                     }`}
                   >
@@ -327,14 +327,14 @@ export default function Navbar() {
                 {profileCompletion === 100 && (
                   <>
                     <button
-                      className="w-full bg-green-500 text-white text-xs py-1 px-2 rounded hover:bg-green-600 transition-colors duration-300 mt-1"
+                      className="w-full bg-green-500 text-white text-xs xs:text-sm sm:text-sm py-1 xs:py-1.5 sm:py-1 px-2 xs:px-3 sm:px-3 rounded hover:bg-green-600 transition-colors duration-300 mt-1"
                       onClick={() => setStartMenuOpen(!startMenuOpen)}
                     >
                       Let's Get You Started
                     </button>
                     {startMenuOpen && (
                       <div
-                        className={`w-full rounded-lg shadow-lg mt-2 flex flex-col overflow-hidden ${
+                        className={`w-full rounded-lg shadow-lg mt-1 xs:mt-2 sm:mt-2 flex flex-col overflow-hidden ${
                           darkMode
                             ? "bg-gray-800 border-gray-700"
                             : "bg-white border-gray-300"
@@ -342,7 +342,7 @@ export default function Navbar() {
                       >
                         <Link
                           to="/SearchJobPost"
-                          className={`block px-3 py-2 text-xs xs:text-sm transition-colors duration-200 ${
+                          className={`block px-2 xs:px-3 sm:px-3 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
                             darkMode
                               ? "hover:bg-gray-700 text-white"
                               : "hover:bg-gray-100 text-black"
@@ -352,7 +352,7 @@ export default function Navbar() {
                         </Link>
                         <Link
                           to="/MyJobs"
-                          className={`block px-3 py-2 text-xs xs:text-sm transition-colors duration-200 ${
+                          className={`block px-2 xs:px-3 sm:px-3 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
                             darkMode
                               ? "hover:bg-gray-700 text-white"
                               : "hover:bg-gray-100 text-black"
@@ -362,7 +362,7 @@ export default function Navbar() {
                         </Link>
                         <Link
                           to="/JobPostHistory"
-                          className={`block px-3 py-2 text-xs xs:text-sm transition-colors duration-200 ${
+                          className={`block px-2 xs:px-3 sm:px-3 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
                             darkMode
                               ? "hover:bg-gray-700 text-white"
                               : "hover:bg-gray-100 text-black"
@@ -372,7 +372,7 @@ export default function Navbar() {
                         </Link>
                         <Link
                           to="/profile"
-                          className={`block px-3 py-2 text-xs xs:text-sm transition-colors duration-200 ${
+                          className={`block px-2 xs:px-3 sm:px-3 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
                             darkMode
                               ? "hover:bg-gray-700 text-white"
                               : "hover:bg-gray-100 text-black"
@@ -389,11 +389,11 @@ export default function Navbar() {
 
             {/* Jobs Available */}
             <div className="relative group inline-block">
-              <span className="px-2 xs:px-3 sm:px-4 py-2 text-white font-medium rounded-lg hover:bg-white/10 transition-all duration-300 flex items-center gap-2 hover:text-green-300 hover:shadow-md">
+              <span className="px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 text-white font-medium rounded-lg hover:bg-white/10 transition-all duration-300 flex items-center gap-1 xs:gap-2 sm:gap-2 hover:text-green-300 hover:shadow-md text-xs xs:text-sm sm:text-base">
                 Jobs Available
               </span>
               <div
-                className={`absolute top-full sm:top-[calc(100%+1rem)] right-0 rounded-lg shadow-lg z-50 mt-2 sm:mt-0 ${
+                className={`absolute top-full sm:top-[calc(100%+0.5rem)] right-0 rounded-lg shadow-lg z-50 mt-1 xs:mt-2 sm:mt-0 ${
                   darkMode
                     ? "bg-gray-800 border-gray-700"
                     : "bg-white border-gray-300"
@@ -401,7 +401,7 @@ export default function Navbar() {
               >
                 <Link
                   to="/SearchJobPost"
-                  className={`block px-4 py-2 text-xs xs:text-sm transition-colors duration-200 ${
+                  className={`block px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
                     darkMode
                       ? "hover:bg-gray-700 text-white"
                       : "hover:bg-gray-100 text-black"
@@ -411,7 +411,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/JobPostHistory"
-                  className={`block px-4 py-2 text-xs xs:text-sm transition-colors duration-200 ${
+                  className={`block px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
                     darkMode
                       ? "hover:bg-gray-700 text-white"
                       : "hover:bg-gray-100 text-black"
@@ -424,11 +424,11 @@ export default function Navbar() {
 
             {/* My Job Posts */}
             <div className="relative group inline-block">
-              <span className="px-2 xs:px-3 sm:px-4 py-2 text-white font-medium rounded-lg hover:bg-white/10 transition-all duration-300 flex items-center gap-2 hover:text-green-300 hover:shadow-md">
+              <span className="px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 text-white font-medium rounded-lg hover:bg-white/10 transition-all duration-300 flex items-center gap-1 xs:gap-2 sm:gap-2 hover:text-green-300 hover:shadow-md text-xs xs:text-sm sm:text-base">
                 My Job Posts
               </span>
               <div
-                className={`absolute top-full sm:top-[calc(100%+1rem)] right-0 rounded-lg shadow-lg z-50 mt-2 sm:mt-0 ${
+                className={`absolute top-full sm:top-[calc(100%+0.5rem)] right-0 rounded-lg shadow-lg z-50 mt-1 xs:mt-2 sm:mt-0 ${
                   darkMode
                     ? "bg-gray-800 border-gray-700"
                     : "bg-white border-gray-300"
@@ -436,7 +436,7 @@ export default function Navbar() {
               >
                 <Link
                   to="/MyJobs"
-                  className={`block px-4 py-2 text-xs xs:text-sm transition-colors duration-200 ${
+                  className={`block px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
                     darkMode
                       ? "hover:bg-gray-700 text-white"
                       : "hover:bg-gray-100 text-black"
@@ -446,7 +446,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/SearchReviews"
-                  className={`block px-4 py-2 text-xs xs:text-sm transition-colors duration-200 ${
+                  className={`block px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
                     darkMode
                       ? "hover:bg-gray-700 text-white"
                       : "hover:bg-gray-100 text-black"
@@ -456,7 +456,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/CreateJobPost"
-                  className={`block px-4 py-2 text-xs xs:text-sm transition-colors duration-200 ${
+                  className={`block px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
                     darkMode
                       ? "hover:bg-gray-700 text-white"
                       : "hover:bg-gray-100 text-black"
@@ -466,32 +466,31 @@ export default function Navbar() {
                 </Link>
               </div>
             </div>
-
           </>
         ) : null}
       </div>
 
       {/* Right Side */}
-      <div className="flex items-center space-x-2 xs:space-x-3 sm:space-x-4 mt-4 sm:mt-0">
+      <div className="flex items-center space-x-2 xs:space-x-3 sm:space-x-4 mt-2 xs:mt-3 sm:mt-0">
         {/* Search */}
         <div className="relative flex items-center" ref={searchRef}>
           {isExpanded ? (
             <div
-              className={`flex items-center rounded-full shadow-md overflow-hidden w-[250px] xs:w-[300px] sm:w-[400px] border transition-all duration-300 ${
+              className={`flex items-center rounded-full shadow-md overflow-hidden w-[200px] xs:w-[250px] sm:w-[400px] border transition-all duration-300 ${
                 darkMode
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-black"
               }`}
             >
               <div className="flex flex-col w-2/3 relative">
-                <div className="flex items-center px-3">
+                <div className="flex items-center px-2 xs:px-3 sm:px-3">
                   <Search
                     className={`text-gray-500 ${darkMode ? "text-gray-300" : ""}`}
-                    size={18}
+                    size={16} xs:size={18} sm:size={20}
                   />
                   <input
                     type="text"
-                    className={`w-full bg-transparent px-3 py-2 focus:outline-none placeholder-gray-500 ${
+                    className={`w-full bg-transparent px-2 xs:px-3 sm:px-3 py-1 xs:py-2 sm:py-2 focus:outline-none placeholder-gray-500 text-xs xs:text-sm sm:text-base ${
                       darkMode ? "placeholder-gray-300" : ""
                     }`}
                     placeholder="Search"
@@ -505,7 +504,7 @@ export default function Navbar() {
                 </div>
                 {suggestions.length > 0 && (
                   <ul
-                    className={`absolute top-full sm:top-[calc(100%+1rem)] left-0 w-full border rounded-md shadow-md z-50 mt-2 sm:mt-0 ${
+                    className={`absolute top-full sm:top-[calc(100%+0.5rem)] left-0 w-full border rounded-md shadow-md z-50 mt-1 xs:mt-2 sm:mt-0 ${
                       darkMode
                         ? "bg-gray-800 border-gray-700 text-white"
                         : "bg-white border-gray-300 text-black"
@@ -518,7 +517,7 @@ export default function Navbar() {
                           setSearchTerm(item);
                           setSuggestions([]);
                         }}
-                        className={`px-4 py-2 cursor-pointer text-xs xs:text-sm transition-colors duration-200 ${
+                        className={`px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 cursor-pointer text-xs xs:text-sm sm:text-sm transition-colors duration-200 ${
                           darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"
                         }`}
                       >
@@ -529,50 +528,49 @@ export default function Navbar() {
                 )}
               </div>
               <div
-                className={`w-px h-8 ${
+                className={`w-px h-6 xs:h-8 sm:h-8 ${
                   darkMode ? "bg-gray-600" : "bg-gray-300"
                 }`}
               />
-              <div className="flex items-center px-3 w-1/3 gap-2">
+              <div className="flex items-center px-2 xs:px-3 sm:px-3 w-1/3 gap-1 xs:gap-2 sm:gap-2">
                 <img
                   src={trollImage}
                   alt="Location"
-                  className="w-5 xs:w-6 h-5 xs:h-6 rounded-full"
+                  className="w-4 xs:w-5 sm:w-6 h-4 xs:h-5 sm:h-6 rounded-full"
                 />
                 <input
                   type="text"
-                  className={`w-full bg-transparent px-3 py-2 focus:outline-none placeholder-gray-500 text-xs xs:text-sm ${
+                  className={`w-full bg-transparent px-2 xs:px-3 sm:px-3 py-1 xs:py-2 sm:py-2 focus:outline-none placeholder-gray-500 text-xs xs:text-sm sm:text-sm ${
                     darkMode ? "placeholder-gray-300" : ""
                   }`}
                   placeholder="Location"
                 />
                 <button
-                  className="bg-gradient-to-r from-green-500 to-lime-500 text-white px-3 py-1 xs:px-4 xs:py-2 rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-105 shadow-sm"
+                  className="bg-gradient-to-r from-green-500 to-lime-500 text-white px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-105 shadow-sm"
                 >
-                  <Search size={16} />
+                  <Search size={14} xs:size={16} sm:size={18} />
                 </button>
               </div>
             </div>
           ) : (
             <button
-              className="bg-gradient-to-r from-green-500 to-lime-500 p-2 rounded-full shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-110"
+              className="bg-gradient-to-r from-green-500 to-lime-500 p-2 xs:p-2.5 sm:p-2 rounded-full shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-110"
               onClick={() => setIsExpanded(true)}
             >
-              <Search className="text-white" size={20} xs:size={24} />
+              <Search className="text-white" size={16} xs:size={20} sm:size={24} />
             </button>
           )}
           {isExpanded && showResults && (searchResults.length || myJobResults.length) && (
             <div
-              className={`absolute top-full sm:top-[calc(100%+1rem)] left-0 rounded-lg shadow-lg z-50 w-[250px] xs:w-[300px] sm:w-[400px] p-2 border mt-2 sm:mt-0 ${
+              className={`absolute top-full sm:top-[calc(100%+0.5rem)] left-0 rounded-lg shadow-lg z-50 w-[200px] xs:w-[250px] sm:w-[400px] p-2 xs:p-3 sm:p-3 border mt-1 xs:mt-2 sm:mt-0 max-h-[50vh] xs:max-h-[60vh] sm:max-h-[70vh] overflow-y-auto ${
                 darkMode
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "bg-white border-gray-300 text-black"
               }`}
-              style={{ minHeight: "150px" }}
             >
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex justify-between items-center mb-1 xs:mb-2 sm:mb-2">
                 <p
-                  className={`text-xs xs:text-sm font-semibold ${
+                  className={`text-xs xs:text-sm sm:text-sm font-semibold ${
                     darkMode ? "text-gray-200" : "text-gray-700"
                   }`}
                 >
@@ -580,7 +578,7 @@ export default function Navbar() {
                 </p>
                 <button
                   onClick={() => setShowResults(false)}
-                  className={`text-xs xs:text-sm ${
+                  className={`text-xs xs:text-sm sm:text-sm ${
                     darkMode
                       ? "text-gray-300 hover:text-gray-100"
                       : "text-gray-500 hover:text-gray-800"
@@ -602,27 +600,27 @@ export default function Navbar() {
                     <Link
                       key={job.jobPostId}
                       to={`/job/${job.jobPostId}`}
-                      className={`p-2 hover:bg-opacity-10 ${
+                      className={`p-1 xs:p-2 sm:p-2 hover:bg-opacity-10 ${
                         darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"
                       } rounded transition-colors duration-200`}
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-medium text-xs xs:text-sm">{job.title}</h3>
-                          <p className="text-xs truncate max-w-[150px] xs:max-w-[200px] sm:max-w-[250px]">
+                          <h3 className="font-medium text-xs xs:text-sm sm:text-sm">{job.title}</h3>
+                          <p className="text-xs xs:text-xs sm:text-xs truncate max-w-[120px] xs:max-w-[150px] sm:max-w-[250px]">
                             {job.description}
                           </p>
                         </div>
                         <div className="flex flex-col items-end">
                           <span
-                            className={`text-xs px-2 py-1 rounded-full ${
+                            className={`text-xs xs:text-xs sm:text-xs px-1 xs:px-2 sm:px-2 py-0.5 xs:py-1 sm:py-1 rounded-full ${
                               getJobStatusInfo(job).statusColor
                             } bg-opacity-20`}
                           >
                             {getJobStatusInfo(job).statusText}
                           </span>
                           <span
-                            className={`text-xs mt-1 ${
+                            className={`text-xs xs:text-xs sm:text-xs mt-0.5 xs:mt-1 sm:mt-1 ${
                               isMyJob ? "text-green-400" : "text-blue-400"
                             }`}
                           >
@@ -641,13 +639,13 @@ export default function Navbar() {
         {/* Theme Toggle */}
         <button
           onClick={() => setDarkMode(!darkMode)}
-          className="p-2 rounded-full hover:bg-white/10 transition-colors duration-300"
+          className="p-1 xs:p-2 sm:p-2 rounded-full hover:bg-white/10 transition-colors duration-300"
           aria-label="Toggle dark mode"
         >
           {darkMode ? (
-            <Sun className="text-yellow-300 hover:text-yellow-200 transition-colors duration-300" size={20} />
+            <Sun className="text-yellow-300 hover:text-yellow-200 transition-colors duration-300" size={16} xs:size={20} sm:size={24} />
           ) : (
-            <Moon className="text-white hover:text-gray-200 transition-colors duration-300" size={20} />
+            <Moon className="text-white hover:text-gray-200 transition-colors duration-300" size={16} xs:size={20} sm:size={24} />
           )}
         </button>
 
@@ -658,20 +656,20 @@ export default function Navbar() {
         <div className="relative" ref={languageRef}>
           <button
             onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
-            className="bg-gradient-to-r from-green-500 to-lime-500 p-2 rounded-full shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-110"
+            className="bg-gradient-to-r from-green-500 to-lime-500 p-1 xs:p-2 sm:p-2 rounded-full shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-110"
             aria-label="Toggle language menu"
           >
-            <Globe className="text-white" size={20} xs:size={24} />
+            <Globe className="text-white" size={16} xs:size={20} sm:size={24} />
           </button>
           {isLanguageMenuOpen && (
             <div
-              className={`absolute right-0 top-full mt-2 w-32 rounded-lg shadow-lg z-50 overflow-hidden ${
+              className={`absolute right-0 top-full mt-1 xs:mt-2 sm:mt-2 w-32 rounded-lg shadow-lg z-50 overflow-hidden ${
                 darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"
               }`}
             >
               <button
                 onClick={() => handleLanguageChange("en")}
-                className={`block w-full text-left px-4 py-2 text-xs xs:text-sm ${
+                className={`block w-full text-left px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm ${
                   darkMode
                     ? "text-gray-300 hover:bg-gray-700"
                     : "text-gray-700 hover:bg-gray-100"
@@ -681,7 +679,7 @@ export default function Navbar() {
               </button>
               <button
                 onClick={() => handleLanguageChange("fr")}
-                className={`block w-full text-left px-4 py-2 text-xs xs:text-sm ${
+                className={`block w-full text-left px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm ${
                   darkMode
                     ? "text-gray-300 hover:bg-gray-700"
                     : "text-gray-700 hover:bg-gray-100"
@@ -697,15 +695,15 @@ export default function Navbar() {
         {isLoggedIn ? (
           <div className="relative group">
             <div className="cursor-pointer">
-              <ProfilePicture userId={userId} size="sm" />
+              <ProfilePicture userId={userId} size="sm" darkMode={darkMode} />
             </div>
             <div
-              className={`absolute right-0 top-full mt-2 w-48 rounded-md shadow-lg z-50 overflow-hidden transform origin-top scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300 ${
+              className={`absolute right-0 top-full mt-1 xs:mt-2 sm:mt-2 w-48 rounded-md shadow-lg z-50 overflow-hidden transform origin-top scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300 ${
                 darkMode ? "bg-gray-800" : "bg-white"
               }`}
             >
               <div
-                className={`px-4 py-3 text-xs xs:text-sm border-b ${
+                className={`px-2 xs:px-3 sm:px-4 py-2 xs:py-3 sm:py-3 text-xs xs:text-sm sm:text-sm border-b ${
                   darkMode ? "border-gray-700" : "border-gray-200"
                 }`}
               >
@@ -714,7 +712,7 @@ export default function Navbar() {
               <div className="py-1">
                 <Link
                   to="/profile"
-                  className={`block px-4 py-2 text-xs xs:text-sm ${
+                  className={`block px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm ${
                     darkMode
                       ? "text-gray-300 hover:bg-gray-700"
                       : "text-gray-700 hover:bg-gray-100"
@@ -724,7 +722,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/settings"
-                  className={`block px-4 py-2 text-xs xs:text-sm ${
+                  className={`block px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm ${
                     darkMode
                       ? "text-gray-300 hover:bg-gray-700"
                       : "text-gray-700 hover:bg-gray-100"
@@ -734,7 +732,7 @@ export default function Navbar() {
                 </Link>
                 <button
                   onClick={logout}
-                  className={`block w-full text-left px-4 py-2 text-xs xs:text-sm ${
+                  className={`block w-full text-left px-2 xs:px-3 sm:px-4 py-1 xs:py-2 sm:py-2 text-xs xs:text-sm sm:text-sm ${
                     darkMode
                       ? "text-gray-300 hover:bg-gray-700"
                       : "text-gray-700 hover:bg-gray-100"
@@ -746,17 +744,17 @@ export default function Navbar() {
             </div>
           </div>
         ) : (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 xs:space-x-2 sm:space-x-2">
             <Link
               to="/login"
-              className="text-white hover:text-green-300 transition-colors duration-300 text-xs xs:text-sm"
+              className="text-white hover:text-green-300 transition-colors duration-300 text-xs xs:text-sm sm:text-base"
             >
               Login
             </Link>
             <span className="text-gray-400">|</span>
             <Link
               to="/register"
-              className="text-white hover:text-green-300 transition-colors duration-300 text-xs xs:text-sm"
+              className="text-white hover:text-green-300 transition-colors duration-300 text-xs xs:text-sm sm:text-base"
             >
               Register
             </Link>

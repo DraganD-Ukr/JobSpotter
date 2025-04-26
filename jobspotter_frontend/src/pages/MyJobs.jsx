@@ -66,8 +66,6 @@ export function MyJobs() {
   const [totalElements, setTotalElements] = useState(0);
   const [pageSize, setPageSize] = useState(9);
   const [filters, setFilters] = useState({
-
-
     title: "",
     tags: [],     
     latitude: "",
@@ -307,7 +305,7 @@ export function MyJobs() {
           <button
             key="start-ellipsis"
             onClick={() => handlePageChange(startPage - 1)}
-            className="px-4 py-2 mx-1 bg-gray-300 text-black rounded-full hover:bg-gray-400"
+            className="px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 mx-0.5 xs:mx-1 sm:mx-1 bg-gray-300 text-black rounded-full hover:bg-gray-400 text-xs xs:text-sm sm:text-base"
           >
             ...
           </button>
@@ -321,7 +319,7 @@ export function MyJobs() {
           <button
             key="end-ellipsis"
             onClick={() => handlePageChange(endPage)}
-            className="px-4 py-2 mx-1 bg-gray-300 text-black rounded-full hover:bg-gray-400"
+            className="px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 mx-0.5 xs:mx-1 sm:mx-1 bg-gray-300 text-black rounded-full hover:bg-gray-400 text-xs xs:text-sm sm:text-base"
           >
             ...
           </button>
@@ -336,7 +334,7 @@ export function MyJobs() {
       <button
         key={i}
         onClick={() => handlePageChange(i)}
-        className={`px-4 py-2 mx-1 rounded-full ${
+        className={`px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 mx-0.5 xs:mx-1 sm:mx-1 rounded-full text-xs xs:text-sm sm:text-base ${
           page === i
             ? "bg-green-500 text-white"
             : "bg-gray-300 text-black hover:bg-gray-400"
@@ -350,21 +348,21 @@ export function MyJobs() {
   // ------------------- Loading State -------------------
   if (loading) {
     return (
-      <div className="main-content flex items-center justify-center min-h-screen">
-        <p>{t("loading", { defaultValue: "Loading your jobs..." })}</p>
+      <div className="main-content flex items-center justify-center min-h-screen p-2 xs:p-4 sm:p-6">
+        <p className="text-sm xs:text-base sm:text-lg">{t("loading", { defaultValue: "Loading your jobs..." })}</p>
       </div>
     );
   }
 
   return (
     <div
-      className={`my-10 main-content min-h-screen p-4 border-1 rounded-4xl ${
+      className={`my-6 xs:my-8 sm:my-10 main-content min-h-screen p-2 xs:p-4 sm:p-6 border-1 rounded-4xl ${
         darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
       }`}
     >
       {/* Top search bar + toggle */}
-      <div className="flex justify-center mb-8">
-        <form onSubmit={handleSearchSubmit} className="flex">
+      <div className="flex flex-col sm:flex-row justify-center mb-4 xs:mb-6 sm:mb-8 gap-2 xs:gap-3 sm:gap-4">
+        <form onSubmit={handleSearchSubmit} className="flex w-full sm:w-auto">
           <input
             type="text"
             value={filters.title}
@@ -372,52 +370,56 @@ export function MyJobs() {
               setFilters((prev) => ({ ...prev, title: e.target.value }))
             }
             placeholder={t("searchJobsPlaceholder", { defaultValue: "Search your jobs by title..." })}
-            className="px-4 py-2 border rounded-l-md focus:outline-none"
+            className={`px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 border rounded-l-md focus:outline-none text-xs xs:text-sm sm:text-base w-full sm:w-64 ${
+              darkMode
+                ? "bg-gray-800 text-white border-gray-700"
+                : "bg-white text-black border-gray-300"
+            }`}
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-green-500 text-white rounded-r-md hover:bg-green-600"
+            className="px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 bg-green-500 text-white rounded-r-md hover:bg-green-600 text-xs xs:text-sm sm:text-base"
           >
             {t("search", { defaultValue: "Search" })}
           </button>
         </form>
         <button
           onClick={toggleView}
-          className="px-4 py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400 flex items-center ml-4"
+          className="px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 rounded-md bg-gray-300 text-black hover:bg-gray-400 flex items-center w-full sm:w-auto text-xs xs:text-sm sm:text-base"
           id="toggle-view"
         >
           {viewType === "card" ? (
             <>
-              <FaList className="mr-2" />
+              <FaList className="mr-1 xs:mr-1.5 sm:mr-2 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
               {t("listView", { defaultValue: "List View" })}
             </>
           ) : (
             <>
-              <FaTh className="mr-2" />
+              <FaTh className="mr-1 xs:mr-1.5 sm:mr-2 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
               {t("cardView", { defaultValue: "Card View" })}
             </>
           )}
         </button>
       </div>
 
-      <div className="flex">
+      <div className="flex flex-col lg:flex-row">
         {/* Filters Column */}
-        <div className="w-1/5 pr-12 border-r ml-42 mr-4">
-          <h3 className="text-xl font-bold mb-4">
+        <div className="w-full lg:w-1/5 pr-0 lg:pr-6 xs:pr-8 sm:pr-10 mb-4 xs:mb-6 sm:mb-8 lg:mb-0">
+          <h3 className="text-base xs:text-lg sm:text-xl font-bold mb-2 xs:mb-3 sm:mb-4">
             {t("filters", { defaultValue: "Filters" })}
           </h3>
           <form onSubmit={handleSearchSubmit}>
             {/* TAGS SECTION */}
-            <div className="mb-4 p-4 border rounded-md">
+            <div className="mb-2 xs:mb-3 sm:mb-4 p-2 xs:p-3 sm:p-4 border rounded-md">
               <div
                 className="flex justify-between items-center cursor-pointer"
                 onClick={toggleTagsCollapse}
               >
-                <h4 className="text-lg font-semibold">{t("tags")}</h4>
+                <h4 className="text-sm xs:text-base sm:text-lg font-semibold">{t("tags")}</h4>
                 {isTagsCollapsed ? (
-                  <FaChevronUp className="text-gray-500" />
+                  <FaChevronUp className="text-gray-500 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
                 ) : (
-                  <FaChevronDown className="text-gray-500" />
+                  <FaChevronDown className="text-gray-500 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
                 )}
               </div>
               <div
@@ -426,14 +428,14 @@ export function MyJobs() {
                 }`}
               >
                 {/* Render any selected tags */}
-                <div className="flex flex-wrap gap-2 mb-2">
+                <div className="flex flex-wrap gap-1 xs:gap-2 sm:gap-3 mb-1 xs:mb-2 sm:mb-3">
                   {filters.tags.map((enumValue) => (
                     <span
                       key={enumValue}
-                      className={`px-2 py-1 rounded-full flex items-center ${getTagColor(enumValue)}`}
+                      className={`px-1 xs:px-2 sm:px-3 py-0.5 xs:py-1 sm:py-1 rounded-full flex items-center text-xs xs:text-sm sm:text-sm ${getTagColor(enumValue)}`}
                     >
-                      <FaTag className="mr-2" />
-                      <span className="mr-2">
+                      <FaTag className="mr-0.5 xs:mr-1 sm:mr-1.5 h-3 xs:h-4 sm:h-4 w-3 xs:w-4 sm:w-4" />
+                      <span className="mr-0.5 xs:mr-1 sm:mr-1.5">
                         {tagMapping.get(enumValue) || enumValue}
                       </span>
                       <button
@@ -441,7 +443,7 @@ export function MyJobs() {
                         onClick={() => handleRemoveTag(enumValue)}
                         className="text-red-500 hover:text-red-700"
                       >
-                        &times;
+                        ×
                       </button>
                     </span>
                   ))}
@@ -451,7 +453,7 @@ export function MyJobs() {
                   name="tags"
                   value=""
                   onChange={(e) => handleAddTag(e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-md ${
+                  className={`w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 border rounded-md text-xs xs:text-sm sm:text-base ${
                     darkMode
                       ? "bg-gray-800 text-white border-gray-700"
                       : "bg-white text-black border-gray-300"
@@ -468,15 +470,19 @@ export function MyJobs() {
             </div>
 
             {/* Job Status Filter */}
-            <div className="mb-4 p-4 border rounded-md">
-              <label className="block mb-2">
+            <div className="mb-2 xs:mb-3 sm:mb-4 p-2 xs:p-3 sm:p-4 border rounded-md">
+              <label className="block mb-1 xs:mb-2 sm:mb-2 text-xs xs:text-sm sm:text-base">
                 {t("jobStatus", { defaultValue: "Job Status" })}
               </label>
               <select
                 name="jobStatus"
                 value={filters.jobStatus}
                 onChange={handleFilterChange}
-                className="w-full px-4 py-2 border rounded-md"
+                className={`w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 border rounded-md text-xs xs:text-sm sm:text-base ${
+                  darkMode
+                    ? "bg-gray-800 text-white border-gray-700"
+                    : "bg-white text-black border-gray-300"
+                }`}
               >
                 <option value="">{t("selectAStatus", { defaultValue: "Select a status" })}</option>
                 <option value="OPEN">{t("open", { defaultValue: "Open" })}</option>
@@ -488,15 +494,19 @@ export function MyJobs() {
             </div>
 
             {/* Location Filter */}
-            <div className="mb-4 p-4 border rounded-md">
-              <label className="block mb-2">
+            <div className="mb-2 xs:mb-3 sm:mb-4 p-2 xs:p-3 sm:p-4 border rounded-md">
+              <label className="block mb-1 xs:mb-2 sm:mb-2 text-xs xs:text-sm sm:text-base">
                 {t("location", { defaultValue: "Location" })}
               </label>
               <input
                 type="text"
                 name="address"
                 placeholder={t("enterAddressLatLng", { defaultValue: "Enter address (lat,lng)" })}
-                className="w-full px-4 py-2 border rounded-md mb-2"
+                className={`w-full px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 border rounded-md mb-1 xs:mb-2 sm:mb-3 text-xs xs:text-sm sm:text-base ${
+                  darkMode
+                    ? "bg-gray-800 text-white border-gray-700"
+                    : "bg-white text-black border-gray-300"
+                }`}
                 onChange={(e) => {
                   const [lat, lng] = e.target.value.split(",");
                   setFilters((prev) => ({
@@ -509,22 +519,24 @@ export function MyJobs() {
               <button
                 type="button"
                 onClick={handleLocationSearch}
-                className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                className="w-full bg-blue-500 text-white px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 rounded-md hover:bg-blue-600 text-xs xs:text-sm sm:text-base"
               >
                 {t("useCurrentLocation", { defaultValue: "Use Current Location" })}
               </button>
               {filters.latitude && filters.longitude && (
-                <p className="text-sm text-green-500 mt-2 text-center">
+                <p className="text-xs xs:text-sm sm:text-sm text-green-500 mt-1 xs:mt-2 sm:mt-3 text-center">
                   {t("usingCurrentLocation", { defaultValue: "Using your current location" })}
                 </p>
               )}
             </div>
 
             {/* Radius Filter */}
-            <div className="mb-4 p-4 border rounded-md">
+            <div className="mb-2 xs:mb-3 sm:mb-4 p-2 xs:p-3 sm:p-4 border rounded-md">
               <label
                 htmlFor="distance-range-slider"
-                className="block mb-2 font-medium text-gray-700"
+                className={`block mb-1 xs:mb-2 sm:mb-2 font-medium text-xs xs:text-sm sm:text-base ${
+                  darkMode ? "text-white" : "text-gray-700"
+                }`}
               >
                 {t("radiusKm", { defaultValue: "Radius (km)" })}
               </label>
@@ -537,36 +549,36 @@ export function MyJobs() {
                   max="500"
                   value={filters.radius}
                   onChange={handleFilterChange}
-                  className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-1 xs:h-2 sm:h-2 rounded-lg appearance-none cursor-pointer"
                   style={{
                     background: `linear-gradient(to right, #3b82f6 ${
                       filters.radius / 5
                     }%, #d1d5db ${filters.radius / 5}%)`,
                   }}
                 />
-                <div className="absolute w-full top-4 flex justify-between">
+                <div className="absolute w-full top-3 xs:top-4 sm:top-4 flex justify-between">
                   {[0, 100, 200, 300, 400, 500].map((value) => (
                     <div key={value} className="relative">
-                      <div className="w-0.5 h-3 bg-gray-500 mx-auto"></div>
+                      <div className="w-0.5 h-2 xs:h-3 sm:h-3 bg-gray-500 mx-auto"></div>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="flex justify-between text-xs text-gray-600 mt-1">
+              <div className={`flex justify-between text-xs xs:text-sm sm:text-sm mt-1 xs:mt-2 sm:mt-3 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
                 {[0, 100, 200, 300, 400, 500].map((value) => (
                   <span key={value} className="w-8 text-center">
                     {value}
                   </span>
                 ))}
               </div>
-              <p className="text-sm mt-2 text-gray-600">
+              <p className={`text-xs xs:text-sm sm:text-sm mt-1 xs:mt-2 sm:mt-3 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
                 {t("radius", { defaultValue: "Radius" })}: {filters.radius} km
               </p>
             </div>
 
             <button
               type="submit"
-              className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+              className="w-full bg-green-500 text-white px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 rounded-md hover:bg-green-600 text-xs xs:text-sm sm:text-base"
             >
               {t("applyFilters", { defaultValue: "Apply Filters" })}
             </button>
@@ -574,9 +586,9 @@ export function MyJobs() {
         </div>
 
         {/* Jobs Column */}
-        <div className="w-4/5 p-4 ml-4 mr-30">
-          <div className="flex flex-col items-start mb-8">
-            <h2 className="text-2xl font-bold text-left mb-4">
+        <div className="w-full lg:w-4/5 p-2 xs:p-4 sm:p-6">
+          <div className="flex flex-col items-start mb-4 xs:mb-6 sm:mb-8">
+            <h2 className="text-base xs:text-lg sm:text-xl font-bold text-left mb-2 xs:mb-3 sm:mb-4">
               {totalElements >= 1
                 ? t("searchReturnedJobPosts", {
                     count: totalElements,
@@ -587,19 +599,19 @@ export function MyJobs() {
           </div>
 
           {errorMessage && (
-            <div className="text-red-500 mb-4 text-center">{errorMessage}</div>
+            <div className="text-red-500 mb-2 xs:mb-3 sm:mb-4 text-center text-xs xs:text-sm sm:text-base">{errorMessage}</div>
           )}
 
           {jobs.length === 0 ? (
-            <p className="text-center">
+            <p className="text-center text-xs xs:text-sm sm:text-base">
               {t("noJobPostsFound", { defaultValue: "No jobs found." })}
             </p>
           ) : (
             <div
               className={
                 viewType === "card"
-                  ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-                  : "space-y-4"
+                  ? "grid gap-2 xs:gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                  : "space-y-2 xs:space-y-4 sm:space-y-6"
               }
             >
               {jobs.map((job) => {
@@ -612,34 +624,34 @@ export function MyJobs() {
                 return (
                   <div
                     key={job.jobPostId}
-                    className={`card border border-gray-300 ${
+                    className={`card border ${darkMode ? "border-gray-700" : "border-gray-300"} ${
                       viewType === "card"
-                        ? "hover:shadow-md hover:border-green-500 transition rounded-md p-4"
-                        : "rounded-lg shadow p-4 flex flex-col sm:flex-row justify-between"
+                        ? "hover:shadow-md hover:border-green-500 transition rounded-md p-2 xs:p-4 sm:p-6"
+                        : "rounded-lg shadow p-2 xs:p-4 sm:p-6 flex flex-col sm:flex-row justify-between"
                     }`}
                   >
                     {/* Updated Title */}
-                    <h3 className="text-xl font-semibold">
+                    <h3 className="text-base xs:text-lg sm:text-xl font-semibold">
                       {t("jobTitle", { defaultValue: job.title })}
                     </h3>
                     {/* Address */}
-                    <p className="flex items-center gap-1">
-                      <FaMapMarkerAlt className="text-red-500" /> {job.address}
+                    <p className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 text-xs xs:text-sm sm:text-base">
+                      <FaMapMarkerAlt className="text-red-500 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" /> {job.address}
                     </p>
                     {/* Date Posted */}
-                    <p className="flex items-center gap-1">
-                      <MdDateRange className="text-blue-500" />{" "}
+                    <p className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 text-xs xs:text-sm sm:text-base">
+                      <MdDateRange className="text-blue-500 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />{" "}
                       {t("posted", { defaultValue: "Posted" })}:
                       {" " + new Date(job.datePosted).toLocaleDateString()}
                     </p>
                     {/* Max Applicants */}
-                    <p className="flex items-center gap-1">
-                      <FaUsers className="text-purple-500" />{" "}
+                    <p className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 text-xs xs:text-sm sm:text-base">
+                      <FaUsers className="text-purple-500 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />{" "}
                       {t("maxApplicants", { defaultValue: "Max Applicants" })}:
                       {" " + job.maxApplicants}
                     </p>
                     {/* Description snippet */}
-                    <p className="mt-2">
+                    <p className="mt-1 xs:mt-2 sm:mt-3 text-xs xs:text-sm sm:text-base">
                       <strong>{t("description", { defaultValue: "Description" })}:</strong>{" "}
                       {job.description && job.description.length > 100
                         ? t("jobDescription", {
@@ -649,34 +661,34 @@ export function MyJobs() {
                     </p>
                     {/* Tags display */}
                     {job.tags && job.tags.length > 0 && (
-                      <p className="my-3 text-sm">
+                      <p className="my-1 xs:my-2 sm:my-3 text-xs xs:text-sm sm:text-sm">
                         <strong>{t("tagsLabel", { defaultValue: "Tags" })}:</strong>{" "}
                         {job.tags.join(", ")}
                       </p>
                     )}
                     {/* Status Info */}
-                    <p className="flex items-center mt-2 gap-1">
-                      <StatusIcon className={`${statusColor} mr-1`} />
-                      <strong className="mr-2">
+                    <p className="flex items-center mt-1 xs:mt-2 sm:mt-3 gap-1 xs:gap-1.5 sm:gap-2 text-xs xs:text-sm sm:text-base">
+                      <StatusIcon className={`${statusColor} mr-1 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5`} />
+                      <strong className="mr-1 xs:mr-2 sm:mr-2">
                         {t("jobStatus", { defaultValue: "Job Status" })}:
                       </strong>{" "}
                       <span className={statusColor}>{statusText}</span>
                     </p>
                     {/* Applicant Status */}
-                    <p className="flex items-center mt-2 gap-1">
+                    <p className="flex items-center mt-1 xs:mt-2 sm:mt-3 gap-1 xs:gap-1.5 sm:gap-2 text-xs xs:text-sm sm:text-base">
                       {job.applicantStatus === "PENDING" && (
-                        <FaClock className={`${applicantStatusColor} mr-1`} />
+                        <FaClock className={`${applicantStatusColor} mr-1 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5`} />
                       )}
                       {job.applicantStatus === "ACCEPTED" && (
-                        <FaCheckCircle className={`${applicantStatusColor} mr-1`} />
+                        <FaCheckCircle className={`${applicantStatusColor} mr-1 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5`} />
                       )}
                       {job.applicantStatus === "REJECTED" && (
-                        <FaTimesCircle className={`${applicantStatusColor} mr-1`} />
+                        <FaTimesCircle className={`${applicantStatusColor} mr-1 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5`} />
                       )}
                       {job.applicantStatus !== "PENDING" &&
                         job.applicantStatus !== "ACCEPTED" &&
                         job.applicantStatus !== "REJECTED" && (
-                          <FaCircle className={`${applicantStatusColor} mr-1`} />
+                          <FaCircle className={`${applicantStatusColor} mr-1 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5`} />
                         )}
                       <strong>
                         {t("applicantStatus", { defaultValue: "Applicant Status" })}:
@@ -684,10 +696,10 @@ export function MyJobs() {
                       <span className={applicantStatusColor}>{applicantStatusText}</span>
                     </p>
                     {/* View Details Button */}
-                    <div className="mt-4">
+                    <div className="mt-2 xs:mt-3 sm:mt-4">
                       <button
                         onClick={() => handleViewDetails(job.jobPostId)}
-                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 w-full"
+                        className="w-full bg-green-500 text-white px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 rounded-md hover:bg-blue-600 text-xs xs:text-sm sm:text-base"
                       >
                         {t("viewMoreDetails", { defaultValue: "View More Details" })}
                       </button>
@@ -700,11 +712,11 @@ export function MyJobs() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex justify-center mt-8">
+            <div className="flex justify-center mt-4 xs:mt-6 sm:mt-8">
               <button
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page === 0}
-                className="w-32 px-4 py-2 mr-6 mx-1 bg-gray-300 text-black rounded-l-full rounded-r-md hover:bg-gray-400 disabled:opacity-50 flex justify-center"
+                className="w-24 xs:w-28 sm:w-32 px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 mr-2 xs:mr-4 sm:mr-6 mx-0.5 xs:mx-1 sm:mx-1 bg-gray-300 text-black rounded-l-full rounded-r-md hover:bg-gray-400 disabled:opacity-50 flex justify-center text-xs xs:text-sm sm:text-base"
                 style={{ clipPath: "polygon(100% 0%, 85% 50%, 100% 100%, 0% 100%, 0% 0%)" }}
               >
                 {t("previous", { defaultValue: "Previous" })}
@@ -713,7 +725,7 @@ export function MyJobs() {
               <button
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page >= totalPages - 1}
-                className="w-26 px-4 py-2 ml-6 mx-1 bg-gray-300 text-black rounded-r-full rounded-l-md hover:bg-gray-400 disabled:opacity-50 flex justify-center"
+                className="w-24 xs:w-28 sm:w-32 px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 ml-2 xs:ml-4 sm:ml-6 mx-0.5 xs:mx-1 sm:mx-1 bg-gray-300 text-black rounded-r-full rounded-l-md hover:bg-gray-400 disabled:opacity-50 flex justify-center text-xs xs:text-sm sm:text-base"
                 style={{ clipPath: "polygon(0% 0%, 15% 50%, 0% 100%, 100% 100%, 100% 0%)" }}
               >
                 {t("next", { defaultValue: "Next" })}
