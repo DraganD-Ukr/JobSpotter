@@ -1,0 +1,60 @@
+global:
+  scrape_interval: 10s # Poll interval for metrics
+  evaluation_interval: 10s # Evaluate rules every 10 seconds
+
+scrape_configs:
+  - job_name: 'config_server'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['config-server:8888']
+        labels:
+          application: 'Config Server Application'
+
+  - job_name: 'discovery_service'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['discovery-service:8761']
+        labels:
+          application: 'Discovery Service Application'
+
+  - job_name: 'gateway_service'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['gateway-service:8100']
+        labels:
+          application: 'Gateway Application'
+
+  - job_name: 'user_service'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['user-service:8080']
+        labels:
+          application: 'User Service Application'
+
+  - job_name: 'job_post_service'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['job-post-service:8081']
+        labels:
+          application: 'JobPost Service Application'
+
+  - job_name: 'review_service'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['review-service:8082']
+        labels:
+          application: 'Reviews-Ratings Service Application'
+
+  - job_name: 'notification_service'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['notification-service:8083']
+        labels:
+          application: 'Notification Service Application'
+
+  - job_name: 'report_service'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['report-service:8084']
+        labels:
+          application: 'Reviews-Ratings Service Application'
