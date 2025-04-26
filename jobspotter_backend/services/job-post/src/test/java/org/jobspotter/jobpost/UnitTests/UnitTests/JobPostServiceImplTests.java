@@ -25,6 +25,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -56,6 +58,11 @@ public class JobPostServiceImplTests {
 
     @Mock
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Mock
+    private ValueOperations<String, Object> valueOperations;
+
+
 
     @Mock
     private JWTUtils jwtUtils;
@@ -669,7 +676,7 @@ public class JobPostServiceImplTests {
             jwtStatic.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(jobPosterId);
             when(jwtUtils.hasAdminRole(accessToken)).thenReturn(false);
             when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
-
+            when(redisTemplate.opsForValue()).thenReturn(valueOperations);
             // Act
             jobPostImpl.updateJobPost(accessToken, jobPostId, patchRequest);
 
@@ -736,6 +743,8 @@ public class JobPostServiceImplTests {
             jwtStatic.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(jobPosterId); //  stub static call
 
             when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
+            when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+            when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
             // Run
             jobPostImpl.updateJobPost(accessToken, jobPostId, patchRequest);
@@ -764,16 +773,21 @@ public class JobPostServiceImplTests {
                 .status(JobStatus.OPEN)
                 .build();
 
-        // Stub JWT role check
-        when(jwtUtils.hasAdminRole(accessToken)).thenReturn(true);
-        when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
+        try (MockedStatic<JWTUtils> mockedJWTUtils = mockStatic(JWTUtils.class)) {
+            mockedJWTUtils.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(UUID.randomUUID());
 
-        // Act
-        jobPostImpl.deleteJobPost(accessToken, jobPostId);
+            when(jwtUtils.hasAdminRole(accessToken)).thenReturn(true);
+            when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
 
-        // Assert
-        verify(jobPostRepository).delete(jobPost);
+            // Call the service
+            jobPostImpl.deleteJobPost(accessToken, jobPostId);
+
+            // Verify
+            verify(jobPostRepository).delete(jobPost);
+        }
+
     }
+
 
     /**
      * Testing for a successful deletion of a job post by the job poster.
@@ -810,6 +824,7 @@ public class JobPostServiceImplTests {
         JobPostApplyRequest applyRequest = new JobPostApplyRequest("Excited to apply!");
 
         when(jobPostRepository.findById(1L)).thenReturn(Optional.of(jobPost));
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
         try (MockedStatic<JWTUtils> jwtUtilsMocked = mockStatic(JWTUtils.class)) {
             jwtUtilsMocked.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
@@ -940,7 +955,7 @@ public class JobPostServiceImplTests {
                 .build();
 
         when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
-
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         // Act
         jobPostImpl.takeApplicantsAction(userId, jobPostId, List.of(actionRequest));
 
@@ -1135,6 +1150,7 @@ public class JobPostServiceImplTests {
 
         when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
         when(jwtUtils.hasAdminRole(accessToken)).thenReturn(true); // Make user admin to skip user check
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
         try (MockedStatic<JWTUtils> jwtUtilsMockedStatic = mockStatic(JWTUtils.class)) {
             jwtUtilsMockedStatic.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(applicantUserId);
@@ -1183,6 +1199,7 @@ public class JobPostServiceImplTests {
 
         when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
         when(jwtUtils.hasAdminRole(accessToken)).thenReturn(true);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
         // Act
         jobPostImpl.deleteApplicant(accessToken, jobPostId, applicantId);
@@ -1300,6 +1317,7 @@ public class JobPostServiceImplTests {
                 .build();
 
         when(jobPostRepository.findById(jobPostId)).thenReturn(Optional.of(jobPost));
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
         try (MockedStatic<JWTUtils> jwtUtilsMocked = mockStatic(JWTUtils.class)) {
             jwtUtilsMocked.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
@@ -1397,7 +1415,7 @@ public class JobPostServiceImplTests {
         try (MockedStatic<JWTUtils> jwtUtilsMockedStatic = Mockito.mockStatic(JWTUtils.class)) {
             jwtUtilsMockedStatic.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(jobPosterId);
             when(jwtUtils.hasAdminRole(accessToken)).thenReturn(false);
-
+            when(redisTemplate.opsForValue()).thenReturn(valueOperations);
             // Act
             jobPostImpl.cancelJobPost(accessToken, jobPostId);
 

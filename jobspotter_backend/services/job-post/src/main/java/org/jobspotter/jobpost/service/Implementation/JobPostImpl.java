@@ -20,6 +20,8 @@ import org.jobspotter.jobpost.service.JobPostService;
 import org.jobspotter.jobpost.service.NotificationService;
 import org.jobspotter.jobpost.service.SearchTitleSuggestionService;
 import org.jobspotter.jobpost.utils.GeoUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -55,6 +57,7 @@ public class JobPostImpl implements JobPostService {
 
     private static final String TOP_JOB_POSTS_KEY = "top10:jobposts";
 
+    private final CacheManager cacheManager;
     //----------------------------------------------------------------------------------------------------------------
     //                                     Job Post Get View Queries implementation
     //----------------------------------------------------------------------------------------------------------------
@@ -471,10 +474,6 @@ public class JobPostImpl implements JobPostService {
      * @param jobPostPatchRequest The fields to update
      * @throws Exception If the user is not an admin or job poster, or job post status is not OPEN
      */
-    @CacheEvict(
-            value = "myJobPostCache",
-            key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId"
-    )
     @Transactional
     @Override
     public void updateJobPost(String accessToken, Long jobPostId, JobPostPatchRequest jobPostPatchRequest) throws Exception {
@@ -505,6 +504,8 @@ public class JobPostImpl implements JobPostService {
 
         // Save the updated job post
         jobPostRepository.save(jobPost);
+
+        updateJobPostCacheDynamic(jobPost, jobPost.getJobPosterId());
         log.info("Job post updated successfully");
     }
 
@@ -516,16 +517,7 @@ public class JobPostImpl implements JobPostService {
      * @param jobPostId The ID of the job post to delete
      * @throws Exception If the user is not an admin or job poster, or job post status is not OPEN
      */
-    @Caching(evict = {
-            @CacheEvict(
-                    value = "myJobPostCache",
-                    key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId"
-            ),
-            @CacheEvict(
-                    value = "jobPostCache",
-                    key = "#jobPostId"
-            )
-    })
+
     @Transactional
     @Override
     public void deleteJobPost(String accessToken, Long jobPostId) throws Exception {
@@ -537,6 +529,10 @@ public class JobPostImpl implements JobPostService {
 
         // Delete the job post
         jobPostRepository.delete(jobPost);
+
+        // Remove the job post from the cache
+        redisTemplate.delete("jobPostCache::" + jobPostId);
+        redisTemplate.delete("myJobPostCache::" + JWTUtils.getUserIdFromToken(accessToken) + ":" + jobPostId);
 
         log.info("Job post deleted successfully");
     }
@@ -552,10 +548,6 @@ public class JobPostImpl implements JobPostService {
      */
 
     @Override
-    @CacheEvict(
-            value = "myJobPostCache",
-            key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId"
-    )
     public void applyToJobPost(String accessToken, Long jobPostId, JobPostApplyRequest jobPostApplyRequest) throws Exception {
 
 
@@ -597,6 +589,8 @@ public class JobPostImpl implements JobPostService {
 
         jobPostRepository.save(jobPost);
 
+        updateJobPostCacheDynamic(jobPost, jobPost.getJobPosterId());
+
         log.info("User applied to job post successfully");
 
         notificationService.sendNotification(Notification.builder()
@@ -621,7 +615,6 @@ public class JobPostImpl implements JobPostService {
     }
 
     @Transactional
-    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Override
     public void takeApplicantsAction(UUID userId, Long jobPostId, List<ApplicantActionRequest> applicantsActionRequest) {
 
@@ -709,6 +702,9 @@ public class JobPostImpl implements JobPostService {
         // Save the updated job post
         jobPostRepository.save(jobPost);
 
+        // Update the job post cache
+        updateJobPostCacheDynamic(jobPost, jobPost.getJobPosterId());
+
         log.info("All applicant actions processed successfully.");
     }
 
@@ -727,7 +723,6 @@ public class JobPostImpl implements JobPostService {
      * @param message The new message to update
      * @throws Exception If the user is not an admin or job poster, job post status is not OPEN, applicant does not exist, or message is empty
      */
-    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Override
     public void updateApplicantMessage(String accessToken, Long jobPostId, Long applicantId, String message) throws Exception{
 //        Get the job post from the database
@@ -750,6 +745,8 @@ public class JobPostImpl implements JobPostService {
         // Save the updated applicant
         applicantRepository.save(applicant);
 
+        updateJobPostCacheDynamic(jobPost, jobPost.getJobPosterId());
+
         log.info("Applicant message updated successfully");
     }
 
@@ -765,7 +762,6 @@ public class JobPostImpl implements JobPostService {
      * @throws Exception If the user is not an admin or job poster, job post status is not OPEN, or applicant does not exist
      */
     @Transactional
-    @CacheEvict(value = "myJobPostCache", key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId")
     @Override
     public void deleteApplicant(String accessToken, Long jobPostId, Long applicantId) throws Exception {
 //        Get the job post from the database
@@ -786,20 +782,12 @@ public class JobPostImpl implements JobPostService {
         // Save the the updated job post
         jobPostRepository.save(jobPost);
 
+        updateJobPostCacheDynamic(jobPost, jobPost.getJobPosterId());
+
         log.info("Applicant deleted successfully");
     }
 
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(
-                    value = "myJobPostCache",
-                    key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId"
-            ),
-            @CacheEvict(
-                    value = "jobPostCache",
-                    key = "#jobPostId"
-            )
-    })
     @Override
     public void startJobPost(String accessToken, Long jobPostId) throws Exception {
 //        Get the job post from the database
@@ -840,6 +828,10 @@ public class JobPostImpl implements JobPostService {
         jobPost.setStatus(JobStatus.IN_PROGRESS);
         jobPostRepository.save(jobPost);
 
+        // Manual cache eviction
+        updateJobPostCacheDynamic(jobPost, jobPost.getJobPosterId());
+
+
         notificationService.sendNotification(Notification.builder()
                 .message("Your job post '" + jobPost.getTitle() + "' have started. Good luck!:")
                 .destinationUserId(jobPost.getJobPosterId())
@@ -863,17 +855,18 @@ public class JobPostImpl implements JobPostService {
 
         log.info("Job post started successfully");
     }
+
+    /**
+     * Cancel a job post by its ID
+     * Only the job poster and admins can cancel a job post
+     * The job post status must be OPEN if the user is not an admin
+     * The applicants are notified of the cancellation
+     *
+     * @param accessToken Access token of the user to check if they are an admin or job poster
+     * @param jobPostId The ID of the job post to cancel
+     * @throws Exception If the user is not an admin or job poster, job post status is not OPEN, or applicants do not exist
+     */
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(
-                    value = "myJobPostCache",
-                    key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId"
-            ),
-            @CacheEvict(
-                    value = "jobPostCache",
-                    key = "#jobPostId"
-            )
-    })
     @Override
     public void cancelJobPost(String accessToken, Long jobPostId) throws Exception {
 
@@ -895,6 +888,10 @@ public class JobPostImpl implements JobPostService {
 //        Save the updated applicants
         applicantRepository.saveAll(applicants);
 
+//        Save the updated job post
+        updateJobPostCacheDynamic(jobPost, jobPost.getJobPosterId());
+
+
 //        Set the status of the job post to CANCELLED
         jobPost.setStatus(JobStatus.CANCELLED);
         jobPostRepository.save(jobPost);
@@ -913,16 +910,6 @@ public class JobPostImpl implements JobPostService {
 
 
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(
-                    value = "myJobPostCache",
-                    key = "T(org.jobspotter.jobpost.authUtils.JWTUtils).getUserIdFromToken(#accessToken).toString() + ':' + #jobPostId"
-            ),
-            @CacheEvict(
-                    value = "jobPostCache",
-                    key = "#jobPostId"
-            )
-    })
     @Override
     public void finishJobPost(String accessToken, Long jobPostId) throws Exception{
 
@@ -938,7 +925,8 @@ public class JobPostImpl implements JobPostService {
 
         jobPostRepository.save(jobPost);
 
-//       TODO: Send notifications to all participating applicants
+        updateJobPostCacheDynamic(jobPost, jobPost.getJobPosterId());
+
         notificationService.sendNotification(Notification.builder()
                 .message("Your job post '" + jobPost.getTitle() + "' have been completed. Thank you for using JobSpotter.")
                 .destinationUserId(jobPost.getJobPosterId())
@@ -1018,6 +1006,64 @@ public class JobPostImpl implements JobPostService {
 
 //Cache Methods
 //----------------------------------------------------------------------------------------------------------------
+private void updateJobPostCacheDynamic(JobPost jobPost, UUID userId) {
+    String publicCacheKey = "jobPostCache::" + jobPost.getJobPostId();
+    String privateCacheKey = "myJobPostCache::" + userId + ":" + jobPost.getJobPostId();
+
+    // Handle public cache (jobPostCache)
+    Object publicCachedObject = redisTemplate.opsForValue().get(publicCacheKey);
+    if (publicCachedObject instanceof JobPostDetailedResponse cachedPublic) {
+        cachedPublic.setStatus(jobPost.getStatus());
+        cachedPublic.setLastUpdatedAt(jobPost.getLastUpdatedAt());
+        cachedPublic.setApplicantsCount(jobPost.getApplicants().size());
+        cachedPublic.setTitle(jobPost.getTitle());
+        cachedPublic.setDescription(jobPost.getDescription());
+        cachedPublic.setTags(
+                jobPost.getTags().stream()
+                        .map(tag -> TagDto.builder()
+                                .tagId(tag.getTagId())
+                                .name(tag.getName())
+                                .build())
+                        .collect(Collectors.toSet())
+        );
+
+        redisTemplate.opsForValue().set(publicCacheKey, cachedPublic);
+        log.info("Updated jobPostCache for jobPostId {}", jobPost.getJobPostId());
+    }
+
+    // Handle private cache (myJobPostCache)
+    Object privateCachedObject = redisTemplate.opsForValue().get(privateCacheKey);
+    if (privateCachedObject instanceof MyJobPostDetailedResponse cachedPrivate) {
+        cachedPrivate.setStatus(jobPost.getStatus());
+        cachedPrivate.setLastUpdatedAt(jobPost.getLastUpdatedAt());
+        cachedPrivate.setMaxApplicants(jobPost.getMaxApplicants());
+        cachedPrivate.setApplicants(
+                jobPost.getApplicants().stream()
+                        .map(applicant -> ApplicantDetailedResponse.builder()
+                                .applicantId(applicant.getApplicantId())
+                                .userId(applicant.getUserId())
+                                .message(applicant.getMessage())
+                                .status(applicant.getStatus())
+                                .build())
+                        .collect(Collectors.toList())
+        );
+        cachedPrivate.setTitle(jobPost.getTitle());
+        cachedPrivate.setDescription(jobPost.getDescription());
+        cachedPrivate.setTags(
+                jobPost.getTags().stream()
+                        .map(tag -> TagDto.builder()
+                                .tagId(tag.getTagId())
+                                .name(tag.getName())
+                                .build())
+                        .collect(Collectors.toSet())
+        );
+
+        redisTemplate.opsForValue().set(privateCacheKey, cachedPrivate);
+        log.info("Updated myJobPostCache for userId {} and jobPostId {}", userId, jobPost.getJobPostId());
+    }
+}
+
+
 private void incrementDailyJobPostView(String accessTocken,Long jobPostId, String ipAddress) {
     if (ipAddress == null || ipAddress.isEmpty()) {
         return; // No IP? Don't proceed.
