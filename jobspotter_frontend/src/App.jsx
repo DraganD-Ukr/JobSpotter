@@ -3,10 +3,9 @@ import { ThemeProvider } from "./components/ThemeContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Notification from "./components/Notification";
-import HelpAndSupport from "./pages/HelpandSupport";
+import HelpAndSupport from "./pages/HelpAndSupport";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Assistance from "./components/Assistance";
-
 import { Home } from "./pages/Home";
 import { About } from "./pages/About";
 import { Contact } from "./pages/Contact";

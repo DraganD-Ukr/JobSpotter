@@ -2,7 +2,6 @@ import React, { useState, useContext } from "react";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { ThemeContext } from "./ThemeContext";
 import { Link } from "react-router-dom";
-
 import ProfilePicture from './ProfilePicture';
 
 const ApplicantItem = React.memo(({
@@ -15,7 +14,6 @@ const ApplicantItem = React.memo(({
 }) => {
   const { darkMode } = useContext(ThemeContext);
   const [localStatus, setLocalStatus] = useState(applicant.status);
-  console.log("jobpostid", jobPostId);
 
   const onApprove = (e) => {
     e.preventDefault();

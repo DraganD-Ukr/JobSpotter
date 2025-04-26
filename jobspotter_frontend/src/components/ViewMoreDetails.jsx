@@ -23,7 +23,6 @@ export function ViewMoreDetails() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [actionMessage, setActionMessage] = useState("");
-  const [autoStartMessage, setAutoStartMessage] = useState("");
   const [isApplicantsPopupVisible, setIsApplicantsPopupVisible] = useState(false);
   const [applicantCounts, setApplicantCounts] = useState({
     approved: 0,
@@ -144,7 +143,7 @@ export function ViewMoreDetails() {
       return setApplicantCounts({ approved: 0, rejected: 0, pending: 0 });
     }
     const counts = applicants.reduce((acc, applicant) => {
-      acc[applicant.status === "APPROVED"
+      acc[applicant.status === "APPROVED" || applicant.status === "ACCEPTED"
         ? "approved"
         : applicant.status === "REJECTED"
         ? "rejected"
@@ -160,18 +159,13 @@ export function ViewMoreDetails() {
       setTimeout(() => setActionMessage(""), 5000);
       return;
     }
-    if (action === "approve" && applicantCounts.approved >= job.maxApplicants) {
+    if (action === "accepted" && applicantCounts.approved >= job.maxApplicants) {
       setActionMessage(
         `Cannot approve more than ${job.maxApplicants} applicants.`
       );
       setTimeout(() => setActionMessage(""), 5000);
       return;
     }
-    setAutoStartMessage(
-      action === "approve" && applicantCounts.approved + 1 === job.maxApplicants
-        ? "Approving this applicant will automatically start the job post."
-        : ""
-    );
     setLocalApplicants((prev) => {
       const updated = prev.map((applicant) =>
         applicant.applicantId === applicantId
@@ -198,7 +192,9 @@ export function ViewMoreDetails() {
         setActionMessage(successMessage);
         fetchJobDetails();
         setTimeout(() => setActionMessage(""), 3000);
-        if (action === "finish") setIsReviewPopupVisible(true);
+        if (action === "finish") {
+          setIsReviewPopupVisible(true);
+        }
       })
       .catch((err) => {
         setErrorMessage(`Failed to ${action} job: ${err.message}`);
@@ -216,7 +212,6 @@ export function ViewMoreDetails() {
   const handleCloseApplicantsPopup = () => {
     setIsApplicantsPopupVisible(false);
     setLocalApplicants([]);
-    setAutoStartMessage("");
   };
 
   const handleSaveChanges = async () => {
@@ -452,7 +447,9 @@ export function ViewMoreDetails() {
   }
 
   const isJobOpen = job.status === "OPEN";
+  const isJobInProgress = job.status === "IN_PROGRESS";
   const canEditJob = isJobOpen && applicantCounts.approved === 0;
+  const canStartJob = isJobOpen && applicantCounts.approved >= job.maxApplicants;
 
   const indexOfLastApplicant = currentPage * applicantsPerPage;
   const indexOfFirstApplicant = indexOfLastApplicant - applicantsPerPage;
@@ -465,11 +462,11 @@ export function ViewMoreDetails() {
 
   const pendingApplicants = Array.isArray(localApplicants)
     ? localApplicants.filter(
-        (app) => app.status !== "APPROVED" && app.status !== "REJECTED"
+        (app) => app.status !== "APPROVED" && app.status !== "REJECTED" && app.status !== "ACCEPTED"
       )
     : [];
   const approvedApplicants = Array.isArray(localApplicants)
-    ? localApplicants.filter((app) => app.status === "APPROVED")
+    ? localApplicants.filter((app) => app.status === "APPROVED" || app.status === "ACCEPTED")
     : [];
   const rejectedApplicants = Array.isArray(localApplicants)
     ? localApplicants.filter((app) => app.status === "REJECTED")
@@ -519,17 +516,6 @@ export function ViewMoreDetails() {
             <FaTrophy className="mr-1 xs:mr-2 sm:mr-2 text-green-500 h-4 xs:h-5 sm:h-6 w-4 xs:w-5 sm:w-6" />
             <p className="text-xs xs:text-sm sm:text-sm">{actionMessage}</p>
           </animated.div>
-        )}
-
-        {autoStartMessage && (
-          <div
-            className="mb-4 xs:mb-6 sm:mb-8 p-2 xs:p-3 sm:p-4 bg-yellow-100 border border-yellow-400
-              text-yellow-700 rounded-md flex items-center justify-center"
-            role="alert"
-          >
-            <FaExclamationTriangle className="mr-1 xs:mr-2 sm:mr-2 text-yellow-500 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
-            <p className="text-xs xs:text-sm sm:text-sm">{autoStartMessage}</p>
-          </div>
         )}
 
         <div className="mb-2 xs:mb-3 sm:mb-4">
@@ -601,10 +587,10 @@ export function ViewMoreDetails() {
               hover:bg-blue-600 transition duration-300 focus:outline-none
               focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
               text-xs xs:text-sm sm:text-sm
-              ${job.status !== "OPEN"
+              ${!canStartJob
                 ? "opacity-50 cursor-not-allowed bg-gray-300 hover:bg-gray-300 text-gray-500 border border-gray-400"
                 : ""}`}
-            disabled={job.status !== "OPEN"}
+            disabled={!canStartJob}
           >
             Start
           </button>
@@ -614,10 +600,10 @@ export function ViewMoreDetails() {
               hover:bg-purple-600 transition duration-300 focus:outline-none
               focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50
               text-xs xs:text-sm sm:text-sm
-              ${job.status !== "IN_PROGRESS"
+              ${!isJobInProgress
                 ? "opacity-50 cursor-not-allowed bg-gray-300 hover:bg-gray-300 text-gray-500 border border-gray-400"
                 : ""}`}
-            disabled={job.status !== "IN_PROGRESS"}
+            disabled={!isJobInProgress}
           >
             Finish
           </button>
@@ -627,10 +613,10 @@ export function ViewMoreDetails() {
               hover:bg-gray-600 transition duration-300 focus:outline-none
               focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50
               text-xs xs:text-sm sm:text-sm
-              ${job.status !== "OPEN"
+              ${!isJobOpen
                 ? "opacity-50 cursor-not-allowed bg-gray-300 hover:bg-gray-300 text-gray-500 border border-gray-400"
                 : ""}`}
-            disabled={job.status !== "OPEN"}
+            disabled={!isJobOpen}
           >
             Cancel
           </button>
@@ -689,7 +675,6 @@ export function ViewMoreDetails() {
         applicantCounts={applicantCounts}
         errorMessage={errorMessage}
         errorBoxAnimation={errorBoxAnimation}
-        autoStartMessage={autoStartMessage}
         pendingApplicants={pendingApplicants}
         approvedApplicants={approvedApplicants}
         rejectedApplicants={rejectedApplicants}
@@ -713,7 +698,7 @@ export function ViewMoreDetails() {
         jobPostId={job.jobPostId}
         reviewerID={currentUser?.userId}
         reviewedUserID={approvedApplicants.length > 0
-          ? approvedApplicants[0].applicantId
+          ? approvedApplicants[0].userId // Use userId instead of applicantId
           : null}
         roleOfReviewer="POSTER"
       />

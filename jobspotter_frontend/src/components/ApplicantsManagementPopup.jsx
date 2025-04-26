@@ -11,7 +11,6 @@ const ApplicantsManagementPopup = React.memo(({
     applicantCounts,
     errorMessage,
     errorBoxAnimation,
-    autoStartMessage,
     pendingApplicants,
     approvedApplicants,
     rejectedApplicants,
@@ -73,12 +72,6 @@ const ApplicantsManagementPopup = React.memo(({
                                 <p className="text-xs xs:text-sm sm:text-sm">{errorMessage}</p>
                             </div>
                         </animated.div>
-                    )}
-                    {autoStartMessage && (
-                        <div className="mb-2 xs:mb-3 sm:mb-4 p-2 xs:p-3 sm:p-3 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-md flex items-center" role="alert">
-                            <FaExclamationTriangle className="mr-1 xs:mr-2 h-4 xs:h-5 sm:h-5 w-4 xs:w-5 sm:w-5" />
-                            <p className="text-xs xs:text-sm sm:text-sm">{autoStartMessage}</p>
-                        </div>
                     )}
 
                     {/* Pending Applicants */}

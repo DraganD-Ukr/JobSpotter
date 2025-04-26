@@ -1,5 +1,5 @@
-import React, { useState, useContext } from "react";
-import { FaStar, FaTimes, FaExclamationTriangle } from "react-icons/fa";
+import React, { useState, useContext, useEffect } from "react";
+import { FaStar, FaTimes, FaExclamationTriangle, FaEdit, FaTrash } from "react-icons/fa";
 import { ThemeContext } from "./ThemeContext";
 import { useSpring, animated } from "react-spring";
 
@@ -9,14 +9,16 @@ function UserReviewPopup({
   jobPostId,
   reviewerID,
   reviewedUserID,
-  roleOfReviewer
+  roleOfReviewer,
+  existingReview 
 }) {
   const { darkMode } = useContext(ThemeContext);
 
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
+  const [rating, setRating] = useState(existingReview?.rating || 0);
+  const [comment, setComment] = useState(existingReview?.comment || "");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [reviewId, setReviewId] = useState(existingReview?.reviewId || null);
 
   // Animation for the modal
   const modalAnimation = useSpring({
@@ -38,6 +40,19 @@ function UserReviewPopup({
     setErrorMessage("");
     setSuccessMessage("");
 
+    // Validate required fields
+    if (!reviewerID) {
+      setErrorMessage("Reviewer user ID is required.");
+      return;
+    }
+    if (!roleOfReviewer) {
+      setErrorMessage("Reviewer role is required.");
+      return;
+    }
+    if (!reviewedUserID) {
+      setErrorMessage("Reviewed user ID is required.");
+      return;
+    }
     if (rating < 1 || rating > 5) {
       setErrorMessage("Please select a rating between 1 and 5 stars.");
       return;
@@ -53,18 +68,60 @@ function UserReviewPopup({
     };
 
     try {
-      const response = await fetch("/api/v1/reviews", {
-        method: "POST",
+      let response;
+      if (reviewId) {
+        // Update existing review
+        response = await fetch(`/api/v1/reviews/${reviewId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload)
+        });
+      } else {
+        // Create new review
+        response = await fetch("/api/v1/reviews/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload)
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error(`Failed to ${reviewId ? "update" : "submit"} review: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (!reviewId) {
+        setReviewId(data.reviewId);
+      }
+      setSuccessMessage(`Review ${reviewId ? "updated" : "submitted"} successfully!`);
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setErrorMessage(error.message);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!reviewId) {
+      setErrorMessage("No review to delete.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/v1/reviews/${reviewId}`, {
+        method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload)
+        credentials: "include"
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to submit review: ${response.statusText}`);
+        throw new Error(`Failed to delete review: ${response.statusText}`);
       }
 
-      setSuccessMessage("Review submitted successfully!");
+      setSuccessMessage("Review deleted successfully!");
       setTimeout(() => {
         onClose();
       }, 2000);
@@ -85,7 +142,7 @@ function UserReviewPopup({
       >
         <div className="flex justify-between items-center mb-4 xs:mb-5 sm:mb-6">
           <h2 className="text-xl xs:text-2xl sm:text-2xl font-semibold">
-            Submit a Review
+            {reviewId ? "Edit Review" : "Submit a Review"}
           </h2>
           <button
             onClick={onClose}
@@ -153,6 +210,16 @@ function UserReviewPopup({
           </div>
 
           <div className="flex justify-end gap-2 xs:gap-3 sm:gap-4">
+            {reviewId && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className={`px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs xs:text-sm sm:text-sm flex items-center`}
+              >
+                <FaTrash className="mr-1" />
+                Delete
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}
@@ -162,9 +229,16 @@ function UserReviewPopup({
             </button>
             <button
               type="submit"
-              className={`px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-xs xs:text-sm sm:text-sm`}
+              className={`px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-xs xs:text-sm sm:text-sm flex items-center`}
             >
-              Submit
+              {reviewId ? (
+                <>
+                  <FaEdit className="mr-1" />
+                  Update
+                </>
+              ) : (
+                "Submit"
+              )}
             </button>
           </div>
         </form>
