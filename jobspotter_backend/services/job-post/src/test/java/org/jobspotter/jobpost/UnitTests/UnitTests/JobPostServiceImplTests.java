@@ -90,10 +90,6 @@ public class JobPostServiceImplTests {
     @InjectMocks
     private JobPostImpl jobPostImpl;
 
-    @BeforeEach
-    void setup() {
-        when(cacheManager.getCache("jobPostCache")).thenReturn(cache);
-    }
     //==================================================================================================================
     //                                     TESTS FOR MAIN JOB POST SERVICE METHODS
     //==================================================================================================================
@@ -1315,6 +1311,7 @@ public class JobPostServiceImplTests {
 
         try (MockedStatic<JWTUtils> jwtUtilsMocked = mockStatic(JWTUtils.class)) {
             jwtUtilsMocked.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(userId);
+            when(cacheManager.getCache("jobPostCache")).thenReturn(cache);
 
             // Act
             jobPostImpl.startJobPost(accessToken, jobPostId);
@@ -1409,6 +1406,7 @@ public class JobPostServiceImplTests {
         try (MockedStatic<JWTUtils> jwtUtilsMockedStatic = Mockito.mockStatic(JWTUtils.class)) {
             jwtUtilsMockedStatic.when(() -> JWTUtils.getUserIdFromToken(accessToken)).thenReturn(jobPosterId);
             when(jwtUtils.hasAdminRole(accessToken)).thenReturn(false);
+            when(cacheManager.getCache("jobPostCache")).thenReturn(cache);
 
             // Act
             jobPostImpl.cancelJobPost(accessToken, jobPostId);
