@@ -130,7 +130,7 @@ export default function AdminReportManagementPopup() {
         setSuccessMessage("Job post deleted successfully!");
         setIsSuccessMessageVisible(true);
         setIsDeleteJobPostConfirmationVisible(false);
-        setJobPostData(null); 
+        setJobPostData(null); // Clear job post data after deletion
       })
       .catch((error) => {
         console.error("Error deleting job post:", error.message);
@@ -157,7 +157,7 @@ export default function AdminReportManagementPopup() {
         setSuccessMessage("Applicant deleted successfully!");
         setIsSuccessMessageVisible(true);
         setIsDeleteApplicantConfirmationVisible(false);
-        setApplicantData(null); 
+        setApplicantData(null); // Clear applicant data after deletion
       })
       .catch((error) => {
         console.error("Error deleting applicant:", error.message);
@@ -193,7 +193,7 @@ export default function AdminReportManagementPopup() {
         setSuccessMessage("Applicant updated successfully!");
         setIsSuccessMessageVisible(true);
         setIsEditApplicantFormVisible(false);
-        setApplicantData((prev) => ({ ...prev, message })); 
+        setApplicantData((prev) => ({ ...prev, message })); // Update local state
       })
       .catch((error) => {
         console.error("Error updating applicant:", error.message);
@@ -226,7 +226,7 @@ export default function AdminReportManagementPopup() {
         setSuccessMessage("Review updated successfully!");
         setIsSuccessMessageVisible(true);
         setIsEditReviewFormVisible(false);
-        setReportedReview((prev) => ({ ...prev, ...reviewData })); 
+        setReportedReview((prev) => ({ ...prev, ...reviewData })); // Update local state
       })
       .catch((error) => {
         console.error("Error updating review:", error.message);
@@ -248,7 +248,7 @@ export default function AdminReportManagementPopup() {
         setSuccessMessage("Review removed successfully!");
         setIsSuccessMessageVisible(true);
         setIsRemoveReviewConfirmationVisible(false);
-        setReportedReview(null);
+        setReportedReview(null); // Clear review data after deletion
       })
       .catch((error) => {
         console.error("Error removing review:", error.message);
@@ -380,11 +380,10 @@ export default function AdminReportManagementPopup() {
         console.log("Disabled user:", userId);
         setSuccessMessage("User disabled successfully!");
         setIsSuccessMessageVisible(true);
-        
         // Update user details to reflect disabled state
         setUserDetails((prev) => ({
           ...prev,
-          isDisabled: true, 
+          isDisabled: true, // Assuming the API might not return this, we set it locally
         }));
       })
       .catch((error) => {
@@ -497,7 +496,7 @@ export default function AdminReportManagementPopup() {
   return (
     <div
       className={`
-        my-6 xs:my-8 sm:my-10 main-content min-h-screen p-4 xs:p-6 sm:p-8 
+        my-10 main-content min-h-screen p-4 border rounded-4xl 
         transition-all ease-in-out duration-500
         ${darkMode
           ? "bg-gradient-to-br from-gray-900 to-gray-800 text-white border-gray-700"
@@ -509,8 +508,7 @@ export default function AdminReportManagementPopup() {
         <div
           className="
             fixed top-4 left-1/2 transform -translate-x-1/2 
-            bg-green-600 text-white py-2 xs:py-3 sm:py-3 px-4 xs:px-6 sm:px-6 rounded-md shadow-lg z-50
-            w-11/12 xs:w-3/4 sm:w-1/2 max-w-md
+            bg-green-600 text-white py-3 px-6 rounded-md shadow-lg z-50
           "
         >
           {successMessage || "Action completed successfully!"}
@@ -521,42 +519,41 @@ export default function AdminReportManagementPopup() {
         <div
           className="
             fixed top-4 left-1/2 transform -translate-x-1/2 
-            bg-red-600 text-white py-2 xs:py-3 sm:py-3 px-4 xs:px-6 sm:px-6 rounded-md shadow-lg z-50
-            w-11/12 xs:w-3/4 sm:w-1/2 max-w-md
+            bg-red-600 text-white py-3 px-6 rounded-md shadow-lg z-50
           "
         >
           {errorMessage || "Error completing action!"}
         </div>
       )}
 
-      <h1 className="text-2xl xs:text-3xl sm:text-4xl font-extrabold mb-2 xs:mb-3 sm:mb-4 tracking-wide">
+      <h1 className="text-4xl font-extrabold mb-4 tracking-wide">
         REPORT MANAGER
       </h1>
-      <p className="mb-4 xs:mb-5 sm:mb-6 text-sm xs:text-base sm:text-lg">
+      <p className="mb-6 text-lg">
         Welcome, {username || "User"}, manage your reports here.
       </p>
 
       <div
         className={`
-          p-4 xs:p-6 sm:p-8 rounded-xl transition-all ease-in-out duration-500 shadow-md
+          p-6 rounded-xl transition-all ease-in-out duration-500 shadow-md
           ${darkMode ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"}
         `}
       >
         {/* Current Status */}
-        <div className="mb-2 xs:mb-3 sm:mb-4">
-          <p className="flex items-center text-sm xs:text-base sm:text-md mb-1 xs:mb-2 sm:mb-2">
+        <div className="mb-4">
+          <p className="flex items-center text-md mb-2">
             <strong className="mr-1">Status:</strong>
             <StatusIcon className={`${statusColor} mr-1`} />
             <span className={`${statusColor}`}>{statusText}</span>
           </p>
-          <p className="text-xs xs:text-sm sm:text-sm text-gray-500">
+          <p className="text-sm text-gray-500">
             <strong>Created At:</strong> {createdAtReadable}
           </p>
         </div>
 
         {/* Title Box */}
-        <div className="mb-2 xs:mb-3 sm:mb-4">
-          <h2 className="text-center font-bold text-lg xs:text-xl sm:text-xl">
+        <div className="mb-4">
+          <h2 className="text-center font-bold text-xl">
             Title
           </h2>
         </div>
@@ -564,35 +561,35 @@ export default function AdminReportManagementPopup() {
         {/* User report message box */}
         <div
           className={`
-            rounded p-2 xs:p-3 sm:p-4 mb-4 xs:mb-5 sm:mb-6
+            rounded p-4 mb-6
             ${darkMode ? "border border-gray-700 bg-gray-900" : "border border-gray-300 bg-gray-50"}
           `}
         >
           {/* The Title is back here above the message */}
           {report.reportTitle && (
-            <div className="text-center font-extrabold mb-2 xs:mb-3 sm:mb-3 text-lg xs:text-xl sm:text-2xl">
+            <div className="text-center font-extrabold mb-3 text-2xl">
               {report.reportTitle}
             </div>
           )}
-          <p className="text-xs xs:text-sm sm:text-sm">
+          <p className="text-sm">
             <span className="font-bold">User report message:</span>{" "}
             {report && report.reportMessage ? report.reportMessage : "No message provided"}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 xs:gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {jobPostData ? (
             <div
               className={`
-                rounded p-2 xs:p-3 sm:p-4 
+                rounded p-4 
                 ${darkMode
                   ? "border border-gray-700 bg-gray-900"
                   : "border border-gray-300 bg-gray-50"
                 }
               `}
             >
-              <h2 className="font-bold mb-1 xs:mb-2 sm:mb-2 text-base xs:text-lg sm:text-lg">Details Of JobPost</h2>
-              <p className="text-xs xs:text-sm sm:text-sm mb-1 xs:mb-2 sm:mb-2">
+              <h2 className="font-bold mb-2 text-lg">Details Of JobPost</h2>
+              <p className="text-sm mb-2">
                 <strong>Title:</strong> {jobTitle}
                 <br />
                 <strong>Description:</strong> {jobDescription}
@@ -603,25 +600,25 @@ export default function AdminReportManagementPopup() {
               </p>
             </div>
           ) : (
-            <div className="rounded p-2 xs:p-3 sm:p-4 border border-gray-300 bg-gray-50 text-red-600 text-center">
-              <h2 className="font-bold text-base xs:text-lg sm:text-lg">Job Post Not Found</h2>
-              <p className="text-xs xs:text-sm sm:text-sm">The requested job post could not be found.</p>
+            <div className="rounded p-4 border border-gray-300 bg-gray-50 text-red-600 text-center">
+              <h2 className="font-bold text-lg">Job Post Not Found</h2>
+              <p className="text-sm">The requested job post could not be found.</p>
             </div>
           )}
 
           <div
             className={`
-              rounded p-2 xs:p-3 sm:p-4 
+              rounded p-4 
               ${darkMode
                 ? "border border-gray-700 bg-gray-900"
                 : "border border-gray-300 bg-gray-50"
               }
             `}
           >
-            <h2 className="font-bold mb-1 xs:mb-2 sm:mb-2 text-base xs:text-lg sm:text-lg">Details of reported user</h2>
+            <h2 className="font-bold mb-2 text-lg">Details of reported user</h2>
             {userDetails ? (
               <>
-                <div className="mb-1 xs:mb-2 sm:mb-2 text-xs xs:text-sm sm:text-sm text-gray-400">
+                <div className="mb-2 text-sm text-gray-400">
                   <p>
                     <strong>Reported User ID:</strong> {userDetails.userId || "N/A"}
                   </p>
@@ -642,10 +639,10 @@ export default function AdminReportManagementPopup() {
                   </p>
                 </div>
 
-                <div className="flex justify-start mt-1 xs:mt-2 sm:mt-2">
+                <div className="flex justify-start mt-2">
                   <button
                     className={`
-                      bg-red-600 text-white px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 rounded text-xs xs:text-sm sm:text-base hover:opacity-90 transition
+                      bg-red-600 text-white px-4 py-2 rounded hover:opacity-90 transition
                       ${userDetails.isDisabled ? "opacity-50 cursor-not-allowed" : ""}
                     `}
                     onClick={handleUserDisable}
@@ -656,7 +653,7 @@ export default function AdminReportManagementPopup() {
                 </div>
               </>
             ) : (
-              <p className="text-xs xs:text-sm sm:text-sm mb-1 xs:mb-2 sm:mb-2 text-red-600">No user data found.</p>
+              <p className="text-sm mb-2 text-red-600">No user data found.</p>
             )}
           </div>
         </div>
@@ -664,15 +661,15 @@ export default function AdminReportManagementPopup() {
         {report?.reportedReviewId && reportedReview && (
           <div
             className={`
-              rounded p-2 xs:p-3 sm:p-4 mt-2 xs:mt-3 sm:mt-4 
+              rounded p-4 mt-4 
               ${darkMode
                 ? "border border-gray-700 bg-gray-900"
                 : "border border-gray-300 bg-gray-50"
               }
             `}
           >
-            <h2 className="font-bold mb-1 xs:mb-2 sm:mb-2 text-base xs:text-lg sm:text-lg">Details of Reported Review</h2>
-            <p className="text-xs xs:text-sm sm:text-sm mb-1 xs:mb-2 sm:mb-2">
+            <h2 className="font-bold mb-2 text-lg">Details of Reported Review</h2>
+            <p className="text-sm mb-2">
               <strong>Review ID:</strong> {reportedReview.reviewId || "N/A"}
               <br />
               <strong>Content:</strong> {reportedReview.content || "N/A"}
@@ -703,15 +700,15 @@ export default function AdminReportManagementPopup() {
         {report?.reportedApplicantId && applicantData && (
           <div
             className={`
-              rounded p-2 xs:p-3 sm:p-4 mt-2 xs:mt-3 sm:mt-4 
+              rounded p-4 mt-4 
               ${darkMode
                 ? "border border-gray-700 bg-gray-900"
                 : "border border-gray-300 bg-gray-50"
               }
             `}
           >
-            <h2 className="font-bold mb-1 xs:mb-2 sm:mb-2 text-base xs:text-lg sm:text-lg">Details of Reported Applicant</h2>
-            <p className="text-xs xs:text-sm sm:text-sm mb-1 xs:mb-2 sm:mb-2">
+            <h2 className="font-bold mb-2 text-lg">Details of Reported Applicant</h2>
+            <p className="text-sm mb-2">
               <strong>Applicant ID:</strong> {applicantData.applicantId || "N/A"}
               <br />
               <strong>Applicant Message:</strong> {applicantData.message || "N/A"}
@@ -740,24 +737,23 @@ export default function AdminReportManagementPopup() {
         {/* Edit JobPost form */}
         {isEditJobPostFormVisible ? (
           jobPostData ? (
-            <div className="rounded-md shadow-md p-4 xs:p-5 sm:p-6 mt-4 xs:mt-5 sm:mt-6 bg-white">
-              <h3 className="mb-4 xs:mb-5 sm:mb-6 text-lg xs:text-xl sm:text-xl font-semibold">Edit Job Post</h3>
+            <div className="rounded-md shadow-md p-6 mt-6 bg-white">
+              <h3 className="mb-6 text-xl font-semibold">Edit Job Post</h3>
               <form
                 onSubmit={handleEditJobPostSubmit}
-                className="space-y-2 xs:space-y-3 sm:space-y-4"
+                className="space-y-4"
               >
                 <div>
                   <label
                     htmlFor="title"
-                    className="block text-gray-700 text-xs xs:text-sm sm:text-sm font-bold mb-1 xs:mb-2 sm:mb-2"
+                    className="block text-gray-700 text-sm font-bold mb-2"
                   >
                     Title:
                   </label>
                   <input
                     className="
-                      shadow appearance-none border rounded w-full py-1 xs:py-2 sm:py-2 px-2 xs:px-3 sm:px-3 
+                      shadow appearance-none border rounded w-full py-2 px-3 
                       text-gray-700 leading-tight focus:outline-none focus:shadow-outline
-                      text-sm xs:text-base sm:text-base
                     "
                     id="title"
                     type="text"
@@ -768,28 +764,25 @@ export default function AdminReportManagementPopup() {
                 <div>
                   <label
                     htmlFor="description"
-                    className="block text-gray-700 text-xs xs:text-sm sm:text-sm font-bold mb-1 xs:mb-2 sm:mb-2"
+                    className="block text-gray-700 text-sm font-bold mb-2"
                   >
                     Description:
                   </label>
                   <textarea
                     className="
-                      shadow appearance-none border rounded w-full py-1 xs:py-2 sm:py-2 px-2 xs:px-3 sm:px-3 
+                      shadow appearance-none border rounded w-full py-2 px-3 
                       text-gray-700 leading-tight focus:outline-none focus:shadow-outline resize-none
-                      text-sm xs:text-base sm:text-base
                     "
                     id="description"
                     defaultValue={jobPostData?.description}
                     name="description"
-                    rows="3"
                   />
                 </div>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 xs:gap-3 sm:gap-4">
+                <div className="flex items-center justify-between">
                   <button
                     className="
-                      w-full sm:w-auto px-4 xs:px-5 sm:px-5 py-1 xs:py-2 sm:py-2 bg-green-600 text-white rounded-md hover:bg-green-700 
+                      px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 
                       focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50
-                      text-xs xs:text-sm sm:text-base
                     "
                     type="submit"
                   >
@@ -797,9 +790,8 @@ export default function AdminReportManagementPopup() {
                   </button>
                   <button
                     className="
-                      w-full sm:w-auto px-4 xs:px-5 sm:px-5 py-1 xs:py-2 sm:py-2 bg-red-600 text-white rounded-md hover:bg-red-700 
+                      px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 
                       focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50
-                      text-xs xs:text-sm sm:text-base
                     "
                     onClick={() => setIsEditJobPostFormVisible(false)}
                     type="button"
@@ -810,9 +802,9 @@ export default function AdminReportManagementPopup() {
               </form>
             </div>
           ) : (
-            <div className="rounded-md shadow-md p-4 xs:p-5 sm:p-6 mt-4 xs:mt-5 sm:mt-6 bg-white text-red-600 text-center">
-              <h3 className="text-base xs:text-lg sm:text-lg font-semibold">Job Post Not Found</h3>
-              <p className="text-xs xs:text-sm sm:text-sm text-gray-700">The requested job post could not be found.</p>
+            <div className="rounded-md shadow-md p-6 mt-6 bg-white text-red-600 text-center">
+              <h3 className="text-lg font-semibold">Job Post Not Found</h3>
+              <p className="text-gray-700">The requested job post could not be found.</p>
             </div>
           )
         ) : null}
@@ -820,19 +812,18 @@ export default function AdminReportManagementPopup() {
         {/* Delete JobPost confirmation */}
         {isDeleteJobPostConfirmationVisible && (
           jobPostData ? (
-            <div className="rounded-md shadow-md p-4 xs:p-5 sm:p-6 mt-4 xs:mt-5 sm:mt-6 bg-white">
-              <h3 className="text-base xs:text-lg sm:text-lg font-semibold text-gray-800 mb-2 xs:mb-3 sm:mb-4">
+            <div className="rounded-md shadow-md p-6 mt-6 bg-white">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Confirm Delete Job Post
               </h3>
-              <p className="text-xs xs:text-sm sm:text-sm text-gray-700 mb-2 xs:mb-3 sm:mb-4">
+              <p className="text-gray-700 mb-4">
                 Are you sure you want to delete job post ID: {report.reportedJobPostId}?
               </p>
-              <div className="flex flex-col sm:flex-row justify-end space-x-0 sm:space-x-2 gap-2 xs:gap-3 sm:gap-4">
+              <div className="flex justify-end space-x-2">
                 <button
                   className="
-                    w-full sm:w-auto px-4 xs:px-5 sm:px-5 py-1 xs:py-2 sm:py-2 bg-red-600 text-white rounded-md hover:bg-red-700 
+                    px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 
                     focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50
-                    text-xs xs:text-sm sm:text-base
                   "
                   onClick={handleDeleteJobPost}
                 >
@@ -840,9 +831,8 @@ export default function AdminReportManagementPopup() {
                 </button>
                 <button
                   className="
-                    w-full sm:w-auto px-4 xs:px-5 sm:px-5 py-1 xs:py-2 sm:py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 
+                    px-5 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 
                     focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50
-                    text-xs xs:text-sm sm:text-base
                   "
                   onClick={() => setIsDeleteJobPostConfirmationVisible(false)}
                 >
@@ -851,9 +841,9 @@ export default function AdminReportManagementPopup() {
               </div>
             </div>
           ) : (
-            <div className="rounded-md shadow-md p-4 xs:p-5 sm:p-6 mt-4 xs:mt-5 sm:mt-6 bg-white text-red-600 text-center">
-              <h3 className="text-base xs:text-lg sm:text-lg font-semibold">Job Post Not Found </h3>
-              <p className="text-xs xs:text-sm sm:text-sm text-gray-700">The requested job post could not be found.</p>
+            <div className="rounded-md shadow-md p-6 mt-6 bg-white text-red-600 text-center">
+              <h3 className="text-lg font-semibold">Job Post Not Found </h3>
+              <p className="text-gray-700">The requested job post could not be found.</p>
             </div>
           )
         )}
@@ -861,18 +851,18 @@ export default function AdminReportManagementPopup() {
         {/* Edit applicant form */}
         {isEditApplicantFormVisible ? (
           applicantData ? (
-            <div className="rounded-md shadow-md p-4 xs:p-5 sm:p-6 mt-4 xs:mt-5 sm:mt-6 bg-white">
-              <h3 className="text-base xs:text-lg sm:text-lg font-semibold text-gray-800 mb-2 xs:mb-3 sm:mb-4">
+            <div className="rounded-md shadow-md p-6 mt-6 bg-white">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Edit Applicant Message
               </h3>
               <form
                 onSubmit={handleEditApplicantSubmit}
-                className="space-y-2 xs:space-y-3 sm:space-y-4"
+                className="space-y-4"
               >
                 <div>
                   <label
                     htmlFor="applicant-message"
-                    className="block text-gray-700 text-xs xs:text-sm sm:text-sm font-bold mb-1 xs:mb-2 sm:mb-2"
+                    className="block text-gray-700 text-sm font-bold mb-2"
                   >
                     Message:
                   </label>
@@ -880,20 +870,17 @@ export default function AdminReportManagementPopup() {
                     id="applicant-message"
                     name="applicant-message"
                     className="
-                      shadow appearance-none border rounded w-full py-1 xs:py-2 sm:py-2 px-2 xs:px-3 sm:px-3 
+                      shadow appearance-none border rounded w-full py-2 px-3 
                       text-gray-700 leading-tight focus:outline-none focus:shadow-outline resize-none
-                      text-sm xs:text-base sm:text-base
                     "
                     defaultValue={applicantData?.message}
-                    rows="3"
                   />
                 </div>
-                <div className="flex flex-col sm:flex-row justify-end space-x-0 sm:space-x-2 gap-2 xs:gap-3 sm:gap-4">
+                <div className="flex justify-end space-x-2">
                   <button
                     className="
-                      w-full sm:w-auto px-4 xs:px-5 sm:px-5 py-1 xs:py-2 sm:py-2 bg-green-600 text-white rounded-md hover:bg-green-700 
+                      px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 
                       focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50
-                      text-xs xs:text-sm sm:text-base
                     "
                     type="submit"
                   >
@@ -901,9 +888,8 @@ export default function AdminReportManagementPopup() {
                   </button>
                   <button
                     className="
-                      w-full sm:w-auto px-4 xs:px-5 sm:px-5 py-1 xs:py-2 sm:py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 
+                      px-5 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 
                       focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50
-                      text-xs xs:text-sm sm:text-base
                     "
                     onClick={() => setIsEditApplicantFormVisible(false)}
                     type="button"
@@ -914,8 +900,8 @@ export default function AdminReportManagementPopup() {
               </form>
             </div>
           ) : (
-            <div className="rounded-md shadow-md p-4 xs:p-5 sm:p-6 mt-4 xs:mt-5 sm:mt-6 bg-white">
-              <p className="text-red-500 font-semibold text-xs xs:text-sm sm:text-sm">
+            <div className="rounded-md shadow-md p-6 mt-6 bg-white">
+              <p className="text-red-500 font-semibold">
                 The applicant could not be found.
               </p>
             </div>
@@ -925,19 +911,18 @@ export default function AdminReportManagementPopup() {
         {/* Delete applicant confirmation */}
         {isDeleteApplicantConfirmationVisible ? (
           applicantData ? (
-            <div className="rounded-md shadow-md p-4 xs:p-5 sm:p-6 mt-4 xs:mt-5 sm:mt-6 bg-white">
-              <h3 className="text-base xs:text-lg sm:text-lg font-semibold text-gray-800 mb-2 xs:mb-3 sm:mb-4">
+            <div className="rounded-md shadow-md p-6 mt-6 bg-white">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Confirm Delete Applicant
               </h3>
-              <p className="text-xs xs:text-sm sm:text-sm text-gray-700 mb-2 xs:mb-3 sm:mb-4">
+              <p className="text-gray-700 mb-4">
                 Are you sure you want to delete applicant ID: {report.reportedApplicantId}?
               </p>
-              <div className="flex flex-col sm:flex-row justify-end space-x-0 sm:space-x-2 gap-2 xs:gap-3 sm:gap-4">
+              <div className="flex justify-end space-x-2">
                 <button
                   className="
-                    w-full sm:w-auto px-4 xs:px-5 sm:px-5 py-1 xs:py-2 sm:py-2 bg-red-600 text-white rounded-md hover:bg-red-700 
+                    px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 
                     focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50
-                    text-xs xs:text-sm sm:text-base
                   "
                   onClick={handleDeleteApplicant}
                 >
@@ -945,9 +930,8 @@ export default function AdminReportManagementPopup() {
                 </button>
                 <button
                   className="
-                    w-full sm:w-auto px-4 xs:px-5 sm:px-5 py-1 xs:py-2 sm:py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 
+                    px-5 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 
                     focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50
-                    text-xs xs:text-sm sm:text-base
                   "
                   onClick={() => setIsDeleteApplicantConfirmationVisible(false)}
                 >
@@ -956,8 +940,8 @@ export default function AdminReportManagementPopup() {
               </div>
             </div>
           ) : (
-            <div className="rounded-md shadow-md p-4 xs:p-5 sm:p-6 mt-4 xs:mt-5 sm:mt-6 bg-white">
-              <p className="text-red-500 font-semibold text-xs xs:text-sm sm:text-sm">
+            <div className="rounded-md shadow-md p-6 mt-6 bg-white">
+              <p className="text-red-500 font-semibold">
                 The applicant could not be found.
               </p>
             </div>
@@ -967,18 +951,18 @@ export default function AdminReportManagementPopup() {
         {/* Edit review form */}
         {isEditReviewFormVisible ? (
           reportedReview ? (
-            <div className="rounded-md shadow-md p-4 xs:p-5 sm:p-6 mt-4 xs:mt-5 sm:mt-6 bg-white">
-              <h3 className="text-base xs:text-lg sm:text-lg font-semibold text-gray-800 mb-2 xs:mb-3 sm:mb-4">
+            <div className="rounded-md shadow-md p-6 mt-6 bg-white">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Edit Review
               </h3>
               <form
                 onSubmit={handleEditReviewSubmit}
-                className="space-y-2 xs:space-y-3 sm:space-y-4"
+                className="space-y-4"
               >
                 <div>
                   <label
                     htmlFor="review-content"
-                    className="block text-gray-700 text-xs xs:text-sm sm:text-sm font-bold mb-1 xs:mb-2 sm:mb-2"
+                    className="block text-gray-700 text-sm font-bold mb-2"
                   >
                     Content:
                   </label>
@@ -986,18 +970,16 @@ export default function AdminReportManagementPopup() {
                     id="review-content"
                     name="review-content"
                     className="
-                      shadow appearance-none border rounded w-full py-1 xs:py-2 sm:py-2 px-2 xs:px-3 sm:px-3 
+                      shadow appearance-none border rounded w-full py-2 px-3 
                       text-gray-700 leading-tight focus:outline-none focus:shadow-outline resize-none
-                      text-sm xs:text-base sm:text-base
                     "
                     defaultValue={reportedReview?.content}
-                    rows="3"
                   />
                 </div>
                 <div>
                   <label
                     htmlFor="review-rating"
-                    className="block text-gray-700 text-xs xs:text-sm sm:text-sm font-bold mb-1 xs:mb-2 sm:mb-2"
+                    className="block text-gray-700 text-sm font-bold mb-2"
                   >
                     Rating:
                   </label>
@@ -1006,21 +988,19 @@ export default function AdminReportManagementPopup() {
                     id="review-rating"
                     name="review-rating"
                     className="
-                      shadow appearance-none border rounded w-full py-1 xs:py-2 sm:py-2 px-2 xs:px-3 sm:px-3 
+                      shadow appearance-none border rounded w-full py-2 px-3 
                       text-gray-700 leading-tight focus:outline-none focus:shadow-outline
-                      text-sm xs:text-base sm:text-base
                     "
                     defaultValue={reportedReview?.rating}
                     min="1"
                     max="5"
                   />
                 </div>
-                <div className="flex flex-col sm:flex-row justify-end space-x-0 sm:space-x-2 gap-2 xs:gap-3 sm:gap-4">
+                <div className="flex justify-end space-x-2">
                   <button
                     className="
-                      w-full sm:w-auto px-4 xs:px-5 sm:px-5 py-1 xs:py-2 sm:py-2 bg-green-600 text-white rounded-md hover:bg-green-700 
+                      px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 
                       focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50
-                      text-xs xs:text-sm sm:text-base
                     "
                     type="submit"
                   >
@@ -1028,9 +1008,8 @@ export default function AdminReportManagementPopup() {
                   </button>
                   <button
                     className="
-                      w-full sm:w-auto px-4 xs:px-5 sm:px-5 py-1 xs:py-2 sm:py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 
+                      px-5 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 
                       focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50
-                      text-xs xs:text-sm sm:text-base
                     "
                     onClick={() => setIsEditReviewFormVisible(false)}
                     type="button"
@@ -1041,8 +1020,8 @@ export default function AdminReportManagementPopup() {
               </form>
             </div>
           ) : (
-            <div className="rounded-md shadow-md p-4 xs:p-5 sm:p-6 mt-4 xs:mt-5 sm:mt-6 bg-white">
-              <p className="text-red-500 font-semibold text-xs xs:text-sm sm:text-sm">
+            <div className="rounded-md shadow-md p-6 mt-6 bg-white">
+              <p className="text-red-500 font-semibold">
                 The review could not be found.
               </p>
             </div>
@@ -1052,19 +1031,18 @@ export default function AdminReportManagementPopup() {
         {/* Remove review confirmation */}
         {isRemoveReviewConfirmationVisible ? (
           report.reportedReviewId ? (
-            <div className="rounded-md shadow-md p-4 xs:p-5 sm:p-6 mt-4 xs:mt-5 sm:mt-6 bg-white">
-              <h3 className="text-base xs:text-lg sm:text-lg font-semibold text-gray-800 mb-2 xs:mb-3 sm:mb-4">
+            <div className="rounded-md shadow-md p-6 mt-6 bg-white">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Confirm Remove Review
               </h3>
-              <p className="text-xs xs:text-sm sm:text-sm text-gray-700 mb-2 xs:mb-3 sm:mb-4">
+              <p className="text-gray-700 mb-4">
                 Are you sure you want to remove review ID: {report.reportedReviewId}?
               </p>
-              <div className="flex flex-col sm:flex-row justify-end space-x-0 sm:space-x-2 gap-2 xs:gap-3 sm:gap-4">
+              <div className="flex justify-end space-x-2">
                 <button
                   className="
-                    w-full sm:w-auto px-4 xs:px-5 sm:px-5 py-1 xs:py-2 sm:py-2 bg-red-600 text-white rounded-md hover:bg-red-700 
+                    px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 
                     focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50
-                    text-xs xs:text-sm sm:text-base
                   "
                   onClick={handleRemoveReview}
                 >
@@ -1072,9 +1050,8 @@ export default function AdminReportManagementPopup() {
                 </button>
                 <button
                   className="
-                    w-full sm:w-auto px-4 xs:px-5 sm:px-5 py-1 xs:py-2 sm:py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 
+                    px-5 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 
                     focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50
-                    text-xs xs:text-sm sm:text-base
                   "
                   onClick={() => setIsRemoveReviewConfirmationVisible(false)}
                 >
@@ -1083,8 +1060,8 @@ export default function AdminReportManagementPopup() {
               </div>
             </div>
           ) : (
-            <div className="rounded-md shadow-md p-4 xs:p-5 sm:p-6 mt-4 xs:mt-5 sm:mt-6 bg-white">
-              <p className="text-red-500 font-semibold text-xs xs:text-sm sm:text-sm">
+            <div className="rounded-md shadow-md p-6 mt-6 bg-white">
+              <p className="text-red-500 font-semibold">
                 The review could not be found.
               </p>
             </div>
@@ -1092,14 +1069,13 @@ export default function AdminReportManagementPopup() {
         ) : null}
 
         {/* Update Status Dropdown */}
-        <div className="mt-4 xs:mt-5 sm:mt-6">
-          <label className="block mb-1 xs:mb-2 sm:mb-2 font-semibold text-base xs:text-lg sm:text-lg">Status Update</label>
+        <div className="mt-6">
+          <label className="block mb-2 font-semibold text-lg">Status Update</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             className={`
-              rounded w-full px-2 xs:px-3 sm:px-3 py-1 xs:py-2 sm:py-2 focus:outline-none
-              text-xs xs:text-sm sm:text-base
+              rounded w-full px-3 py-2 focus:outline-none
               ${darkMode
                 ? "bg-gray-900 border border-gray-700 text-white"
                 : "bg-white border border-gray-300"
@@ -1120,8 +1096,7 @@ export default function AdminReportManagementPopup() {
           <button
             onClick={handleUpdateReportStatus}
             className={`
-              mt-1 xs:mt-2 sm:mt-2 px-3 xs:px-4 sm:px-4 py-1 xs:py-2 sm:py-2 rounded hover:opacity-90 transition
-              text-xs xs:text-sm sm:text-base
+              mt-2 px-4 py-2 rounded hover:opacity-90 transition
               ${darkMode
                 ? "bg-blue-600 text-white"
                 : "bg-blue-500 text-white"
